@@ -11,6 +11,7 @@ usb = CanUSB4(port)
 vlcb = VLCB()
 
 # Send discovery
+print (vlcb.parse_input(b':SB780N0D;'))
 usb.send_data(vlcb.discover())
 # Receive responses until no response
 # This may not end if it's a busy CBUS???
