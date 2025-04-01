@@ -1,9 +1,10 @@
 # Class for handling VLCB data formatting
 
 class VLCB:
-    # 127 is default canid for canusb4
-    def __init__ (self, canid=127):
-        pass
+    # 60 is default canid for canusb4 (127 is dcc controller)
+    def __init__ (self, can_id=60):
+        self.can_id = can_id
+        self.debug = False
     
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
@@ -17,21 +18,37 @@ class VLCB:
             return False
         header = input_string[2:6]
         header_val = int(header, 16)
-        print (f"Header {hex(header_val)}")
+        if self.debug:
+            print (f"Header {hex(header_val)}")
         priority = (header_val & 0xf000) >> 12
-        print (f"Priority {priority:b}")
+        if self.debug:
+            print (f"Priority {priority:b}")
         can_id = (header_val & 0xfe0) >> 5
-        print (f"Can ID {can_id}")
+        if self.debug:
+            print (f"Can ID {can_id}")
         # Next is N / RTR can be ignored
-        print (f"N / RTR {input_string[6]}")
+        if self.debug:
+            print (f"N / RTR {input_string[6]}")
         # Data is rest excluding ; which was already stripped during read
         data = input_string[7:]
-        print (f"Data {data}")
+        if self.debug:
+            print (f"Data {data}")
         # Creates a VLCB_format and returns that
         return VLCBformat (priority, can_id, data)
     
+    # Create header using low priority and can_id (or self.can_id)
+    def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):
+        if can_id == None:
+            can_id = self.can_id
+        header_val = (majpri << 14) + (minpri << 12) + (can_id << 5)
+        header_to_hex = ("000" + hex(header_val).upper()[2:])[-4:]
+        header_string = f':S{header_to_hex}N'
+        return header_string.encode('utf-8')
+    
     def discover (self):
-        return b':SB780N0D;'
+        # Return QNN 
+        return self.make_header() + b'0D;'
+        
         
         
 # Handles a single packet
@@ -48,15 +65,17 @@ class VLCBformat:
         return '??'
         
     def __str__ (self):
-        return f'{self.priority} : {self.can_id} : {self.data[0:2]} : {self.opcode()} : {self.data}'
+        return f'{self.priority} : {self.can_id} : {self.opcode()} ({self.data[0:2]}) : {self.data}'
 
-        
+# Opcodes are provided to interpret read signals
+# or to allow code to provide user friendly information
+# Format provides a string that an be used to help interpret data portion
 class VLCBopcode:
     
     # Dict from opcode to dict of opcode information
     opcodes = {
         '00':  {'opc': 'ACK', 'title': 'General Acknowledgement', 'format': '', 'minpri': 2, 'comment': 'Positive response to query/request performed for report of availability online'},
-        '01':  {'opc': 'NAK', 'title': 'General No Ack', 'format': '', 'minpri': 2, 'comment': 'Negaive response to query/request denied'},
+        '01':  {'opc': 'NAK', 'title': 'General No Ack', 'format': '', 'minpri': 2, 'comment': 'Negative response to query/request denied'},
         '02':  {'opc': 'HLT', 'title': 'Bus Halt', 'format': '', 'minpri': 0, 'comment': 'Commonly broadcasted to all nodes to indicate CBUS is not available and no further packets should be sent until a BON or ARST is received'},
         '03':  {'opc': 'BON', 'title': 'Bus On', 'format': '', 'minpri': 1, 'comment': 'Commonly broadcasted to all nodes to indicate CBUS is available following a HLT.'},
         '04':  {'opc': 'TOF', 'title': 'Track Off', 'format': '', 'minpri': 1, 'comment': 'Commonly broadcasted to all nodes by a command station to indicate track power is off and no further command packets should be sent, except inquiries..'},
