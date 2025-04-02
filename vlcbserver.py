@@ -2,7 +2,7 @@
 # Can be run in a seperate process
 
 from canusb import CanUSB4
-from pyvlcb import VLCB, VLCBformat
+from pyvlcb import VLCB
 import time
 
 port = '/dev/ttyACM0'
