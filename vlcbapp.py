@@ -11,48 +11,50 @@ port = '/dev/ttyACM0'
 # Handle events passes data to/from CanUSB4 and the automate process
 def handle_events(requests, responses, commands, status):
     # Entire thread is in a loop which allows us to keep trying connection etc.
-    while True:
-        # Connect to USB
-        usb = CanUSB4(port)
-        try:
-            usb.connect()
-        except:
-            print (f"Error connecting to {port}")
-            time.sleep(0.5)
-            continue
     
-        while True:
-            # First check if any commands to the server 
-            try:
-                command = commands.get_nowait()
-            except queue.Empty:
-                pass
-            else:
-                # Handle commands here
-                if command == "quit" or command == "exit":
-                    print ("Exiting")
-                    return True
-            
-            # Check to see if we have any responses
-            # Do this clear input queue before sending any new requests
-            in_data = usb.read_data()
-            
-            if in_data[0] == "Data":
-                responses.put(in_data)
-                print (f"Received {in_data[1]}")
-                # If got data then keep on reading more
-                continue
-            # Todo Handle errors
-            
-            # Do we have a request?
-            # If so send it now
-            try:
-                request = requests.get_nowait()
-            except queue.Empty:
-                pass
-            else:
-                print(f"Sending {request}")
-                usb.send_data(request)
+    # Connect to USB
+    usb = CanUSB4(port)
+    try:
+        usb.connect()
+    except:
+        print (f"Error connecting to {port}")
+        return
+        #time.sleep(0.5)
+        #continue
+
+    while True:
+        print ("App event loop")
+        # First check if any commands to the server 
+        try:
+            command = commands.get_nowait()
+        except queue.Empty:
+            pass
+        else:
+            # Handle commands here
+            if command == "quit" or command == "exit":
+                print ("Exiting")
+                return True
+        
+        # Check to see if we have any responses
+        # Do this clear input queue before sending any new requests
+        in_data = usb.read_data()
+        
+        if in_data[0] == "Data":
+            responses.put(in_data)
+            print (f"Received {in_data[1]}")
+            # If got data then keep on reading more
+            continue
+        # Todo Handle errors
+        
+        # Do we have a request?
+        # If so send it now
+        try:
+            request = requests.get_nowait()
+        except queue.Empty:
+            pass
+        else:
+            print(f"Sending {request}")
+            usb.send_data(request)
 
 # Starts the automation process
 def start_automation(requests, responses, commands, status):
@@ -73,10 +75,11 @@ def main():
     automation = Process(target=start_automation, args=(requests, responses, commands, status))
     event_process.start()
     automation.start()
+    print ("Automation ended")
     
     requests.put(b':SB780N0D;')
-    time.sleep(10)
-    commands.put("exit")
+    #time.sleep(10)
+    #commands.put("exit")
 
     event_process.join()
     automation.join()
