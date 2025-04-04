@@ -1,11 +1,15 @@
+# Main App class - handles connection to canusb and creates automate process
+
 from multiprocessing import Lock, Process, Queue, current_process
 import time
 import queue # imported for using queue.Empty exception
 from canusb import CanUSB4
+from vlcbautomate import VLCBAutomate
 
 port = '/dev/ttyACM0'
 
-def run_server(requests, responses, commands, status):
+# Handle events passes data to/from CanUSB4 and the automate process
+def handle_events(requests, responses, commands, status):
     # Entire thread is in a loop which allows us to keep trying connection etc.
     while True:
         # Connect to USB
@@ -50,6 +54,11 @@ def run_server(requests, responses, commands, status):
                 print(f"Sending {request}")
                 usb.send_data(request)
 
+# Starts the automation process
+def start_automation(requests, responses, commands, status):
+    automate = VLCBAutomate(requests, responses, commands, status)
+    automate.run()
+    
 
 def main():
     requests = Queue()
@@ -58,14 +67,19 @@ def main():
     status = Queue()      # Response to commands and/or error messages with CANUSB4
 
     # create processes
-    vlcbserver = Process(target=run_server, args=(requests, responses, commands, status))
-    vlcbserver.start()
+    # process for handling events
+    event_process = Process(target=handle_events, args=(requests, responses, commands, status))
+    # process for automation (which in turn creates the gui)
+    automation = Process(target=start_automation, args=(requests, responses, commands, status))
+    event_process.start()
+    automation.start()
     
     requests.put(b':SB780N0D;')
     time.sleep(10)
     commands.put("exit")
 
-    vlcbserver.join()
+    event_process.join()
+    automation.join()
 
     return True
 

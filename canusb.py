@@ -12,7 +12,7 @@ class CanUSB4 ():
         self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
         # Wait for this * timeout - so could be 3 seconds before giving up
         self.connect()
-        self.debug = True
+        self.debug = False
         
     # Optional arguments override existing
     def connect(self, port=None, baud=None, timeout=None):
@@ -32,13 +32,29 @@ class CanUSB4 ():
         self.ser.write(data)
         
     # Reads byte at a time looking for : (start) and ; (end)
-    # timesout if no data received   
+    # timesout if no data received
+    # Returns list [status, data]
+    # Status = "Data", "NoData", "NotConnect", "Error" (other error)
+    # If error then e is sent instead of data
     def read_data(self):
         retry_count = 0
         data_start = False    # After : goes to true to signify data being received
         in_string = b''
         while retry_count < self.max_retry:
-            this_char = self.ser.read(1)
+            try:
+                this_char = self.ser.read(1)
+            # No data
+            except serial.SerialException:
+                retry_count += 1
+                continue
+            # Unable to communicate with USB
+            except TypeError as e:
+                # Close if not already
+                self.ser.close()
+                return ["NotConnect", "e"]
+            # Any other error
+            except Exception as e:
+                return ["Error", "e"]
             #print (f"Read returned {this_char}")
             if this_char == b'':
                 retry_count += 1
@@ -47,7 +63,7 @@ class CanUSB4 ():
                 # Don't add the terminating char
                 if self.debug:
                     print (f"Read {in_string}")
-                return in_string
+                return ["Data", in_string]
             # Start of packet (resets string even if previous data)
             elif this_char == b':':
                 in_string = b':'
@@ -65,4 +81,4 @@ class CanUSB4 ():
         # Reach here we exited from retry_count due to a timeout
         if self.debug:
             print ("Read timeout")
-        return None
+        return ["NoData", ""]
