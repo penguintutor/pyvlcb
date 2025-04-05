@@ -11,19 +11,22 @@ port = '/dev/ttyACM0'
 # Handle events passes data to/from CanUSB4 and the automate process
 def handle_events(requests, responses, commands, status):
     # Entire thread is in a loop which allows us to keep trying connection etc.
+    debug = False
     
     # Connect to USB
     usb = CanUSB4(port)
     try:
         usb.connect()
     except:
-        print (f"Error connecting to {port}")
+        if debug:
+            print (f"Error connecting to {port}")
         return
         #time.sleep(0.5)
         #continue
 
     while True:
-        print ("App event loop")
+        if debug:
+            print ("App event loop")
         # First check if any commands to the server 
         try:
             command = commands.get_nowait()
@@ -32,7 +35,8 @@ def handle_events(requests, responses, commands, status):
         else:
             # Handle commands here
             if command == "quit" or command == "exit":
-                print ("Exiting")
+                if debug:
+                    print ("Exiting")
                 return True
         
         # Check to see if we have any responses
@@ -40,8 +44,9 @@ def handle_events(requests, responses, commands, status):
         in_data = usb.read_data()
         
         if in_data[0] == "Data":
-            responses.put(in_data)
-            print (f"Received {in_data[1]}")
+            responses.put(in_data[1])
+            if debug:
+                print (f"Received {in_data[1]}")
             # If got data then keep on reading more
             continue
         # Todo Handle errors
@@ -53,7 +58,8 @@ def handle_events(requests, responses, commands, status):
         except queue.Empty:
             pass
         else:
-            print(f"Sending {request}")
+            if debug:
+                print(f"Sending {request}")
             usb.send_data(request)
 
 # Starts the automation process

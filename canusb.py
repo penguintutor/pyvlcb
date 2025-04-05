@@ -6,13 +6,14 @@ import serial
 # Needs port (eg. /dev/ttyACM0)
 class CanUSB4 ():
     def __init__ (self, port, baud=115200, timeout=0.1):
+        self.debug = False
         self.port = port
         self.baud = baud
         self.timeout = timeout
         self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
         # Wait for this * timeout - so could be 3 seconds before giving up
         self.connect()
-        self.debug = False
+        
         
     # Optional arguments override existing
     def connect(self, port=None, baud=None, timeout=None):

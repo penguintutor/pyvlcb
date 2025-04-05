@@ -9,6 +9,7 @@ import queue
 
 class VLCBAutomate ():
     def __init__ (self, requests, responses, commands, status):
+        self.debug = False
         self.requests = requests
         self.responses = responses
         self.commands = commands
@@ -24,6 +25,7 @@ class VLCBAutomate ():
         self.gui_process = Process(target=self.start_gui, args=(self.gui_requests, self.gui_responses, self.gui_commands, self.gui_status))
         
         
+        
     def start_gui(self, gui_requests, gui_responses, gui_commands, gui_status):
         app = App()
         window = MainWindowUI(gui_requests, gui_responses, gui_commands, gui_status)
@@ -33,17 +35,20 @@ class VLCBAutomate ():
     def run (self):
         self.gui_process.start()
         while True:
-            print ("Checking loop")
+            if self.debug:
+                print ("Checking loop")
             # First check if any commands from the gui
             # those normally take priority, but only send one at a time as otherwise could
             # result in not clearing any off the status and/or response queue
             try:
                 gui_command = self.gui_commands.get_nowait()
             except queue.Empty:
-                print ("Queue empty")
+                if self.debug:
+                    print ("Queue empty")
                 pass
             else:
-                print (f"Command received {gui_command}")
+                if self.debug:
+                    print (f"Command received {gui_command}")
                 # If quit pass on to the app, then break out of the loop
                 # If app has already closed then this will meet join at the end
                 if gui_command == "quit" or gui_command == "exit":
@@ -51,34 +56,38 @@ class VLCBAutomate ():
                     break
                 # for other commands then pass through to the app
                 else:
-                    #self.commands.put(command)
+                    self.commands.put(command)
                     pass
-                    
-            print ("Any status")
+            
+            if self.debug:
+                print ("Any status")
             # Check for any responses to commands these should be approx 1:1 so don't need to keep polling
             try:
                 current_status = self.status.get_nowait()
             except queue.Empty:
-                print ("Status empty")
-                pass
+                if self.debug:
+                    print ("Status empty")
             else:
                 # print any response received
-                print (f"Status {current_status}")
+                if self.debug:
+                    print (f"Status {current_status}")
             
             # Check to see if we have any responses 
             # Do this to clear input queue before sending any new requests
             try:
                 response = self.responses.get_nowait()
             except queue.Empty:
-                print ("Response queue empty")
-                pass
+                if self.debug:
+                    print ("Response queue empty")
             else:
-                print (f"Response received {response}")
+                if self.debug:
+                    print (f"Response received {response}")
                 # Pass the response to the gui
                 self.gui_responses.put(response)
             # Todo Handle errors
             
-            print ("Any requests")
+            if self.debug:
+                print ("Any requests")
             # Do we have a request from the gui to send out?
             # If so send it now
             try:
@@ -86,12 +95,18 @@ class VLCBAutomate ():
             except queue.Empty:
                 pass
             else:
-                print(f"Sending {request}")
+                if self.debug:
+                    print(f"Sending {request}")
                 self.requests.put(gui_request)
                 
             # Todo check if we have any of our own requests to send out
+            
+            
+            # Short sleep to reduce number of checks
+            time.sleep(0.5)
 
-        print ("Automate loop closed")
+        if self.debug:
+            print ("Automate loop closed")
         self.gui_process.join()
 
 class App(QApplication):
