@@ -1,4 +1,5 @@
 # Class for handling VLCB data formatting
+# Data is returned as string - needs to be encoded afterwards
 
 from vlcbformat import VLCBformat, VLCBopcode
 
@@ -11,7 +12,11 @@ class VLCB:
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
     def parse_input (self, input_bytes):
-        input_string = input_bytes.decode("utf-8")
+        # Also allow string (no need to decode)
+        if isinstance (input_bytes, str):
+            input_string = input_bytes
+        else:
+            input_string = input_bytes.decode("utf-8")
         if (input_string[0] != ":"):
             print ("No start frame")
             return False
@@ -45,11 +50,13 @@ class VLCB:
         header_val = (majpri << 14) + (minpri << 12) + (can_id << 5)
         header_to_hex = ("000" + hex(header_val).upper()[2:])[-4:]
         header_string = f':S{header_to_hex}N'
-        return header_string.encode('utf-8')
+        return header_string
+        #return header_string.encode('utf-8')
     
     def discover (self):
         # Return QNN 
-        return self.make_header() + b'0D;'
+        #return self.make_header() + b'0D;'
+        return self.make_header() + '0D;'
         
         
     
