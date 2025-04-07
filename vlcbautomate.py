@@ -92,12 +92,17 @@ class VLCBAutomate ():
             # If so send it now
             try:
                 gui_request = self.gui_requests.get_nowait()
+                # If it's a string convert to bytestring
+                if isinstance(gui_request, str):
+                    gui_request = gui_request.encode('utf-8')
             except queue.Empty:
                 pass
             else:
                 if self.debug:
-                    print(f"Sending {request}")
+                    print(f"Sending {gui_request}")
                 self.requests.put(gui_request)
+                # Also echo to gui_responses
+                self.gui_responses.put(gui_request)
                 
             # Todo check if we have any of our own requests to send out
             
