@@ -78,8 +78,7 @@ class MainWindowUI(QMainWindow):
                 print (f"Response received {response}")
             text_response = response.decode("utf-8")
             # Pass the response to the gui console
-            self.console_window.add_log([text_response, "??", "??", "Comment goes here"])
-            #self.ui.textLog.append(text_response)
+            self.console_window.add_log(text_response)
             
         # Todo Handle errors
         

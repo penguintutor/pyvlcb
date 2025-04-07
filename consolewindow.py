@@ -41,18 +41,24 @@ class ConsoleWindowUI(QMainWindow):
         # Call show manually to open the windo
         #self.show()
         
-    # log_details is list with fields:
+    # log_details is unformatted string
+    # Extract details and store as:
     # Cbus data (original string), can_id, op_code, data
-    def add_log (self, log_details):
+    def add_log (self, resp_string):
+        # If it's blank then ignore
+        if resp_string == "":
+            return
+        log_details = self.vlcb.log_entry(resp_string)
         # Add new row to the table
         row_num = self.ui.consoleTable.rowCount()
         self.ui.consoleTable.setRowCount(row_num + 1)
         # Add empty list to next position in list
-        self.console_entries.append([])
-        this_row = self.console_entries[-1]
+        #self.console_entries.append([])
+        #this_row = self.console_entries[-1]
         for i in range(0, len(log_details)):
-            this_row.append(QTableWidgetItem(log_details[i]))
-            self.ui.consoleTable.setItem(row_num, i, this_row[i])
+            #this_row.append(QTableWidgetItem(log_details[i]))
+            #self.ui.consoleTable.setItem(row_num, i, this_row[i])
+            self.ui.consoleTable.setItem(row_num, i, QTableWidgetItem(log_details[i]))
             
         # If in scrollmode then go to the bottom
         if self.ui.scrollCheckBox.isChecked():

@@ -17,6 +17,7 @@ class VLCB:
             input_string = input_bytes
         else:
             input_string = input_bytes.decode("utf-8")
+        print (f"Parsing {input_string}")
         if (input_string[0] != ":"):
             print ("No start frame")
             return False
@@ -42,6 +43,12 @@ class VLCB:
             print (f"Data {data}")
         # Creates a VLCB_format and returns that
         return VLCBformat (priority, can_id, data)
+    
+    # Parse and format into standard log format (fulldata, can_id, op_code, data)
+    def log_entry (self, input_string):
+        vlcb_entry = self.parse_input (input_string)
+        return [input_string, vlcb_entry.can_id, "", vlcb_entry.data]
+        # Todo - error handling 
     
     # Create header using low priority and can_id (or self.can_id)
     def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):
