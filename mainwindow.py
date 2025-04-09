@@ -33,7 +33,7 @@ class MainWindowUI(QMainWindow):
         self.vlcb = VLCB()
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
-        self.ui.setWindowTitle(app_title)
+        self.setWindowTitle(app_title)
         
         # File Menu
         self.ui.actionExit.triggered.connect(self.quit_app)
