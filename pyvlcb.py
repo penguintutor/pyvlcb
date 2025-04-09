@@ -18,14 +18,22 @@ class VLCB:
         else:
             input_string = input_bytes.decode("utf-8")
         print (f"Parsing {input_string}")
+        if (len(input_string) < 5):        # packets are actually much longer
+            print ("Data too short")    
+            return False
         if (input_string[0] != ":"):
             print ("No start frame")
             return False
         if (input_string[1] != "S"):
             print ("Format not supported - only Standard frames allowed")
             return False
-        header = input_string[2:6]
-        header_val = int(header, 16)
+        # Use try when converting to number in case of error
+        try:
+            header = input_string[2:6]
+            header_val = int(header, 16)
+        except:
+            print (f"Invalid format, number expected {header}")
+            header_val = 0
         if self.debug:
             print (f"Header {hex(header_val)}")
         priority = (header_val & 0xf000) >> 12
@@ -45,9 +53,18 @@ class VLCB:
         return VLCBformat (priority, can_id, data)
     
     # Parse and format into standard log format (fulldata, can_id, op_code, data)
+    # For log all values are returned as strings
     def log_entry (self, input_string):
         vlcb_entry = self.parse_input (input_string)
-        return [input_string, vlcb_entry.can_id, "", vlcb_entry.data]
+        # Error handling of invalid packet
+        if vlcb_entry == False:
+            return [input_string, "??", "", "Invalid data"]
+        # convert op-code to string
+        # opcode is first two chars of data
+        opcode = vlcb_entry.data[0:2]
+        opcode_string = f'{opcode} - {VLCBopcode.opcode_mnemonic(opcode)}'
+        data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
+        return [input_string, str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
     # Create header using low priority and can_id (or self.can_id)
