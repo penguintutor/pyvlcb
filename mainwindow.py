@@ -2,9 +2,12 @@ import os
 from multiprocessing import Lock, Process, Queue, current_process
 from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal
 from PySide6.QtWidgets import QMainWindow, QTextBrowser
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtUiTools import QUiLoader
 import queue
 from pyvlcb import VLCB
+from vlcbformat import VLCBopcode
+from vlcbnode import VLCBNode
 from consolewindow import ConsoleWindowUI
 
 loader = QUiLoader()
@@ -22,6 +25,8 @@ class MainWindowUI(QMainWindow):
         self.responses = responses
         self.commands = commands
         self.status = status
+        
+        self.nodes = {} # dict of nodes indexed by NN
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
@@ -41,9 +46,18 @@ class MainWindowUI(QMainWindow):
         # Asset Menu
         self.ui.actionDiscover.triggered.connect(self.discover)
         
+        # Tree view
+        #self.ui.nodeTreeView.setColumnCount(3)
+        #self.ui.setHeaderLabels(['Name', 'Number', 'Type'])
+        self.node_model = QStandardItemModel()
+        self.node_model.setHorizontalHeaderLabels(['Name', 'Number', 'Type'])
+        self.ui.nodeTreeView.setModel(self.node_model)
+        
         self.setCentralWidget(self.ui)
+        self.ui.nodeTreeView.show()
         self.show()
         self.create_console()
+        
         
         # Initial discover request
         self.discover()
@@ -79,8 +93,34 @@ class MainWindowUI(QMainWindow):
             text_response = response.decode("utf-8")
             # Pass the response to the gui console
             self.console_window.add_log(text_response)
+            # Check if we need to handle this further
+            self.handle_incoming (text_response)
             
         # Todo Handle errors
+        
+    # This method is called whenever we get a valid response
+    # Used to determine if further action is required (eg. discovery or update status)
+    # Note this will see all cbus messages, including ones sent to/from other nodes
+    def handle_incoming (self, response):
+        vlcb_entry = self.vlcb.parse_input(response)
+        # If not a valid entry then ignore
+        if vlcb_entry == False:
+            return
+        # Look for specific responses
+        if vlcb_entry.opcode() == 'PNN':    # PNN (Response to query node)
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # if we don't already have this device add it
+            if not data_entry['NN'] in self.nodes.keys():
+                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
+                # Add to Tree View
+                print ("Adding entry")
+                node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
+                self.node_model.appendRow(node)
+                
+            else:
+                # Update existing entry
+                pass
+            
         
     def discover (self):
         self.requests.put(self.vlcb.discover())
