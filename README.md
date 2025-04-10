@@ -13,11 +13,13 @@ This requires pyserial and the GUI requires PySide6.
 
 To setup using virtual environment:
 
+    sudo apt install python3-flask
     mkdir ~/.venv
     python3 -m venv ~/.venv/pyside6
     source ~/.venv/pyside6/bin/activate
     pip install pyside6
     pip install pyserial
+    pip install fastapi uvicorn
     
 Note: I have named the virtual environment pyside6 as that is the main package that is required, but you could name it differently if preferred.
     
