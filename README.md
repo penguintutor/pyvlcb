@@ -13,25 +13,27 @@ This requires pyserial and the GUI requires PySide6.
 
 To setup using virtual environment:
 
-    (sudo apt install python3-flask python3-flask-jwt-simplep)
     mkdir ~/.venv
     python3 -m venv ~/.venv/pyside6
     source ~/.venv/pyside6/bin/activate
     pip install pyside6
     pip install pyserial
+    pip install zmq
     
 Note: I have named the virtual environment pyside6 as that is the main package that is required, but you could name it differently if preferred.
 
-Create a file called secret.cfg - with the contents 
-    apikey="<apikey>"
-    
-inserting a long secure key
-    
 
 # Running
 
 After setting up the virtual environment activate using
 
     source ~/.venv/pyside6/bin/activate
+
+Start the server using:
+
+    python3 vlcbserver.py
+
+Run the GUI application using:
+
     python3 vlcbapp.py 
 
