@@ -1,14 +1,28 @@
-# Main App class - handles connection to canusb and creates automate process
+# Main App class - handles connection to canusb and creates zmq
+# This is a very basic zmq server
+# Receives data from usb and sends to higher when requested
+# Receives request from zmq and sends to USB
+# higher level needs to interpret the data
 
 from multiprocessing import Lock, Process, Queue, current_process
-import queue # imported for using queue.Empty exception
 from canusb import CanUSB4
-from vlcbautomate import VLCBAutomate
+import zmq
+
 
 port = '/dev/ttyACM0'
+context = zmq.Context()
+socket = context.socket(zmq.REP)
+socket.bind("tcp://*:5555")
 
-# Handle events passes data to/from CanUSB4 and the automate process
-def handle_events(requests, responses, commands, status):
+# List containing data received
+data = []
+data_index = 0 # index number for first entry in array
+# eg. if 10 entries removed from start then this will be increased to 10 and
+# new entries will be relative to that
+
+print ("Starting server")
+
+while True:
     # Entire thread is in a loop which allows us to keep trying connection etc.
     debug = True
     
@@ -19,7 +33,8 @@ def handle_events(requests, responses, commands, status):
     except:
         if debug:
             print (f"Error connecting to {port}")
-        return
+        # At the moment stop - perhaps update in future
+        break
         #time.sleep(0.5)
         #continue
 
@@ -28,22 +43,75 @@ def handle_events(requests, responses, commands, status):
         #    print ("App event loop")
         # First check if any commands to the server 
         try:
-            command = commands.get_nowait()
-        except queue.Empty:
+            message = socket.recv(flags=zmq.NOBLOCK)
+            print (f"Raw message {message}")
+            if (message != b''):
+                message = message.decode("utf-8")
+            else:
+                message = ""
+            
+        except zmq.Again as e:
+            #print ("Nothing received")
+            # Nothing received
             pass
+        except Exception as e:
+            print (f"Unknown error {e}")
         else:
+            print (f"Request received {message}")
+            # If empty request
+            if message == "":
+                print ("Sending emptyrequest")
+                socket.send(b'status,emptyrequest')
             # Handle commands here
-            if command == "quit" or command == "exit":
-                if debug:
-                    print ("Exiting")
-                return True
+            elif message[0:7] == "server,":
+                print ("Server message")
+                #if message[7:] == "quit"
+                #    socket.send(b"server,quit")
+                #    if debug:
+                #        print ("Exiting")
+                #    break
+                # Status responsds with status,firstdata,numdata
+                if message[7:] == "status":
+                    status_msg = f"status,{data_index},{len(data)}"
+                    print (f"Status sending {status_msg}")
+                    socket.send(status_msg.encode("utf-8"))
+                else:
+                    print ("Unknown server")
+                    socket.send(b'status,unknownserverreq')
+            # send,<data> - send to usb
+            elif message[0:5] == "send,":
+                send_data = message[5:].encode('utf-8')
+                print (f"send request is {message[5:]}") 
+                usb.send_data(send_data)
+                print ("Returning : sent")
+                socket.send(b"sent")
+            # get,start_num (to end) (May be long)
+            # get,start_num,num_packets (fixed range)
+            # get,-num (last x packets)
+            elif message[0:4] == "get,":
+                print (f"Get request {message[4:]}")
+                message_req = message[4:].split(',')
+                data_string = "data,"
+                num_entries_returned = 0    # Just used for testing, could be used for a checksum 
+                if len(message_req) == 1:
+                    for i in range (int(message_req[0])-data_index, len(data)):
+                        num_entries_returned += 1
+                        data_string += data[i]+"\n"
+                    # If no data added
+                    if data_string == "data,":
+                        socket.send(b"nodata")
+                        print ("No data to return")
+                    else:
+                        print (f"Sending {num_entries_returned} entries")
+                        socket.send(data_string.encode('utf-8'))
+
         
         # Check to see if we have any responses
         # Do this clear input queue before sending any new requests
         in_data = usb.read_data()
         
         if in_data[0] == "Data":
-            responses.put(in_data[1])
+            data.append(in_data[1].decode('utf-8'))
             if debug:
                 print (f"Received {in_data[1]}")
             # If got data then keep on reading more
@@ -52,45 +120,13 @@ def handle_events(requests, responses, commands, status):
         
         # Do we have a request?
         # If so send it now
-        try:
-            request = requests.get_nowait()
-        except queue.Empty:
-            pass
-        else:
-            if debug:
-                print(f"Sending {request}")
-            usb.send_data(request)
+        #try:
+        #    request = requests.get_nowait()
+        #except queue.Empty:
+        #    pass
+        #else:
+        #    if debug:
+        #        print(f"Sending {request}")
+        #    usb.send_data(request)
 
-# Starts the automation process
-def start_automation(requests, responses, commands, status):
-    automate = VLCBAutomate(requests, responses, commands, status)
-    automate.run()
-    
-
-def main():
-    requests = Queue()
-    responses = Queue()   # Typically these are responses to requests, but could be error / not connected
-    commands = Queue()    # These are commands to the server - eg. shutdown / connect on new port
-    status = Queue()      # Response to commands and/or error messages with CANUSB4
-
-    # create processes
-    # process for handling events
-    event_process = Process(target=handle_events, args=(requests, responses, commands, status))
-    # process for automation (which in turn creates the gui)
-    automation = Process(target=start_automation, args=(requests, responses, commands, status))
-    event_process.start()
-    automation.start()
-    print ("Automation started")
-    
-    #requests.put(b':SB780N0D;')
-    #time.sleep(10)
-    #commands.put("exit")
-
-    event_process.join()
-    automation.join()
-
-    return True
-
-
-if __name__ == '__main__':
-    main()
+print ("Connection closed")
