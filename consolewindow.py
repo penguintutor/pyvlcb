@@ -76,7 +76,8 @@ class ConsoleWindowUI(QMainWindow):
         command_string = self.ui.commandEdit.text()
         if command_string == "":
             return
-        self.mainwindow.requests.put(command_string)
+        if self.mainwindow.send_request == "":
+            self.mainwindow.send_request = command_string
         
     # Update checkbox wording
     def scroll_checkbox (self):

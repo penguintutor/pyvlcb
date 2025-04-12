@@ -44,7 +44,7 @@ class MainWindowUI(QMainWindow):
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
-        self.timer.setInterval(1000)
+        self.timer.setInterval(2000)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
         # Todo - remove this - temp for testing
@@ -88,10 +88,10 @@ class MainWindowUI(QMainWindow):
             self.console_window.show()
         
     def poll_server(self):
-        print ("Checking for zmq updates")
+        #print ("Checking for zmq updates")
         # Only allow one check_responses thread to run at a time
         if self.update_in_progress == True:
-            print ("Still running - skipping")
+            #print ("Still running - skipping")
             return
         
         worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
@@ -159,7 +159,7 @@ class MainWindowUI(QMainWindow):
     # If update to node / events then update nodes and
     # notify updatenode
     def thread_getupdate(self, nodes, newdata_emit=None, updatenode_emit=None):
-        print ("Thread getupdate")
+        #print ("Thread getupdate")
         #Only allow one thread at a time
         self.update_in_progress = True
         
@@ -179,7 +179,7 @@ class MainWindowUI(QMainWindow):
             self.send_request = ""
         
         request = f'get,{self.data_received}'
-        print (f"Requesting {request}")
+        #print (f"Requesting {request}")
         response = self.send_receive (request)
         # Todo handle response
         # Check response starts with "data,"
@@ -190,6 +190,9 @@ class MainWindowUI(QMainWindow):
                     continue
                 self.data_received += 1    # Count packets received
                 self.handle_incoming_data(data_packet)
+        elif response[0:6] == "nodata":
+            # No new data received
+            pass
         else:
             print (f"Unrecognised response {response}")
         
@@ -199,7 +202,7 @@ class MainWindowUI(QMainWindow):
         request = request_string.encode('utf-8')
         # todo add error handing
         self.socket.send(request)
-        print ("message sent")
+        #print ("message sent")
         return self.receive()
         
     # retry is the number of times to retry connection
@@ -218,7 +221,7 @@ class MainWindowUI(QMainWindow):
                 print (f"Unknown receive error {e}")
                 continue
             else:
-                print (f"Message is {message}")
+                #print (f"Message is {message}")
                 return message
             # Temp using time sleep 
             # todo time sleep could be replaced with new timer

@@ -44,7 +44,7 @@ while True:
         # First check if any commands to the server 
         try:
             message = socket.recv(flags=zmq.NOBLOCK)
-            print (f"Raw message {message}")
+            #print (f"Raw message {message}")
             if (message != b''):
                 message = message.decode("utf-8")
             else:
@@ -60,7 +60,7 @@ while True:
             print (f"Request received {message}")
             # If empty request
             if message == "":
-                print ("Sending emptyrequest")
+                #print ("Sending emptyrequest")
                 socket.send(b'status,emptyrequest')
             # Handle commands here
             elif message[0:7] == "server,":
@@ -73,23 +73,24 @@ while True:
                 # Status responsds with status,firstdata,numdata
                 if message[7:] == "status":
                     status_msg = f"status,{data_index},{len(data)}"
-                    print (f"Status sending {status_msg}")
+                    #print (f"Status sending {status_msg}")
                     socket.send(status_msg.encode("utf-8"))
                 else:
-                    print ("Unknown server")
+                    print ("Unknown server request")
                     socket.send(b'status,unknownserverreq')
             # send,<data> - send to usb
             elif message[0:5] == "send,":
                 send_data = message[5:].encode('utf-8')
                 print (f"send request is {message[5:]}") 
                 usb.send_data(send_data)
-                print ("Returning : sent")
+                data.append(send_data.decode('utf-8'))
+            #    print ("Returning : sent")
                 socket.send(b"sent")
             # get,start_num (to end) (May be long)
             # get,start_num,num_packets (fixed range)
             # get,-num (last x packets)
             elif message[0:4] == "get,":
-                print (f"Get request {message[4:]}")
+            #    print (f"Get request {message[4:]}")
                 message_req = message[4:].split(',')
                 data_string = "data,"
                 num_entries_returned = 0    # Just used for testing, could be used for a checksum 
@@ -102,7 +103,7 @@ while True:
                         socket.send(b"nodata")
                         print ("No data to return")
                     else:
-                        print (f"Sending {num_entries_returned} entries")
+                        #print (f"Sending {num_entries_returned} entries")
                         socket.send(data_string.encode('utf-8'))
 
         
