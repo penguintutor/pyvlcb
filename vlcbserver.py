@@ -6,6 +6,7 @@
 
 from multiprocessing import Lock, Process, Queue, current_process
 from canusb import CanUSB4
+from datetime import datetime
 import zmq
 
 
@@ -83,7 +84,7 @@ while True:
                 send_data = message[5:].encode('utf-8')
                 print (f"send request is {message[5:]}") 
                 usb.send_data(send_data)
-                data.append(send_data.decode('utf-8'))
+                data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "," + send_data.decode('utf-8'))
             #    print ("Returning : sent")
                 socket.send(b"sent")
             # get,start_num (to end) (May be long)
@@ -112,7 +113,7 @@ while True:
         in_data = usb.read_data()
         
         if in_data[0] == "Data":
-            data.append(in_data[1].decode('utf-8'))
+            data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "," + in_data[1].decode('utf-8'))
             if debug:
                 print (f"Received {in_data[1]}")
             # If got data then keep on reading more

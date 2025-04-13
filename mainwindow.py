@@ -44,12 +44,12 @@ class MainWindowUI(QMainWindow):
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
-        self.timer.setInterval(2000)
+        self.timer.setInterval(5000)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
         # Todo - remove this - temp for testing
         # This will slow startup
-        time.sleep(1)
+        #time.sleep(1)
         
         # VLCB and node creation
         self.vlcb = VLCB()
@@ -96,15 +96,15 @@ class MainWindowUI(QMainWindow):
         
         worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
         self.threadpool.start(worker)
+        #print ("thread started")
             # Pass the response to the gui console
             ###self.console_window.add_log(text_response)
             # Check if we need to handle this further
             ###self.handle_incoming (text_response)
-            
-        # Todo Handle errors
+        return
         
     def update_console (self):
-        pass
+        self.console_window.update_log()
     
     def update_nodes (self):
         pass
@@ -115,7 +115,10 @@ class MainWindowUI(QMainWindow):
     def handle_incoming_data (self, response):
         # pass to console (unparsed)
         self.console_window.add_log(response)
-        vlcb_entry = self.vlcb.parse_input(response)
+        # strip date off (don't need except for the log)
+        print (f"Entry {response}")
+        date_data = response.split(',',2)
+        vlcb_entry = self.vlcb.parse_input(date_data[1])
         # If not a valid entry then ignore
         if vlcb_entry == False:
             return
@@ -178,6 +181,7 @@ class MainWindowUI(QMainWindow):
             # Testing - if we need a lot of entries for testing then comment this out
             self.send_request = ""
         
+        # Send a normal pole request
         request = f'get,{self.data_received}'
         #print (f"Requesting {request}")
         response = self.send_receive (request)
@@ -190,6 +194,7 @@ class MainWindowUI(QMainWindow):
                     continue
                 self.data_received += 1    # Count packets received
                 self.handle_incoming_data(data_packet)
+            self.newdata_loaded_signal.emit()
         elif response[0:6] == "nodata":
             # No new data received
             pass
