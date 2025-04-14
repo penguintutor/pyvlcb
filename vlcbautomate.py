@@ -2,8 +2,9 @@
 # Also handles the creation of the GUI process and messages between the GUI and the app
 
 from multiprocessing import Lock, Process, Queue, current_process
-from PySide6.QtWidgets import QApplication
-from mainwindow import MainWindowUI
+#from fastapi import FastAPI
+#from serverapi import ServerApi
+from flaskapi import FlaskApi
 import time
 import queue
 
@@ -15,48 +16,43 @@ class VLCBAutomate ():
         self.commands = commands
         self.status = status
         # Create extra set of queues to communicate with GUI process
-        self.gui_requests = Queue()    
-        self.gui_responses = Queue()   # Typically these are responses to requests, but could be error / not connected - also copy of requests from automate
-        self.gui_commands = Queue()    # These are commands to the server - eg. shutdown / connect on new port
-        self.gui_status = Queue()      # Response to commands and/or error messages with CANUSB4
+        self.api_requests = Queue()    
+        self.api_responses = Queue()   # Typically these are responses to requests, but could be error / not connected - also copy of requests from automate
 
         # create processes
         # process for handling events
-        self.gui_process = Process(target=self.start_gui, args=(self.gui_requests, self.gui_responses, self.gui_commands, self.gui_status))
+        self.api_process = Process(target=self.start_api, args=(self.api_requests, self.api_responses))
         
         
+    def start_api(self, api_requests, api_responses):
+        print ("Starting API")
+        api = FlaskApi(api_requests, api_responses)
         
-    def start_gui(self, gui_requests, gui_responses, gui_commands, gui_status):
-        app = App()
-        window = MainWindowUI(gui_requests, gui_responses, gui_commands, gui_status)
-        app.exec()
 
-    # This 
     def run (self):
-        self.gui_process.start()
+        self.api_process.start()
         while True:
             if self.debug:
                 print ("Checking loop")
-            # First check if any commands from the gui
+            # First check if any commands from the api
             # those normally take priority, but only send one at a time as otherwise could
             # result in not clearing any off the status and/or response queue
             try:
-                gui_command = self.gui_commands.get_nowait()
+                api_request = self.api_requests.get_nowait()
             except queue.Empty:
                 if self.debug:
                     print ("Queue empty")
                 pass
             else:
                 if self.debug:
-                    print (f"Command received {gui_command}")
+                    print (f"Requests received {api_request}")
                 # If quit pass on to the app, then break out of the loop
                 # If app has already closed then this will meet join at the end
-                if gui_command == "quit" or gui_command == "exit":
+                if api_command == "quit" or api_command == "exit":
                     self.commands.put("exit")
                     break
-                # for other commands then pass through to the app
+                # for other commands then handle here
                 else:
-                    self.commands.put(command)
                     pass
             
             if self.debug:
@@ -72,7 +68,8 @@ class VLCBAutomate ():
                 if self.debug:
                     print (f"Status {current_status}")
             
-            # Check to see if we have any responses 
+            # Check to see if we have any responses
+            # This includes any other messages on the CBUS
             # Do this to clear input queue before sending any new requests
             try:
                 response = self.responses.get_nowait()
@@ -82,27 +79,16 @@ class VLCBAutomate ():
             else:
                 if self.debug:
                     print (f"Response received {response}")
-                # Pass the response to the gui
-                self.gui_responses.put(response)
+                # Todo - handle responses
             # Todo Handle errors
             
             if self.debug:
                 print ("Any requests")
-            # Do we have a request from the gui to send out?
+            # Do we have a request to send out?
             # If so send it now
-            try:
-                gui_request = self.gui_requests.get_nowait()
-                # If it's a string convert to bytestring
-                if isinstance(gui_request, str):
-                    gui_request = gui_request.encode('utf-8')
-            except queue.Empty:
-                pass
-            else:
-                if self.debug:
-                    print(f"Sending {gui_request}")
-                self.requests.put(gui_request)
-                # Also echo to gui_responses
-                self.gui_responses.put(gui_request)
+            #self.requests.put(api_request)
+            # Also echo to api_responses
+            #self.api_responses.put(api_request)
                 
             # Todo check if we have any of our own requests to send out
             
@@ -112,9 +98,6 @@ class VLCBAutomate ():
 
         if self.debug:
             print ("Automate loop closed")
-        self.gui_process.join()
+        self.api_process.join()
 
-class App(QApplication):
-    def __init__ (self):
-        super().__init__()
-        
+

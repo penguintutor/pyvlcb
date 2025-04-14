@@ -55,16 +55,19 @@ class VLCB:
     # Parse and format into standard log format (fulldata, can_id, op_code, data)
     # For log all values are returned as strings
     def log_entry (self, input_string):
-        vlcb_entry = self.parse_input (input_string)
+        # First remove date from the front of the string
+        date_log = input_string.split(',', 2)
+        date_string = date_log[0]
+        vlcb_entry = self.parse_input (date_log[1])
         # Error handling of invalid packet
         if vlcb_entry == False:
-            return [input_string, "??", "", "Invalid data"]
+            return [date_log[1], "??", "", "Invalid data"]
         # convert op-code to string
         # opcode is first two chars of data
         opcode = vlcb_entry.data[0:2]
         opcode_string = f'{opcode} - {VLCBopcode.opcode_mnemonic(opcode)}'
         data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
-        return [input_string, str(vlcb_entry.can_id), opcode_string, data_string]
+        return [date_string, date_log[1], str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
     # Create header using low priority and can_id (or self.can_id)

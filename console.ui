@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1024</width>
+    <width>1200</width>
     <height>580</height>
    </rect>
   </property>
@@ -18,7 +18,7 @@
   </property>
   <property name="minimumSize">
    <size>
-    <width>1000</width>
+    <width>1200</width>
     <height>570</height>
    </size>
   </property>
@@ -52,6 +52,11 @@
         <attribute name="horizontalHeaderStretchLastSection">
          <bool>true</bool>
         </attribute>
+        <column>
+         <property name="text">
+          <string>Time</string>
+         </property>
+        </column>
         <column>
          <property name="text">
           <string>CBus data</string>
@@ -169,8 +174,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1024</width>
-     <height>22</height>
+     <width>1200</width>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

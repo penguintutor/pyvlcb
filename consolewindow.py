@@ -1,5 +1,4 @@
 import os
-from multiprocessing import Lock, Process, Queue, current_process
 from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal
 from PySide6.QtWidgets import QMainWindow, QTextBrowser, QTableWidget, QTableWidgetItem
 from PySide6.QtUiTools import QUiLoader
@@ -22,6 +21,10 @@ class ConsoleWindowUI(QMainWindow):
         
         self.vlcb = VLCB()
         
+        # Holds new entries as they are added
+        # the UI will then update and remove them
+        self.new_entries = []
+        
         # Each entry represents a row on the table
         # Each row is a list of the individual entries
         self.console_entries = []
@@ -30,7 +33,8 @@ class ConsoleWindowUI(QMainWindow):
         self.setWindowTitle(self.window_title)
         
         # Set column width for first column to ensure data fits
-        self.ui.consoleTable.setColumnWidth(0, 200)
+        self.ui.consoleTable.setColumnWidth(0, 150)
+        self.ui.consoleTable.setColumnWidth(1, 200)
         
         # File Menu
         self.ui.actionClose.triggered.connect(self.close_window)
@@ -52,15 +56,21 @@ class ConsoleWindowUI(QMainWindow):
         # If it's blank then ignore
         if resp_string == "":
             return
-        log_details = self.vlcb.log_entry(resp_string)
-        # Add new row to the table
-        row_num = self.ui.consoleTable.rowCount()
-        self.ui.consoleTable.setRowCount(row_num + 1)
-        #print (f"Log details : {log_details}")
-        for i in range(0, len(log_details)):
-            self.ui.consoleTable.setItem(row_num, i, QTableWidgetItem(log_details[i]))
-            # Add tooltip with title of opcode
-            self.ui.consoleTable.item(row_num, i).setToolTip(VLCBopcode.opcode_title(log_details[2]))
+        self.new_entries.append(resp_string)
+        
+        
+    def update_log (self):
+        while len(self.new_entries) > 0:
+            resp_string = self.new_entries.pop(0)
+            log_details = self.vlcb.log_entry(resp_string)
+            # Add new row to the table
+            row_num = self.ui.consoleTable.rowCount()
+            self.ui.consoleTable.setRowCount(row_num + 1)
+            #print (f"Log details : {log_details}")
+            for i in range(0, len(log_details)):
+                self.ui.consoleTable.setItem(row_num, i, QTableWidgetItem(log_details[i]))
+                # Add tooltip with title of opcode
+                self.ui.consoleTable.item(row_num, i).setToolTip(VLCBopcode.opcode_title(log_details[2]))
             
         # If in scrollmode then go to the bottom
         if self.ui.scrollCheckBox.isChecked():
@@ -77,7 +87,8 @@ class ConsoleWindowUI(QMainWindow):
         command_string = self.ui.commandEdit.text()
         if command_string == "":
             return
-        self.mainwindow.requests.put(command_string)
+        if self.mainwindow.send_request == "":
+            self.mainwindow.send_request = command_string
         
     # Update checkbox wording
     def scroll_checkbox (self):
