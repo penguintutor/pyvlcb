@@ -66,9 +66,20 @@ class VLCB:
         # opcode is first two chars of data
         opcode = vlcb_entry.data[0:2]
         opcode_string = f'{opcode} - {VLCBopcode.opcode_mnemonic(opcode)}'
-        data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
+        #data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
+        data_string = VLCB._dict_to_string(VLCBopcode.parse_data(vlcb_entry.data))
         return [date_string, date_log[1], str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
+    
+    # dict to string without {} or ""
+    @staticmethod
+    def _dict_to_string (dictionary):
+        data_string = ""
+        for key, value in dictionary.items():
+            if data_string != "":
+                data_string += " , "
+            data_string += f"{key} = {value}"
+        return data_string
     
     # Create header using low priority and can_id (or self.can_id)
     def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):

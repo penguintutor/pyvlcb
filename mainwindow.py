@@ -37,14 +37,15 @@ class MainWindowUI(QMainWindow):
         self.socket.connect("tcp://localhost:5555")
         
         # Add request to be sent next time timer expires
-        self.send_request = ""
+        self.send_queue = []
         
         # Current position in server log entries and amount of data received
-        self.data_received = 0
+        self.last_packet = 0
+        #self.data_received = 0
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
-        self.timer.setInterval(5000)
+        self.timer.setInterval(500)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
         # Todo - remove this - temp for testing
@@ -71,6 +72,7 @@ class MainWindowUI(QMainWindow):
         #self.ui.nodeTreeView.setColumnCount(3)
         #self.ui.setHeaderLabels(['Name', 'Number', 'Type'])
         self.node_model = QStandardItemModel()
+        self.node_model.setHorizontalHeaderLabels(['Nodes'])
         #self.node_model.setHorizontalHeaderLabels(['Name', 'Number', 'Type'])
         self.ui.nodeTreeView.setModel(self.node_model)
         
@@ -137,19 +139,50 @@ class MainWindowUI(QMainWindow):
                 # Update existing entry
                 pass
             
-        
+    # Initial discover of modules    
     def discover (self):
-        self.start_request("send,"+self.vlcb.discover())
+        self.start_request(self.vlcb.discover())
+        
+    # 2nd phase in discovery RQEVN = 
+    def discover_evn (self):
+        pass
     
     # Places request onwait list
-    def start_request (self, request):
-        #worker = Worker(self.thread_sendrequest, request)
-        #self.threadpool.start(worker)
-        # only add to the list if nothing else already waiting
-        if self.send_request != "":
+    # type is what kind of command to prepend with - eg. send (for cbus) or server etc.
+    # comma is added automatically
+    # set to "" if already formatted
+    # Adding priority pushes to front of queue
+    def start_request (self, request, type="send", priority=False):
+        # add type to request
+        if type != "":
+            request = type + "," + request
+            
+        print (f"Request is {request}")
+        print (f"Current queue {self.send_queue}")
+            
+        # Priority ignores list length and just inserts at front
+        # pushes other priority items further down the list as well
+        if priority:
+            self.send_queue.insert(0, request)
+        # only add to the list if <= 10 items alread
+        if len(self.send_queue) > 10:
             return False
-        self.send_request = request
+        self.send_queue.append(request)
+        print (f"New queue {self.send_queue}")
         return True
+        
+    # Gets request off the queue
+    # Returns false if no requests, otherwise returns request string
+    # If remove = True (default) then remove entry from the queue
+    def get_request (self, remove=True):
+        # If no entries then return false
+        if len(self.send_queue) < 1:
+            return False
+        # if no remove then just return value
+        if remove == False:
+            return self.send_queue[0]
+        # Otherwise pop the entry
+        return self.send_queue.pop(0)
         
         
     # Send exit to automate as well as closing app
@@ -173,31 +206,38 @@ class MainWindowUI(QMainWindow):
         #    print (f"Unexpected message {response}")
         
         # see if there is a specific requst
-        if self.send_request != "":
-            print (f"Sending request {self.send_request}")
-            response = self.send_receive (self.send_request)
+        request = self.get_request()
+        if request != False:
+            print (f"Sending request {request}")
+            response = self.send_receive (request)
             # Todo handle response
             # clear send_request ready for next request
-            # Testing - if we need a lot of entries for testing then comment this out
-            self.send_request = ""
+            
         
         # Send a normal pole request
-        request = f'get,{self.data_received}'
+        request = f'get,{self.last_packet}'
         #print (f"Requesting {request}")
         response = self.send_receive (request)
-        # Todo handle response
+        # Check for an empty data first as we can ignore
+        if response[0:8] == "data,0,0":
+            # No new data received
+            pass
         # Check response starts with "data,"
-        if response[0:5] == "data,":
-            data_packets = response[5:].split('\n')
+        elif response[0:5] == "data,":
+            print (f'received {response}')
+            # get start and end values for data
+            data_retrieved = response.split(',', 3)
+            # need end to know what our last stored value is
+            this_last_packet = int(data_retrieved[2])
+            if self.last_packet < this_last_packet:
+                self.last_packet = this_last_packet
+            data_packets = data_retrieved[3].split('\n')
             for data_packet in data_packets:
                 if len(data_packet) < 5:    # If data too short (perhaps \n)
                     continue
-                self.data_received += 1    # Count packets received
+                #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
                 self.handle_incoming_data(data_packet)
             self.newdata_loaded_signal.emit()
-        elif response[0:6] == "nodata":
-            # No new data received
-            pass
         else:
             print (f"Unrecognised response {response}")
         
@@ -231,7 +271,7 @@ class MainWindowUI(QMainWindow):
             # Temp using time sleep 
             # todo time sleep could be replaced with new timer
             if retry > 1:
-                time.sleep (0.2)
+                time.sleep (0.1)
         return ""
         
         

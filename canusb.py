@@ -10,8 +10,8 @@ class CanUSB4 ():
         self.port = port
         self.baud = baud
         self.timeout = timeout
-        self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
-        # Wait for this * timeout - so could be 3 seconds before giving up
+        self.max_retry = 20    # How many times to attempt on get_data must be at least as long as frame
+        # Wait for this * timeout - so could be 2 seconds before giving up
         self.connect()
         
         

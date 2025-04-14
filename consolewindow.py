@@ -70,7 +70,7 @@ class ConsoleWindowUI(QMainWindow):
             for i in range(0, len(log_details)):
                 self.ui.consoleTable.setItem(row_num, i, QTableWidgetItem(log_details[i]))
                 # Add tooltip with title of opcode
-                self.ui.consoleTable.item(row_num, i).setToolTip(VLCBopcode.opcode_title(log_details[2]))
+                self.ui.consoleTable.item(row_num, i).setToolTip(VLCBopcode.opcode_title(log_details[3]))
             
         # If in scrollmode then go to the bottom
         if self.ui.scrollCheckBox.isChecked():
@@ -87,8 +87,7 @@ class ConsoleWindowUI(QMainWindow):
         command_string = self.ui.commandEdit.text()
         if command_string == "":
             return
-        if self.mainwindow.send_request == "":
-            self.mainwindow.send_request = command_string
+        self.mainwindow.start_request(command_string)
         
     # Update checkbox wording
     def scroll_checkbox (self):
