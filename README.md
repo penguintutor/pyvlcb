@@ -18,22 +18,15 @@ To setup using virtual environment:
     source ~/.venv/pyside6/bin/activate
     pip install pyside6
     pip install pyserial
-    pip install zmq
+    pip install pyzmq
     
 Note: I have named the virtual environment pyside6 as that is the main package that is required, but you could name it differently if preferred.
-
+    
 
 # Running
 
 After setting up the virtual environment activate using
 
     source ~/.venv/pyside6/bin/activate
-
-Start the server using:
-
-    python3 vlcbserver.py
-
-Run the GUI application using:
-
-    python3 vlcbapp.py 
+    python3 app.py 
 
