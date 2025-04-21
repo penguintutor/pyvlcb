@@ -307,9 +307,9 @@ class VLCBopcode:
                 if VLCBopcode.field_formats[this_field][1] != "char":
                     this_val = int(this_val, 16)
                 data_parsed[this_field] = this_val
-            # remaining data added to final field (shouldn't normally get this)
-            if len(data) > 0:
-                data_parsed["ExtraData"] = data
+        # remaining data added to final field (shouldn't normally get this)
+        if len(data) > 0:
+            data_parsed["ExtraData"] = data
         return data_parsed
 
 

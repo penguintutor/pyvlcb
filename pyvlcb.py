@@ -45,8 +45,8 @@ class VLCB:
         # Next is N / RTR can be ignored
         if self.debug:
             print (f"N / RTR {input_string[6]}")
-        # Data is rest excluding ; which was already stripped during read
-        data = input_string[7:]
+        # Data is rest excluding ; 
+        data = input_string[7:-1]
         if self.debug:
             print (f"Data {data}")
         # Creates a VLCB_format and returns that
@@ -81,6 +81,10 @@ class VLCB:
             data_string += f"{key} = {value}"
         return data_string
     
+    @staticmethod
+    def num_to_hexstr (num):
+        return f"{hex(num).upper()[2:]:0>4}"
+    
     # Create header using low priority and can_id (or self.can_id)
     def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):
         if can_id == None:
@@ -93,8 +97,10 @@ class VLCB:
     
     def discover (self):
         # Return QNN 
-        #return self.make_header() + b'0D;'
         return self.make_header() + '0D;'
+    
+    def discover_evn (self, node_id):
+        return f"{self.make_header()}58{VLCB.num_to_hexstr(node_id)};" 
         
         
     

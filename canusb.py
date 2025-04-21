@@ -61,7 +61,8 @@ class CanUSB4 ():
                 retry_count += 1
             # End of packet
             elif this_char == b';':
-                # Don't add the terminating char
+                # Add the terminating char
+                in_string += this_char
                 if self.debug:
                     print (f"Read {in_string}")
                 return ["Data", in_string]

@@ -125,26 +125,43 @@ class MainWindowUI(QMainWindow):
         if vlcb_entry == False:
             return
         # Look for specific responses
+        # todo - should we check timestamp first? If the entry is from before the first request then may not be
+        # interested as it's an old node. Alternatively we could load anyway (max 100 past entries are stored)
+        # or we could not retrieve any previous messages by first checking for -1 entries and using that for
+        # the start value
+        # For now we handle all responses including old ones
         if vlcb_entry.opcode() == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # if we don't already have this device add it
             if not data_entry['NN'] in self.nodes.keys():
-                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
+                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
                 # Add to Tree View
                 print ("Adding entry")
-                node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
-                self.node_model.appendRow(node)
-                
+                #node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
+                self.node_model.appendRow(self.nodes[data_entry['NN']].gui_node)
             else:
                 # Update existing entry
-                pass
+                items_changed = self.nodes[data_entry['NN']].update_node({'ManfId': data_entry['ManufId'], 'ModId': data_entry['ModId'], 'Flags': data_entry['Flags']})
+                # If no items changed then no need to check for further updates
+                if items_changed == 0:
+                    return
+                node_string = f" {data_entry['NN']}"        # Includes a space as that's part of the string
+                for i in range (0, self.node_model.rowCount()):
+                    this_item = self.node_model.item(i).text()
+                    this_item_parts = this_item.split(',')
+                    if this_item_parts[1] == node_string:
+                        self.node_model.item(i).setText(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
+            # If this is new, or has changed then we can also get the number of events
+            self.discover_evn (data_entry['NN'])
+            
             
     # Initial discover of modules    
     def discover (self):
         self.start_request(self.vlcb.discover())
         
     # 2nd phase in discovery RQEVN = 
-    def discover_evn (self):
+    def discover_evn (self, node_id):
+        self.start_request(self.vlcb.discover_evn(node_id))
         pass
     
     # Places request onwait list
