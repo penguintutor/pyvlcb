@@ -95,12 +95,17 @@ class VLCB:
         return header_string
         #return header_string.encode('utf-8')
     
+    # Discover nodes
     def discover (self):
         # Return QNN 
         return self.make_header() + '0D;'
     
+    # Discover number of events configured
     def discover_evn (self, node_id):
         return f"{self.make_header()}58{VLCB.num_to_hexstr(node_id)};" 
         
+    # Discover number of events available
+    def discover_nevn (self, node_id):
+        return f"{self.make_header()}56{VLCB.num_to_hexstr(node_id)};" 
         
     
