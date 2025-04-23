@@ -20,6 +20,7 @@ class VLCBNode():
         self.time_updated = time()
         self.gui_node = QStandardItem(f"Unknown, {self.node_id}, {self.can_id}")
         self.numev = -1 # If number events unknown then set to -1
+        self.evspc = -1 # event space
         
     # updates any of the entries - based on dict
     # Node_id cannot be changed as that is the unique identifier for the node
@@ -57,6 +58,8 @@ class VLCBNode():
         # If we have num eve add that to the string
         if self.numev >= 0:
             node_string += f", NumEv: {self.numev}"
+        if self.evspc >= 0:
+            node_string += f", EvSpc: {self.evspc}"
         return node_string
     
     # Update QStandardItem with current string values
@@ -68,6 +71,10 @@ class VLCBNode():
         
     def set_numev (self, numev):
         self.numev = numev
+        self.update_gui_node_string()
+        
+    def set_evspc (self, evspc):
+        self.evspc = evspc
         self.update_gui_node_string()
         
     

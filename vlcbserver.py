@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 # Main App class - handles connection to canusb and creates zmq
 # This is a very basic zmq server
 # Receives data from usb and sends to higher when requested

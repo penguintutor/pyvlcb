@@ -154,7 +154,7 @@ class MainWindowUI(QMainWindow):
                 #        self.node_model.item(i).setText(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
             # If this is new, or has changed then we can also get the number of events
             self.discover_evn (data_entry['NN'])
-        elif vlcb_entry.opcode() == 'NUMEV':
+        elif vlcb_entry.opcode() == 'NUMEV':    # Number of configured events
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # If we don't already have this node then didn't see a PNN response - so likely error
             if not data_entry['NN'] in self.nodes.keys():
@@ -162,16 +162,25 @@ class MainWindowUI(QMainWindow):
                 return
             # Update node with evnum value
             self.nodes[data_entry['NN']].set_numev(data_entry['NumEvents'])
+        elif vlcb_entry.opcode() == 'EVNLF':    # Number of event space left in node
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # If we don't already have this node then didn't see a PNN response - so likely error
+            if not data_entry['NN'] in self.nodes.keys():
+                print (f"EVNLF response from Unknown node {data_entry['NN']}")
+                return
+            # Update node with evnum value
+            self.nodes[data_entry['NN']].set_evspc(data_entry['EVSPC'])
             
             
     # Initial discover of modules    
     def discover (self):
         self.start_request(self.vlcb.discover())
         
-    # 2nd phase in discovery RQEVN = 
+    # 2nd phase in discovery RQEVN to get number of events
+    # and NNEVN - get number of events available
     def discover_evn (self, node_id):
         self.start_request(self.vlcb.discover_evn(node_id))
-        pass
+        self.start_request(self.vlcb.discover_nevn(node_id))
     
     # Places request onwait list
     # type is what kind of command to prepend with - eg. send (for cbus) or server etc.

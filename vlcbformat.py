@@ -238,7 +238,7 @@ class VLCBopcode:
             "DateTime": [8, "hex"],        # Date and time encoded
             "Char1_7": [14, "ascii"],      # Name string 7 bytes long - padded
             "En3_0": [8, "hex"],           # 4 bytes of stored event
-            "EVSPC": [4, "num"],           # Amount of space available for events
+            "EVSPC": [2, "num"],           # Amount of space available for events
             "Error": [4, "hex"]            # Error code
         }
     
