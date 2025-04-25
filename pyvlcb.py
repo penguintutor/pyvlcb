@@ -106,6 +106,15 @@ class VLCB:
         
     # Discover number of events available
     def discover_nevn (self, node_id):
-        return f"{self.make_header()}56{VLCB.num_to_hexstr(node_id)};" 
+        return f"{self.make_header()}56{VLCB.num_to_hexstr(node_id)};"
+    
+    # Discover stored events NERD
+    def discover_nerd (self, node_id):
+        return f"{self.make_header()}57{VLCB.num_to_hexstr(node_id)};"
         
+    #manufaturer name  is requested by RQMN.
+    #<0x11>
+    #The response is NAME
+    #<0xE2><><char1><char2><char3><char4><char5><char6><char7>
+    #Obviously the NAME string is limited to 7 chars, all 7 characters are used
     
