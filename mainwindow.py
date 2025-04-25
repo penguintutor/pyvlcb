@@ -48,12 +48,10 @@ class MainWindowUI(QMainWindow):
         self.timer.setInterval(500)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
-        # Todo - remove this - temp for testing
-        # This will slow startup
-        #time.sleep(1)
+        self.pc_can_id = 60      # CAN ID of CANUSB4
         
         # VLCB and node creation
-        self.vlcb = VLCB()
+        self.vlcb = VLCB(self.pc_can_id)
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
@@ -132,16 +130,22 @@ class MainWindowUI(QMainWindow):
         # For now we handle all responses including old ones - but check for whether there are any changes
         if vlcb_entry.opcode() == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # Determine mode based on flags (bit 3)
+            # Flags bit 0 = consumer, bit 1 = producer, bit 2= FliM, bit 3 = supports bootloading
+            if data_entry['Flags'] & 0x4:
+                mode = "FLiM"
+            else:
+                mode = "SLiM"
             # if we don't already have this device add it
             if not data_entry['NN'] in self.nodes.keys():
-                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
+                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
                 # Add to Tree View
                 print ("Adding entry")
                 #node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
                 self.node_model.appendRow(self.nodes[data_entry['NN']].gui_node)
             else:
                 # Update existing entry
-                items_changed = self.nodes[data_entry['NN']].update_node({'ManfId': data_entry['ManufId'], 'ModId': data_entry['ModId'], 'Flags': data_entry['Flags']})
+                items_changed = self.nodes[data_entry['NN']].update_node({'Mode': mode, 'ManfId': data_entry['ManufId'], 'ModId': data_entry['ModId'], 'Flags': data_entry['Flags']})
                 # If no items changed then no need to check for further updates
                 if items_changed == 0:
                     return
@@ -170,6 +174,19 @@ class MainWindowUI(QMainWindow):
                 return
             # Update node with evnum value
             self.nodes[data_entry['NN']].set_evspc(data_entry['EVSPC'])
+            # Add a query for the next discovery stage - get a list of all the events
+            self.discover_nerd (data_entry['NN'])
+        elif vlcb_entry.opcode() == 'ENRSP':
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # If we don't already have this node then didn't see a PNN response - so likely error
+            if not data_entry['NN'] in self.nodes.keys():
+                print (f"ENRSP response from Unknown node {data_entry['NN']}")
+                return
+            # Add event to node
+            print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
+            self.nodes[data_entry['NN']].add_ev(data_entry['EnIndex'], data_entry['En3_0'])
+            
+            
             
             
     # Initial discover of modules    
@@ -181,6 +198,10 @@ class MainWindowUI(QMainWindow):
     def discover_evn (self, node_id):
         self.start_request(self.vlcb.discover_evn(node_id))
         self.start_request(self.vlcb.discover_nevn(node_id))
+        
+    # 3rd phase of discover Read back all stored events in a node (NERD)
+    def discover_nerd (self, node_id):
+        self.start_request(self.vlcb.discover_nerd(node_id))
     
     # Places request onwait list
     # type is what kind of command to prepend with - eg. send (for cbus) or server etc.

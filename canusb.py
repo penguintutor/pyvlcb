@@ -5,12 +5,12 @@ import serial
 # replace easier if using a different way to connect to CANBUS
 # Needs port (eg. /dev/ttyACM0)
 class CanUSB4 ():
-    def __init__ (self, port, baud=115200, timeout=0.1):
+    def __init__ (self, port, baud=115200, timeout=0.04):
         self.debug = False
         self.port = port
         self.baud = baud
         self.timeout = timeout
-        self.max_retry = 20    # How many times to attempt on get_data must be at least as long as frame
+        self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
         # Wait for this * timeout - so could be 2 seconds before giving up
         self.connect()
         
@@ -61,6 +61,9 @@ class CanUSB4 ():
                 retry_count += 1
             # End of packet
             elif this_char == b';':
+                # Check we have some data if not then return NoData
+                if len(in_string) == 0:
+                    return ["NoData", ""]
                 # Add the terminating char
                 in_string += this_char
                 if self.debug:

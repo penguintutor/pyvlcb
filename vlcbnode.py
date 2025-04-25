@@ -1,17 +1,19 @@
 # This class object is intended for for use within the GUI only
 # It closely couples the nodes to QStandardItems which makes it easier to update the GUI
-# but at the expense of couplnig this to the GUI. There is also a last updated field
+# but at the expense of coupling this to the GUI. There is also a last updated field
 # so it's possible to see if the node has become stale
 
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from time import time
+from vlcbev import VLCBEv
 
 
 #ManufId,ModId,Flags
 # Stores Nodes defined / discovered
 class VLCBNode():
-    def __init__ (self, node_id, can_id, manuf_id, mod_id, flags):
+    def __init__ (self, node_id, mode, can_id, manuf_id, mod_id, flags):
         self.node_id = node_id
+        self.mode = mode   # Set to SLiM / FLiM if replies with own can_id
         self.can_id = can_id
         self.manuf_id = manuf_id
         self.mod_id = mod_id
@@ -21,12 +23,17 @@ class VLCBNode():
         self.gui_node = QStandardItem(f"Unknown, {self.node_id}, {self.can_id}")
         self.numev = -1 # If number events unknown then set to -1
         self.evspc = -1 # event space
+        # Events are stored as a dictionary with the ev_id as the index
+        self.ev = {}
+        
+    def add_ev(self, ev_id, en):
+        self.ev[ev_id]=VLCBEv(self, ev_id, en)
         
     # updates any of the entries - based on dict
     # Node_id cannot be changed as that is the unique identifier for the node
     # That will be ignored along with any unrecognised values
     # If any values changed then returns number of updates, if they are still the same then returns 0
-    # tihs does not include the time_updated field which is always updated but not counted
+    # this does not include the time_updated field which is always updated but not counted
     def update_node(self, upd_dict):
         # update time
         self.update_time()
@@ -54,7 +61,7 @@ class VLCBNode():
         return items_changed
     
     def __str__ (self):
-        node_string = f"Unknown, NodeId: {self.node_id}, CanId: {self.can_id}"
+        node_string = f"Unknown, NodeId: {self.node_id}, Mode: {self.mode}, CanId: {self.can_id}"
         # If we have num eve add that to the string
         if self.numev >= 0:
             node_string += f", NumEv: {self.numev}"
@@ -69,11 +76,17 @@ class VLCBNode():
     def update_time (self):
         self.time_updated = time()
         
+    # Set the number of events
     def set_numev (self, numev):
+        # An update to an event etc. also updates time
+        self.update_time()
         self.numev = numev
         self.update_gui_node_string()
         
+    # Sets the event space
     def set_evspc (self, evspc):
+        # An update to an event etc. also updates time
+        self.update_time()
         self.evspc = evspc
         self.update_gui_node_string()
         
