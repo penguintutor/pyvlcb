@@ -85,6 +85,11 @@ class VLCB:
     def num_to_hexstr (num):
         return f"{hex(num).upper()[2:]:0>4}"
     
+    @staticmethod
+    # Where 4 x bytes (8 chars)
+    def num_to_4hexstr (num):
+        return f"{hex(num).upper()[2:]:0>8}"
+    
     # Create header using low priority and can_id (or self.can_id)
     def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):
         if can_id == None:
@@ -111,6 +116,33 @@ class VLCB:
     # Discover stored events NERD
     def discover_nerd (self, node_id):
         return f"{self.make_header()}57{VLCB.num_to_hexstr(node_id)};"
+    
+    # node and ev should be the IDs - state either "on" or "off" / True or False
+    def accessory_command (self, node_id, ev_id, state):
+        # determine if long or short
+        if ev_id <= 0xffff:
+            return self.accessory_short_command (node_id, ev_id, state)
+        else:
+            return self.accessory_long_command (node_id, ev_id, state)
+        
+    # Note that short is the same as long but different code and node_id is added (already included in long)
+    def accessory_short_command (self, node_id, ev_id, state):
+        # Turn on
+        if state == True or state == "on":
+            # ASON
+            return f"{self.make_header()}98{VLCB.num_to_hexstr(node_id)}{VLCB.num_to_hexstr(ev_id)};"
+        # Turn off = ASOFF
+        else:
+            return f"{self.make_header()}99{VLCB.num_to_hexstr(node_id)}{VLCB.num_to_hexstr(ev_id)};"
+        
+    def accessory_long_command (self, node_id, ev_id, state):
+        # Turn on
+        if state == True or state == "on":
+            # ASON
+            return f"{self.make_header()}90{VLCB.num_to_4hexstr(ev_id)};"
+        # Turn off = ASOFF
+        else:
+            return f"{self.make_header()}91{VLCB.num_to_4hexstr(ev_id)};"
         
     #manufaturer name  is requested by RQMN.
     #<0x11>

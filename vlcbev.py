@@ -10,10 +10,31 @@ from time import time
 # Stores Nodes defined / discovered
 class VLCBEv():
     def __init__ (self, node, ev_id, en):
+        self.name = f"EV {ev_id}"
         self.node = node    # Link to parent
         self.ev_id = ev_id  # Index of event EN#
         self.en = en        # Stored value of the event (EN3 to EN0)
+        self.gui_node = QStandardItem(f"EV {self.ev_id} : {self.en:#08x}")
 
+    # Is it long format
+    # basic check just look for <= ffff for short
+    def is_long (self):
+        if self.en <= 0xffff:
+            return False
+        return True
+
+    def long_string (self):
+        if self.is_long():
+            return "Long"
+        else:
+            return "Short"
+        
+    # shorter version just updates the en if applicable
+    def update_en(self, en):
+        if en == self.en:
+            return False
+        self.en = en
+        self.gui_node.setText(f"EV {self.ev_id} : {self.en:#08x}")
         
     # updates any of the entries - based on dict
     # ev_id cannot be changed as that is the unique identifier for the node

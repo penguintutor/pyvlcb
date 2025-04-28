@@ -1,6 +1,6 @@
 import os
 from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal, Slot, QThreadPool, QRunnable
-from PySide6.QtWidgets import QMainWindow, QTextBrowser
+from PySide6.QtWidgets import QMainWindow, QTextBrowser, QAbstractItemView, QTableWidgetItem
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtUiTools import QUiLoader
 import queue
@@ -73,6 +73,22 @@ class MainWindowUI(QMainWindow):
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
         #self.node_model.setHorizontalHeaderLabels(['Name', 'Number', 'Type'])
         self.ui.nodeTreeView.setModel(self.node_model)
+        self.ui.nodeTreeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        
+        #self.select_model = self.node_model.selectionModel()
+        #self.select_model = self.ui.nodeTreeView.selectionModel()
+        
+        self.ui.nodeTreeView.clicked.connect(self.tree_clicked)
+        #self.select_model.selectionChanged.connect(self.tree_clicked)
+        #self.ui.nodeTreeView.selectionChanged.connect(self.tree_clicked)
+        
+        # Event buttons
+        self.ui.evButtonOff.clicked.connect(self.ev_clicked_off)
+        self.ui.evButtonOn.clicked.connect(self.ev_clicked_on)
+        
+        # Last Event that was selected - use for On/Off buttons
+        # has (Node, EVid, EVNum) - num added to make it easier
+        self.selected_ev = None
         
         self.setCentralWidget(self.ui)
         self.ui.nodeTreeView.show()
@@ -82,11 +98,23 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.discover()
         
+    def tree_clicked(self, item):
+        node_item = self.node_model.itemFromIndex(item)
+        for key, node in self.nodes.items():
+            new_item = node.check_item (node_item)
+            if new_item != None:
+                # If this is a node then show that in table
+                if new_item[1] == 0:
+                    self.node_table_show_node(new_item)
+                else:
+                    self.node_table_show_ev(new_item)
+        
+        
     def create_console(self, show=True):
         self.console_window = ConsoleWindowUI(self)
         if show:
-            self.console_window.show()
-        
+            self.console_window.show()    
+    
     def poll_server(self):
         #print ("Checking for zmq updates")
         # Only allow one check_responses thread to run at a time
@@ -108,6 +136,78 @@ class MainWindowUI(QMainWindow):
     
     def update_nodes (self):
         pass
+    
+    def ev_clicked_off (self):
+        # None selected (shouldn't normally be the case)
+        if self.selected_ev == None:
+            return
+        self.start_request(self.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
+        
+        
+        
+    def ev_clicked_on (self):
+        if self.selected_ev == None:
+            return
+        self.start_request(self.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
+
+        
+    # Have the node table show the node information
+    # node_item = (nn, 0)
+    def node_table_show_node (self, node_item):
+        nn = node_item[0]
+        
+        self.ui.tableLabel.setText("Node:")
+        item = self.ui.nodeTable.verticalHeaderItem(1)
+        item.setText("Node ID / CAN ID:")
+        item = self.ui.nodeTable.verticalHeaderItem(2)
+        item.setText("Mode:")
+        item = self.ui.nodeTable.verticalHeaderItem(3)
+        item.setText("Manuf / Mod:")
+        item = self.ui.nodeTable.verticalHeaderItem(4)
+        item.setText("Events / Space:")
+        
+        item = self.ui.nodeTable.item(0,0)
+        item.setText(f"{self.nodes[nn].name}")
+        item = self.ui.nodeTable.item(1,0)
+        item.setText(self.nodes[nn].node_string())
+        item = self.ui.nodeTable.item(2,0)
+        item.setText(f"{self.nodes[nn].mode}")
+        item = self.ui.nodeTable.item(3,0)
+        item.setText(self.nodes[nn].manuf_string())
+        item = self.ui.nodeTable.item(4,0)
+        item.setText(self.nodes[nn].ev_num_string())
+        
+    # node_item = (nn, ev)
+    def node_table_show_ev (self, node_item):
+        nn = node_item[0]
+        ev_id = node_item[1]
+        self.selected_ev = node_item
+        # Add the EvNum
+        self.selected_ev.append(self.nodes[nn].ev[ev_id].en)
+        
+        self.ui.tableLabel.setText("Event:")
+        item = self.ui.nodeTable.verticalHeaderItem(1)
+        item.setText("Node ID:")
+        item = self.ui.nodeTable.verticalHeaderItem(2)
+        item.setText("Event ID:")
+        item = self.ui.nodeTable.verticalHeaderItem(3)
+        item.setText("Value")
+        item = self.ui.nodeTable.verticalHeaderItem(4)
+        item.setText("Long / short:")
+        
+        #self.ui.nodeTable.setItem(0,0, QTableWidgetItem("Test 0 0"))
+        
+        item = self.ui.nodeTable.item(0,0)
+        item.setText(f"{self.nodes[nn].ev[ev_id].name}")
+        item = self.ui.nodeTable.item(1,0)
+        item.setText(f"{self.nodes[nn].node_id}")
+        item = self.ui.nodeTable.item(2,0)
+        item.setText(f"{ev_id}")
+        item = self.ui.nodeTable.item(3,0)
+        item.setText(f"{self.nodes[nn].ev[ev_id].en:#08x}")
+        item = self.ui.nodeTable.item(4,0)
+        item.setText(f"{self.nodes[nn].ev[ev_id].long_string()}")
+
         
     # This method is called whenever we get a valid response
     # Used to determine if further action is required (eg. discovery or update status)
@@ -213,8 +313,8 @@ class MainWindowUI(QMainWindow):
         if type != "":
             request = type + "," + request
             
-        print (f"Request is {request}")
-        print (f"Current queue {self.send_queue}")
+        #print (f"Request is {request}")
+        #print (f"Current queue {self.send_queue}")
             
         # Priority ignores list length and just inserts at front
         # pushes other priority items further down the list as well
@@ -224,7 +324,7 @@ class MainWindowUI(QMainWindow):
         if len(self.send_queue) > 10:
             return False
         self.send_queue.append(request)
-        print (f"New queue {self.send_queue}")
+        #print (f"New queue {self.send_queue}")
         return True
         
     # Gets request off the queue
@@ -264,7 +364,7 @@ class MainWindowUI(QMainWindow):
         # see if there is a specific requst
         request = self.get_request()
         if request != False:
-            print (f"Sending request {request}")
+            #print (f"Sending request {request}")
             response = self.send_receive (request)
             # Todo handle response
             # clear send_request ready for next request
@@ -280,7 +380,7 @@ class MainWindowUI(QMainWindow):
             pass
         # Check response starts with "data,"
         elif response[0:5] == "data,":
-            print (f'received {response}')
+            #print (f'received {response}')
             # get start and end values for data
             data_retrieved = response.split(',', 3)
             # need end to know what our last stored value is

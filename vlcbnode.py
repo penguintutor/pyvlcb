@@ -12,6 +12,7 @@ from vlcbev import VLCBEv
 # Stores Nodes defined / discovered
 class VLCBNode():
     def __init__ (self, node_id, mode, can_id, manuf_id, mod_id, flags):
+        self.name = f"Node: {node_id}"            # Initially set to node id
         self.node_id = node_id
         self.mode = mode   # Set to SLiM / FLiM if replies with own can_id
         self.can_id = can_id
@@ -20,14 +21,29 @@ class VLCBNode():
         self.flags = flags
         self.events = []
         self.time_updated = time()
-        self.gui_node = QStandardItem(f"Unknown, {self.node_id}, {self.can_id}")
+        self.gui_node = QStandardItem(f"{self.name}, {self.node_id}, {self.can_id}")
         self.numev = -1 # If number events unknown then set to -1
         self.evspc = -1 # event space
         # Events are stored as a dictionary with the ev_id as the index
         self.ev = {}
         
+    def check_item (self, item):
+        if self.gui_node == item:
+            #print ("This node")
+            return ([self.node_id, 0])
+        for key, ev in self.ev.items():
+            if ev.gui_node == item:
+                return ([self.node_id, ev.ev_id])
+        return None
+        
     def add_ev(self, ev_id, en):
+        # Only add if new - otherwise try update
+        if ev_id in self.ev.keys():
+            self.ev[ev_id].update_en (en)
+            return
         self.ev[ev_id]=VLCBEv(self, ev_id, en)
+        # add as child to self.gui_node
+        self.gui_node.appendRow(self.ev[ev_id].gui_node)
         
     # updates any of the entries - based on dict
     # Node_id cannot be changed as that is the unique identifier for the node
@@ -61,13 +77,28 @@ class VLCBNode():
         return items_changed
     
     def __str__ (self):
-        node_string = f"Unknown, NodeId: {self.node_id}, Mode: {self.mode}, CanId: {self.can_id}"
+        return f"{self.name}, {self.node_id}, {self.can_id}"
+        
+    def extended_string (self):
+        node_string = self.__str__()
         # If we have num eve add that to the string
         if self.numev >= 0:
             node_string += f", NumEv: {self.numev}"
         if self.evspc >= 0:
             node_string += f", EvSpc: {self.evspc}"
         return node_string
+    
+    def node_string (self):
+        return f"{self.node_id} / {self.can_id}"
+    
+    def manuf_string (self):
+        return f"{self.manuf_id} / {self.mod_id}"
+    
+    def ev_num_string (self):
+        if self.numev != -1 and self.evspc != -1:
+            return f"{self.numev} / {self.evspc}"
+        # If don't have both number of events and event space then just return empty string
+        return ("")
     
     # Update QStandardItem with current string values
     def update_gui_node_string (self):
