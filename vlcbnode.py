@@ -12,7 +12,13 @@ from vlcbev import VLCBEv
 # Stores Nodes defined / discovered
 class VLCBNode():
     def __init__ (self, node_id, mode, can_id, manuf_id, mod_id, flags):
-        self.name = f"Node: {node_id}"            # Initially set to node id
+        # Special case if node = 0xffff then it's a CAB controller
+        if node_id == 0xffff:
+            self.name = "CANCAB"
+        elif node_id == 0xfffe:
+            self.name = "CANCMD"
+        else:
+            self.name = f"Node: {node_id}"            # Initially set to node id
         self.node_id = node_id
         self.mode = mode   # Set to SLiM / FLiM if replies with own can_id
         self.can_id = can_id
@@ -26,6 +32,11 @@ class VLCBNode():
         self.evspc = -1 # event space
         # Events are stored as a dictionary with the ev_id as the index
         self.ev = {}
+        
+    # Sets name and updates the GUI string
+    def set_name (self, name):
+        self.name = name
+        self.update_gui_node_string()
         
     def check_item (self, item):
         if self.gui_node == item:

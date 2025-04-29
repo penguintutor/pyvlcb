@@ -5,7 +5,7 @@ import serial
 # replace easier if using a different way to connect to CANBUS
 # Needs port (eg. /dev/ttyACM0)
 class CanUSB4 ():
-    def __init__ (self, port, baud=115200, timeout=0.04):
+    def __init__ (self, port, baud=115200, timeout=0.01):
         self.debug = False
         self.port = port
         self.baud = baud

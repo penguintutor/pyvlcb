@@ -9,6 +9,7 @@ from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from consolewindow import ConsoleWindowUI
+from layout import Layout
 import zmq
 
 loader = QUiLoader()
@@ -49,6 +50,9 @@ class MainWindowUI(QMainWindow):
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
         self.pc_can_id = 60      # CAN ID of CANUSB4
+        
+        # Layout is useful for giving real names to certain items
+        self.layout = Layout()
         
         # VLCB and node creation
         self.vlcb = VLCB(self.pc_can_id)
@@ -239,6 +243,7 @@ class MainWindowUI(QMainWindow):
             # if we don't already have this device add it
             if not data_entry['NN'] in self.nodes.keys():
                 self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
+                self.nodes[data_entry['NN']].set_name(self.layout.node_name(data_entry['NN']))
                 # Add to Tree View
                 print ("Adding entry")
                 #node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
@@ -276,18 +281,16 @@ class MainWindowUI(QMainWindow):
             self.nodes[data_entry['NN']].set_evspc(data_entry['EVSPC'])
             # Add a query for the next discovery stage - get a list of all the events
             self.discover_nerd (data_entry['NN'])
-        elif vlcb_entry.opcode() == 'ENRSP':
+        elif vlcb_entry.opcode() == 'ENRSP':    # EV discovery
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # If we don't already have this node then didn't see a PNN response - so likely error
             if not data_entry['NN'] in self.nodes.keys():
                 print (f"ENRSP response from Unknown node {data_entry['NN']}")
                 return
             # Add event to node
-            print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
+            #print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
             self.nodes[data_entry['NN']].add_ev(data_entry['EnIndex'], data_entry['En3_0'])
-            
-            
-            
+            self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))            
             
     # Initial discover of modules    
     def discover (self):
