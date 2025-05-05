@@ -21,6 +21,7 @@
 #else
 #include <winsock2.h>
 #endif
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -48,18 +49,60 @@ included by <termios.h> */
 
 /* Settings for queue / shared memory */
 #define MQ_NAME "/mhd_main_queue" // Message queue name (must start with /)
-#define MAX_MSG_SIZE 255           // Maximum size of a message
-#define MAX_MESSAGES 10           // Maximum number of messages in the queue
-#define MAX_DATA 100              // Maximum number of CBUS messages
+#define MAX_MSG_SIZE 50           // Maximum size of a single read from CBUS (just used for READ - can combine messages)
+#define MAX_MESSAGES 10           // Maximum number of messages in the mqueue
+#define MAX_DATA 110               // Maximum number of CBUS messages stored
+#define SAFE_MAX_DATA 100          // The maximum number of values it is safe to return (must be less than MAX_DATA) to avoid race conditions
+// SAFE_MAX_DATA vs MAX_DATA avoids needing to use mutex / spinlock to protect data
+// MAX_DATA is the size of the array, but as it wraps then need to be able to guarentee all data read is not written 
+// the difference is a buffer that is safe to write but cannot read without checking it's not been overwritten
 
 // --- Global Variables ---
 volatile sig_atomic_t keep_running = 1; // Flag to control the main loop
 mqd_t mq_main_reader = -1;              // Message queue descriptor for main thread (reader)
 struct MHD_Daemon *daemon_ptr = NULL;   // Pointer to the MHD daemon instance
 char data [MAX_DATA][MAX_MSG_SIZE];     // Shared memory - write in main thread - read in API
+//int first_data_pos = 0;                 // array position in data where first data is (either 0, or scroll where overwrite)
+int next_data_pos = 0;                  // array position in data where next data to be written (this -1 is the last written)
+unsigned long long num_messages_received = 0;          // Incremented each time a message is received (never reset unless app restarted)      
+// If this was a unsigned long int then expected to be a least a year before this limit is reached using usnigned long long more likely to be thousands of years   
 
+// Basic check that the request is a cbus message
+// First character must be :
+// Last character must be ;
+// All others must be alphanumeric
+// returns 0 for True, -1 for invalid character
+int check_cbus_message (const char *message_string) 
+{
+    int length = strlen(message_string);
+    if (message_string[0] != ':' || message_string[length-1] != ';') return -1;
+    // search rest (excluding final)
+    for (int i = 1; i < length - 1; i++)
+    {
+        if (!isalnum(message_string[i]))
+        {
+            return -1;
+        }
+    }
+    return 0;
+}
 
-int discovery (int fd)
+void copy_to_data (char *new_string)
+{
+    // copy into the next position
+    strcpy (data[next_data_pos], new_string);
+    printf ("Copied %s\n", data[next_data_pos]);
+    num_messages_received += 1;
+    // increment next pos
+    next_data_pos += 1;
+    // if reached end then move to beginning
+    if (next_data_pos >= MAX_MSG_SIZE)
+    {
+        next_data_pos = 0;
+    }
+}
+
+/*int discovery (int fd)
 {
 	char discovery[256] = ":SB780N0D;";
 	char ch;
@@ -74,15 +117,32 @@ int discovery (int fd)
 			return 2;
 		}
 	}
+}*/
+
+
+int send_data (int fd, char *data_string)
+{
+    char ch;
+	int res;
+    for (int i=0; data_string[i] != '\0'; i++) 
+	{
+		ch = data_string[i];
+		res = write (fd, &ch, sizeof(ch));
+		if (res < 0) 
+		{
+				perror ("Write failed on serial");
+				return 2;
+		}
+	}
 }
-
-
 
 // --- Message Structure ---
 typedef struct
 {
     char text[MAX_MSG_SIZE];
 } message_t;
+
+
 
 // --- Signal Handler ---
 void sigint_handler(int sig)
@@ -138,54 +198,137 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     struct MHD_Response *response;
     enum MHD_Result ret;
     int send_status;
+    
+    // Allow 1kb respoonse
+    char response_data[1024] = "Error command not recognised";   // This will be replaced later if valid request
+    
+    const char *value;
 
     printf("Handler Thread: Received request for URL: %s\n", url);
-
-    // --- Send message to main thread ---
-    // Open the existing message queue for writing
-    // Note: This happens in the context of a request handler thread.
-    // The queue MUST have been created by the main thread already.
-    mq_writer = mq_open(MQ_NAME, O_WRONLY);
-    if (mq_writer == (mqd_t)-1)
+    /* Handle URL here - see if we handle directly (eg. query) or pass to the message queue */
+    // Is this a vlcb command (ie. raw format)
+    const char *vlcb = "/vlcb";
+    //if (strncmp (url, vlcb, 6))
+    if (strcmp (url, vlcb) == 0)
     {
-        perror("Handler Thread: mq_open (writer) failed");
-        // Decide how to handle this - maybe send an error response?
-        // For simplicity, we'll just log and continue, but not send a message.
-    }
-    else
-    {
-        // Prepare the message
-        snprintf(msg.text, MAX_MSG_SIZE, "Request received for: %s", url);
-
-        // Send the message (non-blocking isn't strictly necessary for send,
-        // but good practice if the queue could be full, though unlikely here)
-        send_status = mq_send(mq_writer, (const char *)&msg, sizeof(msg), 0); // Priority 0
-        if (send_status == -1)
+        printf ("Matches /vlcb\n");
+        // Do we have a send request?
+        value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "send");
+        if (value != NULL)
         {
-            perror("Handler Thread: mq_send failed");
-            // Log error, maybe respond differently to the client
-        }
+            printf ("Value is %s - size %d\n", value, strlen(value));
+            // Check that the string is a valid C Bus message
+            if (check_cbus_message(value) != 0) 
+            {
+                perror ("Invalid message format - skipping");
+                strcpy (response_data, "Error, invalid message format");
+            }
+            else
+            {
+                // --- Send message to main thread ---
+                // Open the existing message queue for writing
+                // Note: This happens in the context of a request handler thread.
+                // The queue MUST have been created by the main thread already.
+                mq_writer = mq_open(MQ_NAME, O_WRONLY);
+                if (mq_writer == (mqd_t)-1)
+                {
+                    perror("Handler Thread: mq_open (writer) failed");
+                    // Decide how to handle this - maybe send an error response?
+                    // Log and update response
+                    strcpy (response_data, "Error, failed top open message queue");
+                }
+                else
+                {
+                    // Send the message (non-blocking isn't strictly necessary for send,
+                    // but good practice if the queue could be full, though unlikely here)
+                    // not sizeof(value)
+                    send_status = mq_send(mq_writer, value, strlen(value), 0); // Priority 0
+                    if (send_status == -1)
+                    {
+                        perror("Handler Thread: mq_send failed");
+                        // Log error, maybe respond differently to the client
+                        strcpy (response_data, "Error, send meessage failed");
+                    }
+                    else
+                    {
+                        printf("Handler Thread: Message sent to main thread for URL: %s Value: %s Status %d\n", url, value, send_status);
+                        strcpy (response_data, "Success, message sent");
+                    }
+
+                    // Close the writer descriptor
+                    if (mq_close(mq_writer) == -1)
+                    {
+                        perror("Handler Thread: mq_close (writer) failed");
+                    }
+                }
+            }
+        } // End send
         else
-        {
-            printf("Handler Thread: Message sent to main thread for URL: %s\n", url);
-        }
-
-        // Close the writer descriptor
-        if (mq_close(mq_writer) == -1)
-        {
-            perror("Handler Thread: mq_close (writer) failed");
-        }
+        { 
+            // check if it's a query of responses 
+            // If so can get straight from shared memory
+            value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "query");
+            if (value != NULL)
+            {
+                long int end_val;
+                long int query_val = strtol (value,NULL,0);
+                printf ("Query data from %d", query_val);
+                
+                // if it's negative then convert to actual value
+                if (query_val < 0) query_val = num_messages_received - query_val;
+                
+                // check if end (last value to get)
+                value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "end");
+                if (value != NULL) 
+                {
+                    end_val = strtol (value,NULL,0);
+                    // If value is not valid (or does not make sense) then ignore the parameter
+                    if (end_val < query_val) query_val = num_messages_received -1;  // -1 as index starts at 0
+                }
+                else end_val = num_messages_received -1; // -1 as index starts at 0
+                
+                
+                /* Useful values from structure:
+                 * num_messages_received -1 (last pos) is at next_data_pos -1
+                 * if < 0 then next_data_pos -1 = MAX_DATA-1
+                 * 
+                 * message_num at index0 
+                 *     zero_pos_msg_num = num_messages_received - next_data_pos
+                 * 
+                 * lowest safe message_num
+                 *     first_data_pos = SAFE_MAX_DATA - next_data_pos
+                 *     first_data_msg_num = zero_pos_msg_num - MAX_DATA + first_data_pos
+                 * /**/
+                                
+                // Now get the data from query_val to the end
+                // simplist is if we have not yet exceeded max value - just return all values to that point
+                if (num_messages_received < SAFE_MAX_DATA) 
+                {
+                    response_data[0] = '\0';
+                    for (int i=query_val; i<=end_val; i++)
+                    {
+                        strcat (response_data, data[i]);
+                        strcat (response_data, "\n");
+                    }
+                }
+                
+                /** TODO - HANDLE other conditions - check edge cases **/
+                
+            } // End of query
+        } // end of else (from first check for send)
     }
+
 
     // --- Send HTTP response back to the client ---
     //const char *page = "<html><body>Message sent to server's main thread.</body></html>";
     char page[255];
-    sprintf(page, "<html><body>%s</body></html>", data[0]);
+    sprintf(page, "<html><body>%s</body></html>", response_data);
     printf ("Response Page %s ", page);
     response = MHD_create_response_from_buffer(strlen(page),
                                                (void *)page,
                                                MHD_RESPMEM_MUST_COPY);  // copy the string
-                                               //MHD_RESPMEM_PERSISTENT); // Use PERSISTENT as page is const char*
+
+
     if (!response)
     {
         fprintf(stderr, "Handler Thread: Failed to create MHD response.\n");
@@ -271,7 +414,10 @@ int main(void)
     // Handle serial communications with CANUSB4    
 	int fd,c, ch, res;
 	struct termios oldtio,newtio;
-	char buf[255];
+	char buf[MAX_MSG_SIZE + 10];  // Must be at least MAX_MSG_SIZE - made larger so no risk of overflow
+    char rec_data[MAX_MSG_SIZE+10]; // Remaining data is stored in this prior to transferring to data storage
+    char rec_data_pos = 0; //next pos to store rec data
+    char msg_q_rec[MAX_MSG_SIZE];
 	
 	fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY ); 
 	if (fd <0) {perror(MODEMDEVICE); return 2; }
@@ -286,36 +432,35 @@ int main(void)
 	/* set input mode (non-canonical, no echo,...) */
 	newtio.c_lflag = 0;
 	 
-	newtio.c_cc[VTIME]    = 0;   /* inter-character timer unused */
-	newtio.c_cc[VMIN]     = 5;   /* blocking read until 5 chars received */
+	newtio.c_cc[VTIME]    = 5;   /* inter-character timer unused  - 5 * 0.1 sec*/
+	newtio.c_cc[VMIN]     = 0;   /* non blocking read */
 	
 	tcflush(fd, TCIFLUSH);
 	tcsetattr(fd,TCSANOW,&newtio);
 
 
-    char *s = "Test string";
-
-    // Convert the string to a char array
-    strcpy(data[0], s);
-    
-    
-    discovery (fd);
-
     // --- Main Loop ---
     // Keep running and check for messages from the API queue and CANUSB
     while (keep_running)
     {
+        //printf ("Main Thread: Start of loop\n");
         // Attempt to receive a message (non-blocking)
-        bytes_read = mq_receive(mq_main_reader, (char *)&received_msg, sizeof(message_t), NULL);
+        //bytes_read = mq_receive(mq_main_reader, (char *)&received_msg, sizeof(message_t), NULL);
+        bytes_read = mq_receive(mq_main_reader, msg_q_rec, sizeof(message_t), NULL);
+        
 
         if (bytes_read >= 0)
         {
             // Message received successfully
-            printf("Main Thread: <<< Received message: \"%s\" (%zd bytes) >>>\n",
-                   received_msg.text, bytes_read);
+            //printf("Main Thread: <<< Received message: \"%s\" (%zd bytes) >>>\n",
+            //       received_msg.text, bytes_read);
+            // Add terminating 0
+            msg_q_rec[bytes_read] = '\0';
+            printf ("Q Data is %s - %d\n", msg_q_rec, bytes_read);
             // Add null termination just in case, though snprintf should handle it
-            received_msg.text[MAX_MSG_SIZE - 1] = '\0';
-            // Process the message here...
+            //received_msg.text[MAX_MSG_SIZE - 1] = '\0';
+            // Process the message
+            send_data (fd, msg_q_rec);
         }
         else
         {
@@ -339,9 +484,46 @@ int main(void)
         }
         
         // check for USB
-		res = read(fd,buf,255);   /* returns after 5 chars have been input */
-        buf[res]=0;               /* so we can printf... */
-        printf("%s\n", buf);
+		res = read(fd,buf,MAX_MSG_SIZE);   /* returns after MAX_MSG_SIZE chars have been input */
+        buf[res]=0;               /* Terminates the string */
+        if (res > 0) printf("%s\n", buf);
+        // rec_data
+        // Todo split into data blocks - starting with : and ending with ;
+        // first copy into rec_data and check for valid structure
+        // then transfer that to the data storage and reset the counter in rec_data
+        // any remaining chars are left on rec_data ready for next block
+        // As reset each time there is a : then any corrupt messages will be dropped
+        for (int i=0; i<MAX_MSG_SIZE; i++)
+        {
+            //printf ("In for loop i %d, buf size %d\n", i, res);
+            // finish if reach end of new data (string terminator)
+            if (buf[i] == 0) break;
+            // move next char to rec_data
+            rec_data[rec_data_pos] = buf[i];
+            // if it's a : then restart (end not received so possibly corrupt)
+            if (buf[i] == ':')
+            {
+                rec_data_pos = 0;
+                continue;
+            }
+            // if it's a ; then reached end of packet
+            // could perform additional processing if required 
+            else if (buf[i] == ';')
+            {
+                // terminate the string
+                rec_data[rec_data_pos+1] = 0;
+                // copy into data
+                copy_to_data (rec_data);
+                // reset pos ready for next data
+                rec_data_pos = 0;
+                continue;
+            }
+            else 
+            {
+                rec_data_pos ++;
+            }
+            
+        }
 
         // Sleep for a short duration to avoid busy-waiting
         // Adjust the sleep time as needed for responsiveness vs CPU usage

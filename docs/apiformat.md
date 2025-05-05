@@ -10,6 +10,26 @@ if not then require login
 /login POST username, password
 handled locally within api
 
+
+## Raw Commands
+These are the only ones currently implemented
+Note for simplicity these are provided in a strict order and format
+
+/vlcb?get=<id of first data packet>
+/vlcb?send=<string of send request>
+
+Send must be a single CBUS message starting with : and ending with ;
+All content must be alphanum - anything else and it will not be sent to CBUS
+
+
+
+
+
+
+
+
+
+
 ## Server commands
 
 Issue command to the server, includes quit or future connect to different USB port etc.
