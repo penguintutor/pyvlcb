@@ -1,6 +1,8 @@
 # Secret
 secret.cfg
 
+# C object files
+*.o
 
 
 # Byte-compiled / optimized / DLL files
