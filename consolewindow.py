@@ -34,7 +34,7 @@ class ConsoleWindowUI(QMainWindow):
         
         # Set column width for first column to ensure data fits
         self.ui.consoleTable.setColumnWidth(0, 150)
-        self.ui.consoleTable.setColumnWidth(1, 200)
+        self.ui.consoleTable.setColumnWidth(2, 200)
         
         # File Menu
         self.ui.actionClose.triggered.connect(self.close_window)
@@ -60,6 +60,7 @@ class ConsoleWindowUI(QMainWindow):
         
         
     def update_log (self):
+        #print (f"Updating console with {self.new_entries}")
         while len(self.new_entries) > 0:
             resp_string = self.new_entries.pop(0)
             log_details = self.vlcb.log_entry(resp_string)

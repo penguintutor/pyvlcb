@@ -31,6 +31,7 @@
 #include <fcntl.h>  // For O_* constants
 #include <sys/stat.h> // For mode constants
 #include <mqueue.h> // For POSIX message queues
+#include <time.h>
 
 // Include libmicrohttpd header AFTER system headers that define types it uses
 #include <microhttpd.h>
@@ -49,13 +50,26 @@ included by <termios.h> */
 
 /* Settings for queue / shared memory */
 #define MQ_NAME "/mhd_main_queue" // Message queue name (must start with /)
-#define MAX_MSG_SIZE 50           // Maximum size of a single read from CBUS (just used for READ - can combine messages)
+#define MAX_MSG_SIZE 100           // Maximum size of a single read from CBUS (just used for READ - can combine messages)
 #define MAX_MESSAGES 10           // Maximum number of messages in the mqueue
-#define MAX_DATA 110               // Maximum number of CBUS messages stored
-#define SAFE_MAX_DATA 100          // The maximum number of values it is safe to return (must be less than MAX_DATA) to avoid race conditions
+//#define MAX_DATA 35           // Very low value used for testing
+//#define SAFE_MAX_DATA 30      // Very low value used for testing
+#define MAX_DATA 1100               // Maximum number of CBUS messages stored
+#define SAFE_MAX_DATA 1000          // The maximum number of values it is safe to return (must be less than MAX_DATA) to avoid race conditions
 // SAFE_MAX_DATA vs MAX_DATA avoids needing to use mutex / spinlock to protect data
 // MAX_DATA is the size of the array, but as it wraps then need to be able to guarentee all data read is not written 
 // the difference is a buffer that is safe to write but cannot read without checking it's not been overwritten
+
+/* Debug */
+// If 0 then no messages (except errors and url requests)
+// Debug >=2 also include one line per item received from USB
+// >= 5 includes url requests
+#define DEBUG 2
+
+
+/* Format settings */
+#define FORMAT_HTML 0
+#define FORMAT_TXT 1
 
 // --- Global Variables ---
 volatile sig_atomic_t keep_running = 1; // Flag to control the main loop
@@ -66,6 +80,52 @@ char data [MAX_DATA][MAX_MSG_SIZE];     // Shared memory - write in main thread 
 int next_data_pos = 0;                  // array position in data where next data to be written (this -1 is the last written)
 unsigned long long num_messages_received = 0;          // Incremented each time a message is received (never reset unless app restarted)      
 // If this was a unsigned long int then expected to be a least a year before this limit is reached using usnigned long long more likely to be thousands of years   
+
+
+// Reads block of data from store
+// must be sequential
+// start_val is what number is at start_pos
+int read_from_data (char *return_string, int start_pos, int end_pos, int start_val)
+{
+    int response_length = 0;
+    char str_buffer[256];
+    return_string[0] = '\0';
+    for (int i=start_pos; i<=end_pos; i++)
+    {
+        sprintf (str_buffer, "%ld,%s\n", i+start_val-start_pos, data[i]);
+        strcat (return_string, str_buffer);
+        response_length ++;
+    }
+    // Returns number of messages returned (1 higher than actual value)
+    return response_length;
+}
+
+/* code to handle decode of url */
+// Function to convert a hex character to its integer value
+int from_hex(char ch) {
+    return isdigit(ch) ? ch - '0' : tolower(ch) - 'a' + 10;
+}
+
+// Function to decode a percent-encoded string
+void url_decode(const char *src, char *dest) {
+    const char *pstr = src;
+    char *pbuf = dest;
+        while (*pstr) {
+            if (*pstr == '%') {
+                if (pstr[1] && pstr[2]) {
+                    *pbuf++ = from_hex(pstr[1]) << 4 | from_hex(pstr[2]);
+                    pstr += 2;
+                }
+            } else if (*pstr == '+') {
+                *pbuf++ = ' ';
+            } else {
+                *pbuf++ = *pstr;
+            }
+            pstr++;
+        }
+    *pbuf = '\0';
+}
+
 
 // Basic check that the request is a cbus message
 // First character must be :
@@ -87,37 +147,37 @@ int check_cbus_message (const char *message_string)
     return 0;
 }
 
-void copy_to_data (char *new_string)
+// Copy the message to the shared data
+// new_string should be the message, incoming is 'i' (incoming) or 'o' (outgoing) 
+// relative to the PC to CANUSB
+// Saved internally in the format <datestring>,<i/o>(incoming/outgoing),<message>
+void copy_to_data (char *new_string, char incoming)
 {
+    char time_buff[100];
+    char buffer[256];
+    
+    if (DEBUG >= 2) printf ("%c - %s\n", incoming, new_string);
+    
+    time_t now;
+    time(&now);
+    
+    strftime(time_buff, sizeof time_buff, "%FT%TZ", gmtime(&now));
+    
+    sprintf (buffer, "%s,%c,%s", time_buff, incoming, new_string);
     // copy into the next position
-    strcpy (data[next_data_pos], new_string);
-    printf ("Copied %s\n", data[next_data_pos]);
+    strcpy (data[next_data_pos], buffer);
+    //printf ("Copied %s\n", data[next_data_pos]);
+    
     num_messages_received += 1;
     // increment next pos
     next_data_pos += 1;
+    //printf ("Last entry %s, num entries %d", data[next_data_pos-1], num_messages_received);
     // if reached end then move to beginning
-    if (next_data_pos >= MAX_MSG_SIZE)
+    if (next_data_pos >= MAX_DATA)
     {
         next_data_pos = 0;
     }
 }
-
-/*int discovery (int fd)
-{
-	char discovery[256] = ":SB780N0D;";
-	char ch;
-	int res;
-	
-	for (int i = 0; discovery[i] != '\0'; i++) {
-		ch = discovery[i];
-		printf("Writing character :%c ASCII:%d\n", ch, ch);
-		res = write(fd, &ch, sizeof(ch));
-		if (res < 0) {
-			perror("write on SERIAL_DEVICE failed");
-			return 2;
-		}
-	}
-}*/
 
 
 int send_data (int fd, char *data_string)
@@ -134,6 +194,8 @@ int send_data (int fd, char *data_string)
 				return 2;
 		}
 	}
+    // If successful then add to data
+    copy_to_data (data_string, 'o');
 }
 
 // --- Message Structure ---
@@ -198,27 +260,44 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     struct MHD_Response *response;
     enum MHD_Result ret;
     int send_status;
+    int format = FORMAT_HTML;   // default to html - FORMAT_TXT often used by client app
+    char header_string[255] = "";
     
     // Allow 1kb respoonse
     char response_data[1024] = "Error command not recognised";   // This will be replaced later if valid request
     
     const char *value;
 
-    printf("Handler Thread: Received request for URL: %s\n", url);
+    //printf("Handler Thread: Received request for URL: %s\n", url);
     /* Handle URL here - see if we handle directly (eg. query) or pass to the message queue */
     // Is this a vlcb command (ie. raw format)
     const char *vlcb = "/vlcb";
     //if (strncmp (url, vlcb, 6))
     if (strcmp (url, vlcb) == 0)
     {
-        printf ("Matches /vlcb\n");
+        if (DEBUG >= 5) printf ("HTTP request for /vlcb\n");
+        // check if we have a format parameter to determine what format to respond in
+        // eg. format=html (default - wrap data in html body), format=txt (plain text - typically comma separated)
+        value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "format");
+        if (value != NULL)
+        {
+            //printf ("Format %s\n", value);
+            if (strcmp(value, "txt") == 0) format=FORMAT_TXT;
+        }
+        // If not then leave at default which was set above
+        
+        
         // Do we have a send request?
         value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "send");
         if (value != NULL)
         {
-            printf ("Value is %s - size %d\n", value, strlen(value));
+            if (DEBUG >= 5) printf ("send %s \n", value);
+            char decoded[256];
+            url_decode(value, decoded); 
+            response_data[0] = '\0';
+            //printf ("Value is %s - size %d\n", decoded, strlen(decoded));
             // Check that the string is a valid C Bus message
-            if (check_cbus_message(value) != 0) 
+            if (check_cbus_message(decoded) != 0) 
             {
                 perror ("Invalid message format - skipping");
                 strcpy (response_data, "Error, invalid message format");
@@ -242,7 +321,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                     // Send the message (non-blocking isn't strictly necessary for send,
                     // but good practice if the queue could be full, though unlikely here)
                     // not sizeof(value)
-                    send_status = mq_send(mq_writer, value, strlen(value), 0); // Priority 0
+                    send_status = mq_send(mq_writer, decoded, strlen(decoded), 0); // Priority 0
                     if (send_status == -1)
                     {
                         perror("Handler Thread: mq_send failed");
@@ -251,7 +330,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                     }
                     else
                     {
-                        printf("Handler Thread: Message sent to main thread for URL: %s Value: %s Status %d\n", url, value, send_status);
+                        //printf("Handler Thread: Message sent to main thread for URL: %s Value: %s Status %d\n", url, decoded, send_status);
                         strcpy (response_data, "Success, message sent");
                     }
 
@@ -265,19 +344,22 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
         } // End send
         else
         { 
-            // check if it's a query of responses 
+            // check if it's a "read" - ie. query of responses 
             // If so can get straight from shared memory
-            value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "query");
+            value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "read");
             if (value != NULL)
             {
+                if (DEBUG >= 5) printf ("read %s \n", value);
+                int response_length = 0;
                 long int end_val;
                 long int query_val = strtol (value,NULL,0);
-                printf ("Query data from %d", query_val);
+                response_data[0] = '\0';
+                //printf ("Read data from %d\n", query_val);
                 
                 // if it's negative then convert to actual value
                 if (query_val < 0) query_val = num_messages_received - query_val;
                 
-                // check if end (last value to get)
+                // check if we have an end (last value to get)
                 value = MHD_lookup_connection_value(connection, MHD_GET_ARGUMENT_KIND, "end");
                 if (value != NULL) 
                 {
@@ -287,32 +369,106 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                 }
                 else end_val = num_messages_received -1; // -1 as index starts at 0
                 
-                
-                /* Useful values from structure:
-                 * num_messages_received -1 (last pos) is at next_data_pos -1
-                 * if < 0 then next_data_pos -1 = MAX_DATA-1
-                 * 
-                 * message_num at index0 
-                 *     zero_pos_msg_num = num_messages_received - next_data_pos
-                 * 
-                 * lowest safe message_num
-                 *     first_data_pos = SAFE_MAX_DATA - next_data_pos
-                 *     first_data_msg_num = zero_pos_msg_num - MAX_DATA + first_data_pos
-                 * /**/
-                                
-                // Now get the data from query_val to the end
-                // simplist is if we have not yet exceeded max value - just return all values to that point
-                if (num_messages_received < SAFE_MAX_DATA) 
+                // Do we have any data to return 
+                if (query_val < num_messages_received) 
                 {
-                    response_data[0] = '\0';
-                    for (int i=query_val; i<=end_val; i++)
+                    // make local copies of globals to avoid race conditions where updated during this process
+                    long int highest_value = num_messages_received;
+                    int next_pos = next_data_pos;
+                    
+                    // calculate some useful values regarding the cyclic data store
+                    long int lowest_value = 0;
+                    int first_data_pos = 0;
+                    // If not exceeded data store then above are 0, but if not then calc 
+                    if (highest_value > SAFE_MAX_DATA)
                     {
-                        strcat (response_data, data[i]);
-                        strcat (response_data, "\n");
+                        lowest_value = highest_value - SAFE_MAX_DATA;
+                        first_data_pos = next_pos - SAFE_MAX_DATA;
+                        if (first_data_pos < 0) first_data_pos = MAX_DATA + first_data_pos; //first_data_pos is -ve so adding it takes it off the MAX_DATA
                     }
+                    
+                    // if query_val is less than the first available entry then set to first available
+                    if (query_val < lowest_value) query_val = lowest_value;
+                    // already set end_val to be <= last value
+                    
+                    // get first index position
+                    int first_index = first_data_pos + (query_val - lowest_value);
+                    //if exceed end then wrap
+                    if (first_index > MAX_DATA) first_index -= MAX_DATA;
+                    // get last index position
+                    int last_index = next_pos - (highest_value - end_val);
+                    
+                
+                    //printf ("Get request start %d, stop %d, max %d", query_val, end_val, num_messages_received);
+                    
+                    // if all in one block
+                    char long_buffer[2048];
+                    int response_val;
+                    if (first_index <= last_index)
+                    {
+                        if (DEBUG >= 5) printf ("Getting start %d (%d), last %d(%d), counter %d\n", first_index, query_val, last_index, end_val, query_val);
+                        
+                        response_val = read_from_data (long_buffer, first_index, last_index, query_val);
+                        response_length += response_val;
+                        strcat (response_data, long_buffer);
+                        
+                        if (DEBUG >= 5) printf ("Response val %d, response length %d\n", response_val, response_length);
+                    }
+                    else // 2 parts
+                    {
+                        // part 1 from first index to end data
+                        response_val = read_from_data (long_buffer, first_index, MAX_DATA, query_val);
+                        response_length += response_val;
+                        strcat (response_data, long_buffer);
+                        // part 2 from start data to last
+                        response_val = read_from_data (long_buffer, 0, last_index, query_val + response_val);
+                        response_length += response_val;
+                        strcat (response_data, long_buffer);
+                    }
+                    
+                    
+                    /* Useful values from cyclic store
+                     * num_messages_received -1 (last pos) is at next_data_pos -1
+                     * if < 0 then next_data_pos -1 = MAX_DATA-1
+                     * 
+                     * message_num at index0 
+                     *     zero_pos_msg_num = num_messages_received - next_data_pos
+                     * 
+                     * lowest safe message_num
+                     *     first_data_pos = SAFE_MAX_DATA - next_data_pos
+                     *     first_data_msg_num = zero_pos_msg_num - MAX_DATA + first_data_pos
+                     * /**/
+                                    
+                    // Now get the data from query_val to the end
+                    // simplist is if we have not yet exceeded max value - just return all values to that point
+                    /*char str_buffer[255];
+                    if (num_messages_received < SAFE_MAX_DATA) 
+                    {
+                        response_data[0] = '\0';
+                        for (int i=query_val; i<=end_val; i++)
+                        {
+                            sprintf (str_buffer, "%ld,%s\n", i, data[i]);
+                            strcat (response_data, str_buffer);
+                            response_length ++;
+                        }
+                    }*/
                 }
+                /*else // most likely asking for next data that doesn't exist
+                {
+                    strcpy (header_string, "Read,0,0,0\n")
+                }*/
                 
                 /** TODO - HANDLE other conditions - check edge cases **/
+                
+                // Add summary info
+                // Returns Read,<start>,<end>,<count>
+                // With first packet then end is normally 1 less than count (ie. indexed from 0)
+                // special case is where count is 0 then the other values should be ignored
+                if (response_length == 0) strcpy (header_string, "Read,0,0,0\n");
+                else
+                {
+                    sprintf (header_string, "Read,%ld,%ld,%ld\n", query_val, end_val, response_length); 
+                }
                 
             } // End of query
         } // end of else (from first check for send)
@@ -321,9 +477,16 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
 
     // --- Send HTTP response back to the client ---
     //const char *page = "<html><body>Message sent to server's main thread.</body></html>";
-    char page[255];
-    sprintf(page, "<html><body>%s</body></html>", response_data);
-    printf ("Response Page %s ", page);
+    char page[2048];
+    if (format == FORMAT_HTML)
+    {
+        sprintf(page, "<html><body>%s%s</body></html>", header_string, response_data);
+    }
+    else
+    {
+        sprintf(page, "%s%s", header_string, response_data);
+    }
+    //printf ("Response Page %s ", page);
     response = MHD_create_response_from_buffer(strlen(page),
                                                (void *)page,
                                                MHD_RESPMEM_MUST_COPY);  // copy the string
@@ -456,7 +619,7 @@ int main(void)
             //       received_msg.text, bytes_read);
             // Add terminating 0
             msg_q_rec[bytes_read] = '\0';
-            printf ("Q Data is %s - %d\n", msg_q_rec, bytes_read);
+            //printf ("Q Data is %s - %d\n", msg_q_rec, bytes_read);
             // Add null termination just in case, though snprintf should handle it
             //received_msg.text[MAX_MSG_SIZE - 1] = '\0';
             // Process the message
@@ -484,9 +647,9 @@ int main(void)
         }
         
         // check for USB
-		res = read(fd,buf,MAX_MSG_SIZE);   /* returns after MAX_MSG_SIZE chars have been input */
+		res = read(fd,buf,MAX_MSG_SIZE);   /* returns after MAX_MSG_SIZE chars have been input or more likely timeout*/
         buf[res]=0;               /* Terminates the string */
-        if (res > 0) printf("%s\n", buf);
+        //if (res > 0) printf("%s\n", buf);
         // rec_data
         // Todo split into data blocks - starting with : and ending with ;
         // first copy into rec_data and check for valid structure
@@ -497,13 +660,14 @@ int main(void)
         {
             //printf ("In for loop i %d, buf size %d\n", i, res);
             // finish if reach end of new data (string terminator)
-            if (buf[i] == 0) break;
+            if (buf[i] == '\0') break;
             // move next char to rec_data
             rec_data[rec_data_pos] = buf[i];
             // if it's a : then restart (end not received so possibly corrupt)
             if (buf[i] == ':')
             {
-                rec_data_pos = 0;
+                rec_data[0] = ':';
+                rec_data_pos = 1;
                 continue;
             }
             // if it's a ; then reached end of packet
@@ -513,7 +677,7 @@ int main(void)
                 // terminate the string
                 rec_data[rec_data_pos+1] = 0;
                 // copy into data
-                copy_to_data (rec_data);
+                copy_to_data (rec_data, 'i');
                 // reset pos ready for next data
                 rec_data_pos = 0;
                 continue;
@@ -577,8 +741,3 @@ int main(void)
     printf("Main Thread: Exiting.\n");
     return 0;
 }
-
-    
-    
-    
-    

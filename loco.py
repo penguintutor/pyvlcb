@@ -1,0 +1,22 @@
+# Holds a loco session
+
+class Loco:
+    def __init__ (self, loco_id, session, direction, speed):
+        self.status = "off"   # Starts in off status - change to on when allocated
+        self.loco_id = loco_id
+        self.session = session # If session == 0 then no session allocated (don't support none DCC)
+        self.direction = direction # 1 = forward, 0 = reverse
+        self.speed = speed #(0 to 127) - 1 = emergency stop (skip in normal use)
+        
+        
+    
+    # get Dir/Speed combined value
+    def get_speed_dir (self):
+        return (self.direction * 0x80) + self.speed
+    
+    # Takes combined speed & dir and updates direction / speed
+    def set_speed_dir (self, speed_dir):
+        self.direction = speed_dir >> 7
+        self.speed = speed_dir && 0x7F
+        
+    

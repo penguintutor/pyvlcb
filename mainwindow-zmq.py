@@ -10,13 +10,12 @@ from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from consolewindow import ConsoleWindowUI
 from layout import Layout
-from vlcbclient import VLCBClient
+import zmq
 
 loader = QUiLoader()
 basedir = os.path.dirname(__file__)
 
 app_title = "VLCB App"
-url = "http://127.0.0.1:8888/"
 
 class MainWindowUI(QMainWindow):
     
@@ -34,15 +33,15 @@ class MainWindowUI(QMainWindow):
         self.threadpool = QThreadPool()
         self.update_in_progress = False
         
-        # The class is called client, but as it's used to communicate
-        # with the server it's referred to in this as self.server
-        self.server = VLCBClient(url)
+        self.context = zmq.Context()
+        self.socket = self.context.socket(zmq.REQ)
+        self.socket.connect("tcp://localhost:5555")
         
         # Add request to be sent next time timer expires
         self.send_queue = []
         
         # Current position in server log entries and amount of data received
-        self.last_packet = None
+        self.last_packet = 0
         #self.data_received = 0
         
         # Create a timer to periodically check for updates
@@ -72,12 +71,20 @@ class MainWindowUI(QMainWindow):
         self.ui.actionDiscover.triggered.connect(self.discover)
         
         # Tree view
+        #self.ui.nodeTreeView.setColumnCount(3)
+        #self.ui.setHeaderLabels(['Name', 'Number', 'Type'])
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
+        #self.node_model.setHorizontalHeaderLabels(['Name', 'Number', 'Type'])
         self.ui.nodeTreeView.setModel(self.node_model)
         self.ui.nodeTreeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
+        #self.select_model = self.node_model.selectionModel()
+        #self.select_model = self.ui.nodeTreeView.selectionModel()
+        
         self.ui.nodeTreeView.clicked.connect(self.tree_clicked)
+        #self.select_model.selectionChanged.connect(self.tree_clicked)
+        #self.ui.nodeTreeView.selectionChanged.connect(self.tree_clicked)
         
         # Event buttons
         self.ui.evButtonOff.clicked.connect(self.ev_clicked_off)
@@ -113,6 +120,7 @@ class MainWindowUI(QMainWindow):
             self.console_window.show()    
     
     def poll_server(self):
+        #print ("Checking for zmq updates")
         # Only allow one check_responses thread to run at a time
         if self.update_in_progress == True:
             #print ("Still running - skipping")
@@ -120,6 +128,11 @@ class MainWindowUI(QMainWindow):
         
         worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
         self.threadpool.start(worker)
+        #print ("thread started")
+            # Pass the response to the gui console
+            ###self.console_window.add_log(text_response)
+            # Check if we need to handle this further
+            ###self.handle_incoming (text_response)
         return
         
     def update_console (self):
@@ -133,6 +146,8 @@ class MainWindowUI(QMainWindow):
         if self.selected_ev == None:
             return
         self.start_request(self.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
+        
+        
         
     def ev_clicked_on (self):
         if self.selected_ev == None:
@@ -184,6 +199,8 @@ class MainWindowUI(QMainWindow):
         item = self.ui.nodeTable.verticalHeaderItem(4)
         item.setText("Long / short:")
         
+        #self.ui.nodeTable.setItem(0,0, QTableWidgetItem("Test 0 0"))
+        
         item = self.ui.nodeTable.item(0,0)
         item.setText(f"{self.nodes[nn].ev[ev_id].name}")
         item = self.ui.nodeTable.item(1,0)
@@ -199,22 +216,13 @@ class MainWindowUI(QMainWindow):
     # This method is called whenever we get a valid response
     # Used to determine if further action is required (eg. discovery or update status)
     # Note this will see all cbus messages, including ones sent to/from other nodes
-    # <id>,<timestamp>,<incoming>,<message>
-    # Note incoming is either i (incoming) or o (outgoing)
-    
     def handle_incoming_data (self, response):
-        #print (f"Incoming data {response}")
         # pass to console (unparsed)
         self.console_window.add_log(response)
         # strip date off (don't need except for the log)
-        #print (f"Entry {response}")
-        id_date_data = response.split(',',3)
-        #print (f"ID Date Data {id_date_data}")
-        if (len(id_date_data) < 4):
-            print (f"Invalid entry - skipping {response}")
-            return
-        # Todo - id_date_data[2] is i / o - not yet implemented in console
-        vlcb_entry = self.vlcb.parse_input(id_date_data[3])
+        print (f"Entry {response}")
+        date_data = response.split(',',2)
+        vlcb_entry = self.vlcb.parse_input(date_data[1])
         # If not a valid entry then ignore
         if vlcb_entry == False:
             return
@@ -237,7 +245,7 @@ class MainWindowUI(QMainWindow):
                 self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
                 self.nodes[data_entry['NN']].set_name(self.layout.node_name(data_entry['NN']))
                 # Add to Tree View
-                #print ("Adding entry")
+                print ("Adding entry")
                 #node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
                 self.node_model.appendRow(self.nodes[data_entry['NN']].gui_node)
             else:
@@ -305,9 +313,8 @@ class MainWindowUI(QMainWindow):
     # Adding priority pushes to front of queue
     def start_request (self, request, type="send", priority=False):
         # add type to request
-        # Old format had send first
-        #if type != "":
-        #    request = type + "," + request
+        if type != "":
+            request = type + "," + request
             
         #print (f"Request is {request}")
         #print (f"Current queue {self.send_queue}")
@@ -316,7 +323,7 @@ class MainWindowUI(QMainWindow):
         # pushes other priority items further down the list as well
         if priority:
             self.send_queue.insert(0, request)
-        # only add to the list if <= 10 items already
+        # only add to the list if <= 10 items alread
         if len(self.send_queue) > 10:
             return False
         self.send_queue.append(request)
@@ -342,52 +349,52 @@ class MainWindowUI(QMainWindow):
         QCoreApplication.quit()
         
     # Run in thread
-    # Query web - get data
-    # If from web notify newdata
+    # Query ZMQ - get data
+    # If from USB notify newdata
     # If update to node / events then update nodes and
     # notify updatenode
     def thread_getupdate(self, nodes, newdata_emit=None, updatenode_emit=None):
+        #print ("Thread getupdate")
         #Only allow one thread at a time
         self.update_in_progress = True
-               
+        
+        # check there is no message waiting to receive first
+        # Should not get this, but prevents being stuck in loop of failed sends
+        #response = self.receive(retry=0)
+        #if response != "":
+        #    print (f"Unexpected message {response}")
+        
         # see if there is a specific requst
         request = self.get_request()
         if request != False:
             #print (f"Sending request {request}")
-            response = self.server.send (request)
+            response = self.send_receive (request)
             # Todo handle response
-            # Just a True / false response
             # clear send_request ready for next request
             
-        # Get updates since last_packet
-        response = self.server.read (self.last_packet)
-        #print (f"**** Response {response}")
-        # First line is summary
+        
+        # Send a normal pole request
+        request = f'get,{self.last_packet}'
+        #print (f"Requesting {request}")
+        response = self.send_receive (request)
         # Check for an empty data first as we can ignore
-        if response[0:10] == "Read,0,0,0":
+        if response[0:8] == "data,0,0":
             # No new data received
             pass
-        # Check response starts with "Read,"
-        elif response[0:5] == "Read,":
-            # split into status_line and data
-            status_data = response.split('\n',1)
-            #print (f"Status data {status_data}")
-
-            # First line format is "Read,<start>,<end>,<numlines>"
-            header = status_data[0].split(',', 3)
+        # Check response starts with "data,"
+        elif response[0:5] == "data,":
+            #print (f'received {response}')
+            # get start and end values for data
+            data_retrieved = response.split(',', 3)
             # need end to know what our last stored value is
-            this_last_packet = int(header[2])
-            if self.last_packet == None or self.last_packet < this_last_packet:
+            this_last_packet = int(data_retrieved[2])
+            if self.last_packet < this_last_packet:
                 self.last_packet = this_last_packet
-            data_packets = status_data[1].split('\n')
-            #print (f"Data packets: {data_packets}")
+            data_packets = data_retrieved[3].split('\n')
             for data_packet in data_packets:
-                #print (f"Handling packet {data_packet}")
-                if len(data_packet) < 5:    # If data too short (perhaps empty line) - in reality this is much longer as includes date
-                    print ("Skipping empty packet")
+                if len(data_packet) < 5:    # If data too short (perhaps \n)
                     continue
                 #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
-                # passes entire line to 
                 self.handle_incoming_data(data_packet)
             self.newdata_loaded_signal.emit()
         else:
@@ -396,13 +403,35 @@ class MainWindowUI(QMainWindow):
         self.update_in_progress = False
         
     def send_receive(self, request_string):
-        print ("*** Deprecated method TBC ? ***")
         request = request_string.encode('utf-8')
-        self.server.send(request)
+        # todo add error handing
+        self.socket.send(request)
         #print ("message sent")
-        return self.read (self.last_packet)
+        return self.receive()
         
-
+    # retry is the number of times to retry connection
+    def receive (self, retry=100):
+        if retry < 1:
+            retry = 1
+        for i in range (0, retry):
+            try:
+                message = self.socket.recv(flags=zmq.NOBLOCK)
+                message = message.decode("utf-8")
+            except zmq.Again as e:
+                #print ("No data")
+                #continue
+                pass
+            except Exception as e:
+                print (f"Unknown receive error {e}")
+                continue
+            else:
+                #print (f"Message is {message}")
+                return message
+            # Temp using time sleep 
+            # todo time sleep could be replaced with new timer
+            if retry > 1:
+                time.sleep (0.1)
+        return ""
         
         
 class Worker (QRunnable):

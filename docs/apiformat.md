@@ -15,10 +15,19 @@ handled locally within api
 These are the only ones currently implemented
 Note for simplicity these are provided in a strict order and format
 
-/vlcb?get=<id of first data packet>
-/vlcb?send=<string of send request>
+/vlcb?read=<id of first data packet>&format=txt&[&end=<id last packet to retrieve]
+/vlcb?send=<string of send request>&format=txt
 
-Send must be a single CBUS message starting with : and ending with ;
+read can also use read=-<value> to count from end instead of packet number
+if a start packet doesn't exist then start from lowest value
+
+
+#read is used to "read" stored data
+
+possibly allow get / query to integrate individual items - but currently expect the client to create
+these as send commands
+
+Send must be a single CBUS message starting with : and ending with ; (url encoded)
 All content must be alphanum - anything else and it will not be sent to CBUS
 
 
@@ -69,6 +78,6 @@ returns list of nodes
 query,events,<nodeid>
 returns list of events associated with a node
 
-
+Raw data format msg_num,timestamp,message
 
 
