@@ -12,12 +12,13 @@ class VLCB:
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
     def parse_input (self, input_bytes):
+        #print (f"Start parse {input_bytes}")
         # Also allow string (no need to decode)
         if isinstance (input_bytes, str):
             input_string = input_bytes
         else:
             input_string = input_bytes.decode("utf-8")
-        print (f"Parsing {input_string}")
+        #print (f"Parsing {input_string}")
         if (len(input_string) < 5):        # packets are actually much longer
             print ("Data too short")    
             return False
@@ -52,23 +53,26 @@ class VLCB:
         # Creates a VLCB_format and returns that
         return VLCBformat (priority, can_id, data)
     
-    # Parse and format into standard log format (fulldata, can_id, op_code, data)
-    # For log all values are returned as strings
+    # Parse and format into standard log format (datastring, direction, fulldata, direction, can_id, op_code, data
+    # For log all values are returned as strings - note that the number (log entry number) is not returned
     def log_entry (self, input_string):
-        # First remove date from the front of the string
-        date_log = input_string.split(',', 2)
-        date_string = date_log[0]
-        vlcb_entry = self.parse_input (date_log[1])
+        # Input string is num,date,direction,message
+        # First remove number and date from the front of the string
+        entry_parts = input_string.split(',', 3)
+        date_string = entry_parts[1]
+        direction = entry_parts[2]
+        message = entry_parts[3]
+        vlcb_entry = self.parse_input (message)
         # Error handling of invalid packet
         if vlcb_entry == False:
-            return [date_log[1], "??", "", "Invalid data"]
+            return [message, "??", "", "Invalid data"]
         # convert op-code to string
         # opcode is first two chars of data
         opcode = vlcb_entry.data[0:2]
         opcode_string = f'{opcode} - {VLCBopcode.opcode_mnemonic(opcode)}'
         #data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
         data_string = VLCB._dict_to_string(VLCBopcode.parse_data(vlcb_entry.data))
-        return [date_string, date_log[1], str(vlcb_entry.can_id), opcode_string, data_string]
+        return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
     # dict to string without {} or ""
