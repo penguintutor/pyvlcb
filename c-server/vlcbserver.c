@@ -52,10 +52,11 @@ included by <termios.h> */
 #define MQ_NAME "/mhd_main_queue" // Message queue name (must start with /)
 #define MAX_MSG_SIZE 100           // Maximum size of a single read from CBUS (just used for READ - can combine messages)
 #define MAX_MESSAGES 10           // Maximum number of messages in the mqueue
-//#define MAX_DATA 35           // Very low value used for testing
-//#define SAFE_MAX_DATA 30      // Very low value used for testing
-#define MAX_DATA 1100               // Maximum number of CBUS messages stored
-#define SAFE_MAX_DATA 1000          // The maximum number of values it is safe to return (must be less than MAX_DATA) to avoid race conditions
+#define MAX_MESSAGE_REQUEST 10     // Maximum number of messages in a request - to prevent buffer overrun - stack smashing
+#define MAX_DATA 35           // Very low value used for testing
+#define SAFE_MAX_DATA 30      // Very low value used for testing
+//#define MAX_DATA 1100               // Maximum number of CBUS messages stored
+//#define SAFE_MAX_DATA 1000          // The maximum number of values it is safe to return (must be less than MAX_DATA) to avoid race conditions
 // SAFE_MAX_DATA vs MAX_DATA avoids needing to use mutex / spinlock to protect data
 // MAX_DATA is the size of the array, but as it wraps then need to be able to guarentee all data read is not written 
 // the difference is a buffer that is safe to write but cannot read without checking it's not been overwritten
@@ -64,6 +65,7 @@ included by <termios.h> */
 // If 0 then no messages (except errors and url requests)
 // Debug >=2 also include one line per item received from USB
 // >= 5 includes url requests
+// >= 10 for developing only - too much for normal use
 #define DEBUG 2
 
 
@@ -92,7 +94,7 @@ int read_from_data (char *return_string, int start_pos, int end_pos, int start_v
     return_string[0] = '\0';
     for (int i=start_pos; i<=end_pos; i++)
     {
-        sprintf (str_buffer, "%ld,%s\n", i+start_val-start_pos, data[i]);
+        sprintf (str_buffer, "%d,%s\n", i+start_val-start_pos, data[i]);
         strcat (return_string, str_buffer);
         response_length ++;
     }
@@ -196,6 +198,7 @@ int send_data (int fd, char *data_string)
 	}
     // If successful then add to data
     copy_to_data (data_string, 'o');
+    return 0;
 }
 
 // --- Message Structure ---
@@ -256,7 +259,7 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
     (void)con_cls;        // Unused parameter
 
     mqd_t mq_writer = -1;
-    message_t msg;
+    //message_t msg;
     struct MHD_Response *response;
     enum MHD_Result ret;
     int send_status;
@@ -369,9 +372,12 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                 }
                 else end_val = num_messages_received -1; // -1 as index starts at 0
                 
+                
+                
                 // Do we have any data to return 
                 if (query_val < num_messages_received) 
                 {
+                    
                     // make local copies of globals to avoid race conditions where updated during this process
                     long int highest_value = num_messages_received;
                     int next_pos = next_data_pos;
@@ -387,9 +393,15 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                         if (first_data_pos < 0) first_data_pos = MAX_DATA + first_data_pos; //first_data_pos is -ve so adding it takes it off the MAX_DATA
                     }
                     
+                    
                     // if query_val is less than the first available entry then set to first available
                     if (query_val < lowest_value) query_val = lowest_value;
                     // already set end_val to be <= last value
+                    
+                    // check end_messages does not exceed maximum
+                    // Need to do this after updating query_val
+                    // Note this means that client may need to make multiple requests to get up to date
+                    if ((end_val - query_val) > MAX_MESSAGE_REQUEST) end_val = query_val + MAX_MESSAGE_REQUEST;
                     
                     // get first index position
                     int first_index = first_data_pos + (query_val - lowest_value);
@@ -406,9 +418,10 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                     int response_val;
                     if (first_index <= last_index)
                     {
-                        if (DEBUG >= 5) printf ("Getting start %d (%d), last %d(%d), counter %d\n", first_index, query_val, last_index, end_val, query_val);
+                        if (DEBUG >= 5) printf ("Getting start %d (%ld), last %d(%ld), counter %ld\n", first_index, query_val, last_index, end_val, query_val);
                         
                         response_val = read_from_data (long_buffer, first_index, last_index, query_val);
+                        if (DEBUG >= 10) printf ("Read from data %d %s\n", response_val, long_buffer);
                         response_length += response_val;
                         strcat (response_data, long_buffer);
                         
@@ -417,57 +430,37 @@ enum MHD_Result answer_to_connection(void *cls, struct MHD_Connection *connectio
                     else // 2 parts
                     {
                         // part 1 from first index to end data
-                        response_val = read_from_data (long_buffer, first_index, MAX_DATA, query_val);
+                        //printf ("Max data %d, last_index %d", MAX_DATA, last_index);
+                        if (DEBUG >= 5) printf ("Getting part 1 %d (%ld), last %d(%ld), counter %ld\n", first_index, query_val, MAX_DATA-1, end_val, query_val);
+                        response_val = read_from_data (long_buffer, first_index, MAX_DATA-1, query_val);
+                        if (DEBUG >= 10) printf ("Read from data %d %s\n", response_val, long_buffer);
                         response_length += response_val;
                         strcat (response_data, long_buffer);
                         // part 2 from start data to last
+                        if (DEBUG >= 5) printf ("Getting part 2 %d (%ld), last %d(%ld), counter %ld\n", 0, query_val, last_index, end_val, query_val);
                         response_val = read_from_data (long_buffer, 0, last_index, query_val + response_val);
+                        if (DEBUG >= 10) printf ("Read from data %d %s\n", response_val, long_buffer);
                         response_length += response_val;
                         strcat (response_data, long_buffer);
+                        if (DEBUG >= 5) printf ("Response val %d, response length %d\n", response_val, response_length);
                     }
                     
-                    
-                    /* Useful values from cyclic store
-                     * num_messages_received -1 (last pos) is at next_data_pos -1
-                     * if < 0 then next_data_pos -1 = MAX_DATA-1
-                     * 
-                     * message_num at index0 
-                     *     zero_pos_msg_num = num_messages_received - next_data_pos
-                     * 
-                     * lowest safe message_num
-                     *     first_data_pos = SAFE_MAX_DATA - next_data_pos
-                     *     first_data_msg_num = zero_pos_msg_num - MAX_DATA + first_data_pos
-                     * /**/
-                                    
-                    // Now get the data from query_val to the end
-                    // simplist is if we have not yet exceeded max value - just return all values to that point
-                    /*char str_buffer[255];
-                    if (num_messages_received < SAFE_MAX_DATA) 
-                    {
-                        response_data[0] = '\0';
-                        for (int i=query_val; i<=end_val; i++)
-                        {
-                            sprintf (str_buffer, "%ld,%s\n", i, data[i]);
-                            strcat (response_data, str_buffer);
-                            response_length ++;
-                        }
-                    }*/
+
                 }
-                /*else // most likely asking for next data that doesn't exist
-                {
-                    strcpy (header_string, "Read,0,0,0\n")
-                }*/
-                
-                /** TODO - HANDLE other conditions - check edge cases **/
+                /*else // most likely asking for next data that doesn't exist */
+
                 
                 // Add summary info
                 // Returns Read,<start>,<end>,<count>
                 // With first packet then end is normally 1 less than count (ie. indexed from 0)
-                // special case is where count is 0 then the other values should be ignored
-                if (response_length == 0) strcpy (header_string, "Read,0,0,0\n");
+                // special case is where count is 0 or negative then the other values should be ignored
+                // if negative then that is how much ahead that the client is asking for - if more than -1
+                // then this could indicate that client is further ahead and may need to reset
+                // Not so worried about race condition as this is just return value to the calling client
+                if (response_length == 0) sprintf (header_string, "Read,0,0,%lld\n", num_messages_received - query_val);
                 else
                 {
-                    sprintf (header_string, "Read,%ld,%ld,%ld\n", query_val, end_val, response_length); 
+                    sprintf (header_string, "Read,%ld,%ld,%d\n", query_val, end_val, response_length); 
                 }
                 
             } // End of query
@@ -510,7 +503,7 @@ int main(void)
 {
     struct MHD_Daemon *daemon;
     struct mq_attr mq_attributes;
-    message_t received_msg;
+    //message_t received_msg;
     ssize_t bytes_read;
 
     // --- Setup Signal Handling for Ctrl+C ---
@@ -575,11 +568,11 @@ int main(void)
 
 
     // Handle serial communications with CANUSB4    
-	int fd,c, ch, res;
+	int fd, res;
 	struct termios oldtio,newtio;
 	char buf[MAX_MSG_SIZE + 10];  // Must be at least MAX_MSG_SIZE - made larger so no risk of overflow
     char rec_data[MAX_MSG_SIZE+10]; // Remaining data is stored in this prior to transferring to data storage
-    char rec_data_pos = 0; //next pos to store rec data
+    int rec_data_pos = 0; //next pos to store rec data
     char msg_q_rec[MAX_MSG_SIZE];
 	
 	fd = open(MODEMDEVICE, O_RDWR | O_NOCTTY ); 

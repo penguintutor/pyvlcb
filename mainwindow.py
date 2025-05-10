@@ -50,8 +50,15 @@ class MainWindowUI(QMainWindow):
         self.timer.setInterval(500)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
-        self.pc_can_id = 60      # CAN ID of CANUSB4
         
+        # Keep alive timer - used for DCC keep alive
+        # Create timer, but don't start until aquire locomotive
+        self.kalive_timer = QTimer(self)
+        self.kalive_timer.setInterval(4000)
+        self.kalive_timer.timeout.connect(self.keep_alive)
+        
+        self.pc_can_id = 60      # CAN ID of CANUSB4
+    
         # Layout is useful for giving real names to certain items
         self.layout = Layout()
         
@@ -91,6 +98,9 @@ class MainWindowUI(QMainWindow):
         self.ui.nodeTreeView.show()
         self.show()
         self.create_console()
+        
+        # Status of the http connection
+        self.status = "Not connected"
     
         # Initial discover request
         self.discover()
@@ -305,12 +315,6 @@ class MainWindowUI(QMainWindow):
     # Adding priority pushes to front of queue
     def start_request (self, request, type="send", priority=False):
         # add type to request
-        # Old format had send first
-        #if type != "":
-        #    request = type + "," + request
-            
-        #print (f"Request is {request}")
-        #print (f"Current queue {self.send_queue}")
             
         # Priority ignores list length and just inserts at front
         # pushes other priority items further down the list as well
@@ -350,17 +354,32 @@ class MainWindowUI(QMainWindow):
         #Only allow one thread at a time
         self.update_in_progress = True
                
-        # see if there is a specific requst
+        # see if there is a specific request
         request = self.get_request()
         if request != False:
             #print (f"Sending request {request}")
             response = self.server.send (request)
+            if response == None:
+                self.update_in_progress = False
+                self.status = "Not connected"
+                return
+            else:
+                self.status = "Connected"
             # Todo handle response
             # Just a True / false response
             # clear send_request ready for next request
             
         # Get updates since last_packet
         response = self.server.read (self.last_packet)
+        # If response None then error getting update - skip for now and
+        # try again next time we poll
+        if response == None:
+            self.update_in_progress = False
+            self.status = "Not connected"
+            return
+        else:
+            self.status = "Connected"
+        
         #print (f"**** Response {response}")
         # First line is summary
         # Check for an empty data first as we can ignore
@@ -375,6 +394,20 @@ class MainWindowUI(QMainWindow):
 
             # First line format is "Read,<start>,<end>,<numlines>"
             header = status_data[0].split(',', 3)
+            
+            # check to see if field 3 is negative - if so then most likely that
+            # the server has been restarted and we are ahead
+            # Here just reset last_packet to 0 and then continue
+            # If prefer could continue, or perhaps request a negative number
+            # to just get a fixed number of entries
+            packets_received = int (header[3])
+            if packets_received < 0:
+                #print (f"Out of step with server, {self.last_packet} {packets_received}")
+                print ("Restarting after possible server restart")
+                self.last_packet = None
+                self.update_in_progress = False
+                return
+            
             # need end to know what our last stored value is
             this_last_packet = int(header[2])
             if self.last_packet == None or self.last_packet < this_last_packet:
@@ -382,9 +415,15 @@ class MainWindowUI(QMainWindow):
             data_packets = status_data[1].split('\n')
             #print (f"Data packets: {data_packets}")
             for data_packet in data_packets:
+                # if data_packet is empty then skip completely - without any notice as most likely due to \n at end
+                if data_packet == '':
+                    continue
+                
                 #print (f"Handling packet {data_packet}")
                 if len(data_packet) < 5:    # If data too short (perhaps empty line) - in reality this is much longer as includes date
                     print ("Skipping empty packet")
+                    print (f"This packet {data_packet}")
+                    print (f"Data packets {data_packets}")
                     continue
                 #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
                 # passes entire line to 
@@ -395,14 +434,10 @@ class MainWindowUI(QMainWindow):
         
         self.update_in_progress = False
         
-    def send_receive(self, request_string):
-        print ("*** Deprecated method TBC ? ***")
-        request = request_string.encode('utf-8')
-        self.server.send(request)
-        #print ("message sent")
-        return self.read (self.last_packet)
-        
-
+    # Keep alive - called every 4 secs
+    # Add a keep alive to the send queue
+    def keep_alive (self):
+        pass
         
         
 class Worker (QRunnable):

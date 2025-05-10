@@ -20,10 +20,15 @@ class VLCBClient():
         request_string = f"{self.url}vlcb?send={message}&format=txt"
         if (self.debug):
             print (f"Send request {request_string}")
-        request_url = urllib.request.urlopen(request_string)
-        #print(request_url.read())
-        #print ("\n")
-        response = request_url.read()
+        try:
+            request_url = urllib.request.urlopen(request_string)
+            #print(request_url.read())
+            #print ("\n")
+            response = request_url.read()
+        except:
+            print ("Error sending via http")
+            # None indicates not connected
+            return None
         if response[0:7] == "Success":
             #print ("Success")
             return True
@@ -39,8 +44,12 @@ class VLCBClient():
         request_string = f"{self.url}vlcb?read={last_packet}&format=txt"
         if (self.debug):
             print (f"Reading {request_string}")
-        request_url = urllib.request.urlopen(request_string)
-        response = request_url.read().decode('utf-8')
+        try:
+            request_url = urllib.request.urlopen(request_string)
+            response = request_url.read().decode('utf-8')
+        except:
+            print ("Error reading from http request")
+            return None
         #print(response)
         #print ("\n")
         return response
