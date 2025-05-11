@@ -89,7 +89,7 @@ class VLCBopcode:
         # 3rd data section
         '60':  {'opc': 'DFUN', 'title': 'Set Engine functions', 'format': 'Session,Fn1,Fn2', 'minpri': 2, 'comment': '<Dat2> (Fn1) is the function range. 1 is F0(FL) to F4; 2 is F5 to F8; 3 is F9 to F12; 4 is F13 to F20; 5 is F21 to F28; <Dat3> (Fn2) is the NMRA DCC format function byte for that range in corresponding bits. Sent by a CAB or equivalent to request an engine Fn state change.'},
         '61':  {'opc': 'GLOC', 'title': 'Get engine session', 'format': 'AddrHigh_AddrLow,Flags', 'minpri': 2, 'comment': '<Dat1> and <Dat2> are [AddrH] and [AddrL] of the decoder, respectively.; 7 bit addresses have (AddrH=0).; 14 bit addresses have bits 6,7 of AddrH set to 1.; <Flags> contains flag bits as follows:Bit 0: Set for "Steal" mode; Bit 1: Set for "Share" mode; Both bits set to 0 is exactly equivalent to an RLOC request; Both bits set to 1 is invalid, because the 2 modes are mutually exclusive; The command station responds with (PLOC) if the request is successful. Otherwise responds with (ERR): engine in use. (ERR:) stack full or (ERR) no session. The latter indicates that there is no current session to steal/share depending on the flag bits set in the request. GLOC with all flag bits set to zero is exactly equivalent to RLOC, but command stations must continue to support RLOC for backwards compatibility.'},
-        '63':  {'opc': 'ERR', 'title': 'Command station error report', 'format': 'Byte1,Byte2,Byte3', 'minpri': 2, 'comment': 'Sent in response to an error situation by a command station.'},
+        '63':  {'opc': 'ERR', 'title': 'Command station error report', 'format': 'AddrHigh_AddrLow,ErrCode', 'minpri': 2, 'comment': 'Sent in response to an error situation by a command station.'},
         '6F':  {'opc': 'CMDERR', 'title': 'Error messages from nodes during configuration', 'format': 'NN,Error', 'minpri': 3, 'comment': 'Sent by node if there is an error when a configuration command is sent.'},
         '70':  {'opc': 'EVNLF', 'title': 'Event space left reply from node', 'format': 'NN,EVSPC', 'minpri': 3, 'comment': 'EVSPC is a one byte value giving the number of available events left in that node.'},
         '71':  {'opc': 'NVRD', 'title': 'Request read of a node variable', 'format': 'NN,NVIndex', 'minpri': 3, 'comment': 'NV# is the index for the node variable value requested. Response is NVANS.'},
@@ -239,6 +239,7 @@ class VLCBopcode:
             "Char1_7": [14, "ascii"],      # Name string 7 bytes long - padded
             "En3_0": [8, "hex"],           # 4 bytes of stored event
             "EVSPC": [2, "num"],           # Amount of space available for events
+            "ErrCode": [2, "hex"],         # Short 1 byte error code
             "Error": [4, "hex"]            # Error code
         }
     
