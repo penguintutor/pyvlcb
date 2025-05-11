@@ -50,7 +50,7 @@
             <x>-1</x>
             <y>-1</y>
             <width>337</width>
-            <height>601</height>
+            <height>610</height>
            </rect>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -82,6 +82,19 @@
             </widget>
            </item>
            <item>
+            <widget class="QLabel" name="locoStatusLabel">
+             <property name="maximumSize">
+              <size>
+               <width>300</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string>No locomotive selected</string>
+             </property>
+            </widget>
+           </item>
+           <item>
             <widget class="QPushButton" name="locoForwardButton">
              <property name="text">
               <string>Forward</string>
@@ -103,6 +116,15 @@
                  <width>120</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="tracking">
+                <bool>false</bool>
+               </property>
+               <property name="wrapping">
+                <bool>false</bool>
+               </property>
+               <property name="notchesVisible">
+                <bool>true</bool>
                </property>
               </widget>
              </item>

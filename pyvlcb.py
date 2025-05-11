@@ -86,7 +86,13 @@ class VLCB:
         return data_string
     
     @staticmethod
-    def num_to_hexstr (num):
+    # Where 1 x bytes (2 chars)
+    def num_to_1hexstr (num):
+        return f"{hex(num).upper()[2:]:0>2}"
+    
+    @staticmethod
+    # Where 2 x bytes (4 chars)
+    def num_to_2hexstr (num):
         return f"{hex(num).upper()[2:]:0>4}"
     
     @staticmethod
@@ -111,15 +117,15 @@ class VLCB:
     
     # Discover number of events configured
     def discover_evn (self, node_id):
-        return f"{self.make_header()}58{VLCB.num_to_hexstr(node_id)};" 
+        return f"{self.make_header()}58{VLCB.num_to_2hexstr(node_id)};" 
         
     # Discover number of events available
     def discover_nevn (self, node_id):
-        return f"{self.make_header()}56{VLCB.num_to_hexstr(node_id)};"
+        return f"{self.make_header()}56{VLCB.num_to_2hexstr(node_id)};"
     
     # Discover stored events NERD
     def discover_nerd (self, node_id):
-        return f"{self.make_header()}57{VLCB.num_to_hexstr(node_id)};"
+        return f"{self.make_header()}57{VLCB.num_to_2hexstr(node_id)};"
     
     # node and ev should be the IDs - state either "on" or "off" / True or False
     def accessory_command (self, node_id, ev_id, state):
@@ -134,10 +140,10 @@ class VLCB:
         # Turn on
         if state == True or state == "on":
             # ASON
-            return f"{self.make_header()}98{VLCB.num_to_hexstr(node_id)}{VLCB.num_to_hexstr(ev_id)};"
+            return f"{self.make_header()}98{VLCB.num_to_2hexstr(node_id)}{VLCB.num_to_2hexstr(ev_id)};"
         # Turn off = ASOFF
         else:
-            return f"{self.make_header()}99{VLCB.num_to_hexstr(node_id)}{VLCB.num_to_hexstr(ev_id)};"
+            return f"{self.make_header()}99{VLCB.num_to_2hexstr(node_id)}{VLCB.num_to_2hexstr(ev_id)};"
         
     def accessory_long_command (self, node_id, ev_id, state):
         # Turn on
@@ -147,6 +153,27 @@ class VLCB:
         # Turn off = ASOFF
         else:
             return f"{self.make_header()}91{VLCB.num_to_4hexstr(ev_id)};"
+        
+    # RLOC (Allocate loco) :SB040N40D446;
+    # Short address upper address all zeros, only 6 bits of the lower byte are used (1 to 127) 0 is decoderless
+    # :SB040N40D446 D446 becomes 5190(10) = 1446(H) + C000 (highest 2 bits set by CAB - indicate long mode)
+    
+    # Generate code to allocate a loco
+    # Assume long code, but if long = False and ID < 128 then use short mode
+    def allocate_loco (self, loco_id, long=True):
+        # Generate RLOC to allocate loco to a session
+        if long == False and loco_id >= 127:
+            print ("Invalid short code")
+            return False
+        if long == True:
+            loco_id = loco_id | 0xC000
+        return f"{self.make_header()}40{VLCB.num_to_2hexstr(loco_id)};"
+    
+    def release_loco (self, session_id):
+        return f"{self.make_header()}21{VLCB.num_to_1hexstr(session_id)};"
+        
+    def keep_alive (self, session_id):
+        return f"{self.make_header()}23{VLCB.num_to_1hexstr(session_id)};"
         
     #manufaturer name  is requested by RQMN.
     #<0x11>

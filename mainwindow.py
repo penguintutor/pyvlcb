@@ -5,12 +5,14 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtUiTools import QUiLoader
 import queue
 import time
+from consolewindow import ConsoleWindowUI
+from layout import Layout
 from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
-from consolewindow import ConsoleWindowUI
-from layout import Layout
 from vlcbclient import VLCBClient
+from locolist import LocoList
+from loco import Loco
 
 loader = QUiLoader()
 basedir = os.path.dirname(__file__)
@@ -65,6 +67,14 @@ class MainWindowUI(QMainWindow):
         # VLCB and node creation
         self.vlcb = VLCB(self.pc_can_id)
         
+        #Locos
+        self.loco_list = LocoList()
+        # This is the loco being controlled through the interface
+        self.loco = Loco()
+        # Store the loco ids in the same number as the list
+        # Makes it easier to lookup from locoComboList
+        self.loco_ids = []
+        
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
         
@@ -94,6 +104,11 @@ class MainWindowUI(QMainWindow):
         # has (Node, EVid, EVNum) - num added to make it easier
         self.selected_ev = None
         
+        # Update other GUI components
+        # Add locos to menu
+        self.update_loco_list ()
+        self.ui.locoComboBox.currentIndexChanged.connect(self.loco_change)
+        
         self.setCentralWidget(self.ui)
         self.ui.nodeTreeView.show()
         self.show()
@@ -104,6 +119,46 @@ class MainWindowUI(QMainWindow):
     
         # Initial discover request
         self.discover()
+        
+    # When loco change requested through combobox
+    def loco_change (self, index):
+        
+        # Release old loco
+        if self.loco.status == "on" and self.loco.session != 0:
+            # Sends a release but doesn't check for a response
+            self.start_request(self.vlcb.release_loco(self.loco.session))
+            self.loco.released()
+            # Normally would want to stop the keep alive but we are hoping to aquire a new session immediately after
+            # So the keep alive will just ignore until aquired
+
+        # Check for a valid loco chosen (ie if gone back to 0 then return)
+        if index == 0:
+            if self.kalive_timer.isActive():
+                self.kalive_timer.stop()
+            return
+
+        loco_id = self.loco_ids[index]
+        loco_name = self.loco_list.loco_name(loco_id)
+
+        self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
+        # Update with loco_id
+        self.loco.loco_id = loco_id
+        self.start_request(self.vlcb.allocate_loco(loco_id))
+        # Don't check status - instead this will be picked up by the regular polling
+        # This could result in a situation where it constantly says "Aquiring"
+        # Perhaps consider a retry and/or timeout in future
+        self.kalive_timer.start()
+        
+        
+    def update_loco_list (self):
+        self.ui.locoComboBox.clear()
+        # Readd the default - none selected
+        self.ui.locoComboBox.addItem("Loco Name / ID")
+        self.loco_ids.append(0)
+        # Returns the list of 
+        for loco_id in self.loco_list.get_locos():
+            self.loco_ids.append(loco_id)
+            self.ui.locoComboBox.addItem(self.loco_list.loco_name(loco_id))
         
     def tree_clicked(self, item):
         node_item = self.node_model.itemFromIndex(item)
@@ -234,7 +289,8 @@ class MainWindowUI(QMainWindow):
         # or we could not retrieve any previous messages by first checking for -1 entries and using that for
         # the start value
         # For now we handle all responses including old ones - but check for whether there are any changes
-        if vlcb_entry.opcode() == 'PNN':    # PNN (Response to query node)
+        ret_opcode = vlcb_entry.opcode()    # Instead of calling method for each condition save it in a variable
+        if ret_opcode == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Determine mode based on flags (bit 3)
             # Flags bit 0 = consumer, bit 1 = producer, bit 2= FliM, bit 3 = supports bootloading
@@ -265,7 +321,7 @@ class MainWindowUI(QMainWindow):
                 #        self.node_model.item(i).setText(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
             # If this is new, or has changed then we can also get the number of events
             self.discover_evn (data_entry['NN'])
-        elif vlcb_entry.opcode() == 'NUMEV':    # Number of configured events
+        elif ret_opcode == 'NUMEV':    # Number of configured events
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # If we don't already have this node then didn't see a PNN response - so likely error
             if not data_entry['NN'] in self.nodes.keys():
@@ -273,7 +329,7 @@ class MainWindowUI(QMainWindow):
                 return
             # Update node with evnum value
             self.nodes[data_entry['NN']].set_numev(data_entry['NumEvents'])
-        elif vlcb_entry.opcode() == 'EVNLF':    # Number of event space left in node
+        elif ret_opcode == 'EVNLF':    # Number of event space left in node
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # If we don't already have this node then didn't see a PNN response - so likely error
             if not data_entry['NN'] in self.nodes.keys():
@@ -283,7 +339,7 @@ class MainWindowUI(QMainWindow):
             self.nodes[data_entry['NN']].set_evspc(data_entry['EVSPC'])
             # Add a query for the next discovery stage - get a list of all the events
             self.discover_nerd (data_entry['NN'])
-        elif vlcb_entry.opcode() == 'ENRSP':    # EV discovery
+        elif ret_opcode == 'ENRSP':    # EV discovery
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # If we don't already have this node then didn't see a PNN response - so likely error
             if not data_entry['NN'] in self.nodes.keys():
@@ -292,7 +348,35 @@ class MainWindowUI(QMainWindow):
             # Add event to node
             #print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
             self.nodes[data_entry['NN']].add_ev(data_entry['EnIndex'], data_entry['En3_0'])
-            self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))            
+            self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
+        # Indicates allocation of loco - need to verify this is expected
+        elif ret_opcode == 'PLOC':
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3'
+            loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
+            if self.loco.loco_id != loco_id:
+                print (f"PLOC ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                return
+            # Update loco with session, speed and direction
+            self.loco.session = data_entry['Session']
+            self.loco.set_speed_dir (data_entry['SpeedDir'])
+            self.loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
+            # Set status to on last gives time to ensure all entries updated
+            self.loco.status = "on"
+        # ERR is error from DCC controller - eg. problem aquiring loco
+        elif ret_opcode == 'ERR':
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
+            # Check error code relates to the current loco
+            if self.loco.loco_id != loco_id:
+                print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                return
+            if data_entry['ErrCode'] == 1:
+                self.ui.locoStatusLabel.setText ("Error - no sessions available")
+            # Todo - need to provide option to steal loco
+            elif data_entry['ErrCode'] == 2:
+                self.ui.locoStatusLabel.setText ("Error - address taken")
+            
             
     # Initial discover of modules    
     def discover (self):
@@ -437,7 +521,10 @@ class MainWindowUI(QMainWindow):
     # Keep alive - called every 4 secs
     # Add a keep alive to the send queue
     def keep_alive (self):
-        pass
+        # Check we have a session to send a keep alive (ie. not in process of trying
+        # to aquire a new loco
+        if self.loco.status == "on" and self.loco.session != 0:
+            self.start_request(self.vlcb.keep_alive(self.loco.session))
         
         
 class Worker (QRunnable):
