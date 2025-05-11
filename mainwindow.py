@@ -108,6 +108,7 @@ class MainWindowUI(QMainWindow):
         # Add locos to menu
         self.update_loco_list ()
         self.ui.locoComboBox.currentIndexChanged.connect(self.loco_change)
+        self.ui.locoDial.valueChanged.connect(self.loco_change_speed)
         
         self.setCentralWidget(self.ui)
         self.ui.nodeTreeView.show()
@@ -148,7 +149,11 @@ class MainWindowUI(QMainWindow):
         # This could result in a situation where it constantly says "Aquiring"
         # Perhaps consider a retry and/or timeout in future
         self.kalive_timer.start()
+        # Todo update the LCD display and the dial
         
+    def loco_change_speed (self, new_speed):
+        self.loco.set_speed (new_speed)
+        self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
         
     def update_loco_list (self):
         self.ui.locoComboBox.clear()
@@ -359,10 +364,12 @@ class MainWindowUI(QMainWindow):
                 return
             # Update loco with session, speed and direction
             self.loco.session = data_entry['Session']
-            self.loco.set_speed_dir (data_entry['SpeedDir'])
+            self.loco.set_speeddir (data_entry['SpeedDir'])
             self.loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
+            self.ui.locoStatusLabel.setText ("Ready")
             # Set status to on last gives time to ensure all entries updated
             self.loco.status = "on"
+            # Todo update controller with new values
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)

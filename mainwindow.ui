@@ -107,7 +107,7 @@
               <widget class="QDial" name="locoDial">
                <property name="minimumSize">
                 <size>
-                 <width>0</width>
+                 <width>150</width>
                  <height>250</height>
                 </size>
                </property>
@@ -116,6 +116,9 @@
                  <width>120</width>
                  <height>16777215</height>
                 </size>
+               </property>
+               <property name="maximum">
+                <number>127</number>
                </property>
                <property name="tracking">
                 <bool>false</bool>
@@ -129,20 +132,71 @@
               </widget>
              </item>
              <item>
-              <widget class="QLCDNumber" name="locoSpeedLcd">
-               <property name="maximumSize">
-                <size>
-                 <width>130</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="lineWidth">
-                <number>0</number>
-               </property>
-               <property name="digitCount">
-                <number>2</number>
-               </property>
-              </widget>
+              <layout class="QVBoxLayout" name="verticalLayout_3">
+               <item>
+                <widget class="QRadioButton" name="locoForwardRadio">
+                 <property name="minimumSize">
+                  <size>
+                   <width>0</width>
+                   <height>0</height>
+                  </size>
+                 </property>
+                 <property name="maximumSize">
+                  <size>
+                   <width>140</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QLCDNumber" name="locoSpeedLcd">
+                 <property name="maximumSize">
+                  <size>
+                   <width>130</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="lineWidth">
+                  <number>0</number>
+                 </property>
+                 <property name="digitCount">
+                  <number>3</number>
+                 </property>
+                </widget>
+               </item>
+               <item>
+                <widget class="QRadioButton" name="locoReverseRadio">
+                 <property name="maximumSize">
+                  <size>
+                   <width>140</width>
+                   <height>16777215</height>
+                  </size>
+                 </property>
+                 <property name="toolTip">
+                  <string extracomment="Reverse"/>
+                 </property>
+                 <property name="layoutDirection">
+                  <enum>Qt::RightToLeft</enum>
+                 </property>
+                 <property name="text">
+                  <string/>
+                 </property>
+                 <property name="checkable">
+                  <bool>true</bool>
+                 </property>
+                 <property name="checked">
+                  <bool>false</bool>
+                 </property>
+                </widget>
+               </item>
+              </layout>
              </item>
             </layout>
            </item>

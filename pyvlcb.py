@@ -174,6 +174,13 @@ class VLCB:
         
     def keep_alive (self, session_id):
         return f"{self.make_header()}23{VLCB.num_to_1hexstr(session_id)};"
+    
+    # Set loco speed and direction (always done together)
+    # Maximum once every 32 miliseconds (GUI configured based on non triggered so shouldn't be an issue)
+    # Could add time detection if required
+    # This uses the combined speed and direction value
+    def loco_speeddir (self, session_id, speeddir):
+        return f"{self.make_header()}47{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(speeddir)};"
         
     #manufaturer name  is requested by RQMN.
     #<0x11>
