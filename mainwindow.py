@@ -13,6 +13,7 @@ from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
 from locolist import LocoList
 from loco import Loco
+from stealdialog import StealDialog
 
 loader = QUiLoader()
 basedir = os.path.dirname(__file__)
@@ -26,6 +27,7 @@ class MainWindowUI(QMainWindow):
     newdata_loaded_signal = Signal()
     # If nodes are updated then need to update elements
     node_updated_signal = Signal()
+    steal_dialog_signal = Signal(int)
     
     def __init__(self):
         super().__init__()
@@ -81,6 +83,7 @@ class MainWindowUI(QMainWindow):
         # Signals
         self.newdata_loaded_signal.connect (self.update_console)
         self.node_updated_signal.connect (self.update_nodes)
+        self.steal_dialog_signal.connect (self.steal_loco_dialog)
         
         # File Menu
         self.ui.actionExit.triggered.connect(self.quit_app)
@@ -149,11 +152,12 @@ class MainWindowUI(QMainWindow):
         # This could result in a situation where it constantly says "Aquiring"
         # Perhaps consider a retry and/or timeout in future
         self.kalive_timer.start()
-        # Todo update the LCD display and the dial
+        
         
     def loco_change_speed (self, new_speed):
         self.loco.set_speed (new_speed)
         self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.update_lcd()
         
     def update_loco_list (self):
         self.ui.locoComboBox.clear()
@@ -370,6 +374,7 @@ class MainWindowUI(QMainWindow):
             # Set status to on last gives time to ensure all entries updated
             self.loco.status = "on"
             # Todo update controller with new values
+            self.update_lcd ()
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
@@ -383,6 +388,8 @@ class MainWindowUI(QMainWindow):
             # Todo - need to provide option to steal loco
             elif data_entry['ErrCode'] == 2:
                 self.ui.locoStatusLabel.setText ("Error - address taken")
+                self.steal_dialog_signal.emit(loco_id)
+
             
             
     # Initial discover of modules    
@@ -525,6 +532,19 @@ class MainWindowUI(QMainWindow):
         
         self.update_in_progress = False
         
+    def steal_loco_dialog (self):
+        #steal_dialog = loader.load("stealdialog.ui", None)
+        #steal_dialog = loader.load(os.path.join(basedir, "stealwindow.ui"), None)
+        steal_dialog = StealDialog(self)
+        steal_dialog.open()
+        #steal_dialog.exec_()
+        
+    # Update the LCD display based on the speed
+    def update_lcd (self):
+        self.ui.locoSpeedLcd.display(self.loco.speed)
+        #self.ui.locoForwardRadio
+        #self.ui.locoReverseRadio
+        
     # Keep alive - called every 4 secs
     # Add a keep alive to the send queue
     def keep_alive (self):
@@ -532,7 +552,11 @@ class MainWindowUI(QMainWindow):
         # to aquire a new loco
         if self.loco.status == "on" and self.loco.session != 0:
             self.start_request(self.vlcb.keep_alive(self.loco.session))
-        
+            
+            
+    def steal_loco_check (self, num_loco):
+        steal_dialog = QDialog(self)
+        steal_dialog.exec_()    
         
 class Worker (QRunnable):
     def __init__(self, fn, *args, **kwargs):

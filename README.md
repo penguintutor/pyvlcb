@@ -54,3 +54,16 @@ All requests are sent to a message queue, so there may be a short delay in them 
 unless there are a lot of updates in progress.
 
 For loco control the dial shows the desired speed, the LCD display shows the value provided in the last update
+
+
+
+Steal = GLOC (61) Flags = 1
+eg. :SB040N61D44601;
+
+- 63 Err code 8 = Session cancelled
+Followed by E1 PLOC
+
+
+GLOC Flags = 2 = Share
+
+44 STMOD - mode = 0 ? - is speed mode 128 steps (is this required)?
