@@ -9,11 +9,8 @@ import urllib.request, urllib.parse
 class VLCBClient():
     def __init__ (self, url):
         self.url = url
-        self.debug = True
+        self.debug = False
      
-    # Use get_data instead
-    #def poll_server (self):
-    #    pass
     
     def send (self, message):
         message = urllib.parse.quote(message)
@@ -38,7 +35,7 @@ class VLCBClient():
     def read (self, last_packet):
         # if lastpacket does not have a value then read from 0 (have no data)
         if last_packet == None:
-            last_packet = 0
+            last_packet = -5
         else:
             last_packet += 1	# Read next packet
         request_string = f"{self.url}vlcb?read={last_packet}&format=txt"

@@ -5,8 +5,9 @@ from PySide6.QtUiTools import QUiLoader
 
 class StealDialog(QDialog):
     
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent)
+        self.gui = parent
         self.setModal(True)
         loader = QUiLoader()
         basedir = os.path.dirname(__file__)
@@ -15,10 +16,23 @@ class StealDialog(QDialog):
         main_layout = QVBoxLayout()
         main_layout.addWidget(self.ui)
         self.setLayout(main_layout)
-        #self.open()
+        # handle button clicks
+        self.ui.cancelButton.clicked.connect (self.cancel)
+        self.ui.stealButton.clicked.connect (self.steal)
+        self.ui.shareButton.clicked.connect (self.share)
         
-        self.ui.cancelButton.clicked.connect (self.reject)
+    def steal (self):
+        self.gui.steal_loco_signal.emit()
+        self.accept()
+        
+    def share (self):
+        self.gui.share_loco_signal.emit()
+        self.accept()
+    
+        
+    def cancel(self):
+        # Send signal to reset gui selection
+        self.gui.reset_loco_signal.emit()
+        self.reject()
 
-    #def reject(self):
-    #    self.close()
         

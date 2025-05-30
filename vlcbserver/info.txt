@@ -1,0 +1,4 @@
+pip3 install Flask-WTF
+pip3 install strip-tags
+
+

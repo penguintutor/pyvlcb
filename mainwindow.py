@@ -19,7 +19,10 @@ loader = QUiLoader()
 basedir = os.path.dirname(__file__)
 
 app_title = "VLCB App"
-url = "http://127.0.0.1:8888/"
+#url = "http://127.0.0.1:8888/"
+url = "http://127.0.0.1:5000/"
+
+read_rate = 200
 
 class MainWindowUI(QMainWindow):
     
@@ -28,6 +31,11 @@ class MainWindowUI(QMainWindow):
     # If nodes are updated then need to update elements
     node_updated_signal = Signal()
     steal_dialog_signal = Signal(int)
+    # Handle loco selection
+    # reset loco to none selected (if aquire failed or loco stolen by another controller)
+    reset_loco_signal = Signal()
+    steal_loco_signal = Signal() # Attempt to steal loco
+    share_loco_signal = Signal() # Attempt to share loco
     
     def __init__(self):
         super().__init__()
@@ -46,12 +54,15 @@ class MainWindowUI(QMainWindow):
         self.send_queue = []
         
         # Current position in server log entries and amount of data received
+        # If -1 will try and get all including old entries
+        # If None just get the last few packets received (effectively start from current instead of history)
+        # None is -5 to ensure see the initial discover
         self.last_packet = None
-        #self.data_received = 0
+        #self.data_received = None
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
-        self.timer.setInterval(500)
+        self.timer.setInterval(read_rate)
         self.timer.timeout.connect(self.poll_server)
         self.timer.start()
         
@@ -84,6 +95,9 @@ class MainWindowUI(QMainWindow):
         self.newdata_loaded_signal.connect (self.update_console)
         self.node_updated_signal.connect (self.update_nodes)
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
+        self.reset_loco_signal.connect (self.reset_loco)
+        self.steal_loco_signal.connect (self.steal_loco)
+        self.share_loco_signal.connect (self.share_loco)
         
         # File Menu
         self.ui.actionExit.triggered.connect(self.quit_app)
@@ -110,7 +124,8 @@ class MainWindowUI(QMainWindow):
         # Update other GUI components
         # Add locos to menu
         self.update_loco_list ()
-        self.ui.locoComboBox.currentIndexChanged.connect(self.loco_change)
+        #self.ui.locoComboBox.currentIndexChanged.connect(self.loco_change)
+        self.ui.locoComboBox.activated.connect(self.loco_change)
         self.ui.locoDial.valueChanged.connect(self.loco_change_speed)
         
         self.setCentralWidget(self.ui)
@@ -124,9 +139,41 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.discover()
         
+    def steal_loco (self):
+        # Check we have valid loco_id (if not reset)
+        if (self.loco.loco_id == 0):
+            self.reset_loco()
+            return
+        loco_id = self.loco.loco_id
+        loco_name = self.loco_list.loco_name(loco_id)
+        self.ui.locoStatusLabel.setText(f"Stealing {loco_name}")
+        self.loco.status = 'gloc'
+        self.start_request(self.vlcb.steal_loco(loco_id))
+    
+    def share_loco (self):
+        # Check we have valid loco_id (if not reset)
+        if (self.loco.loco_id == 0):
+            self.reset_loco()
+            return
+        loco_id = self.loco.loco_id
+        loco_name = self.loco_list.loco_name(loco_id)
+        self.ui.locoStatusLabel.setText(f"Req sharing {loco_name}")
+        self.start_request(self.vlcb.share_loco(loco_id))
+        
+    # Reset loco selection in GUI and remove references
+    def reset_loco (self):
+        # remove keep alive timer if active
+        if self.kalive_timer.isActive():
+                self.kalive_timer.stop()
+        self.loco.reset()
+        # Change combo after reset - that way the post change
+        # will not send a release message
+        self.ui.locoComboBox.setCurrentIndex(0)
+        self.ui.locoStatusLabel.setText(f"None active") 
+        
+       
     # When loco change requested through combobox
     def loco_change (self, index):
-        
         # Release old loco
         if self.loco.status == "on" and self.loco.session != 0:
             # Sends a release but doesn't check for a response
@@ -148,6 +195,7 @@ class MainWindowUI(QMainWindow):
         # Update with loco_id
         self.loco.loco_id = loco_id
         self.start_request(self.vlcb.allocate_loco(loco_id))
+        self.loco.status = 'rloc'
         # Don't check status - instead this will be picked up by the regular polling
         # This could result in a situation where it constantly says "Aquiring"
         # Perhaps consider a retry and/or timeout in future
@@ -277,7 +325,8 @@ class MainWindowUI(QMainWindow):
     # Note incoming is either i (incoming) or o (outgoing)
     
     def handle_incoming_data (self, response):
-        #print (f"Incoming data {response}")
+        if self.debug:
+            print (f"Incoming data {response}")
         # pass to console (unparsed)
         self.console_window.add_log(response)
         # strip date off (don't need except for the log)
@@ -291,6 +340,8 @@ class MainWindowUI(QMainWindow):
         vlcb_entry = self.vlcb.parse_input(id_date_data[3])
         # If not a valid entry then ignore
         if vlcb_entry == False:
+            if self.debug:
+                print (f"Not a valid entry {id_date_data}")
             return
         # Look for specific responses
         # todo - should we check timestamp first? If the entry is from before the first request then may not be
@@ -299,6 +350,8 @@ class MainWindowUI(QMainWindow):
         # the start value
         # For now we handle all responses including old ones - but check for whether there are any changes
         ret_opcode = vlcb_entry.opcode()    # Instead of calling method for each condition save it in a variable
+        if self.debug:
+            print (f"Op code {ret_opcode}")
         if ret_opcode == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Determine mode based on flags (bit 3)
@@ -360,10 +413,14 @@ class MainWindowUI(QMainWindow):
             self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
         # Indicates allocation of loco - need to verify this is expected
         elif ret_opcode == 'PLOC':
+            # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc
+            if self.loco.is_aquiring() == False:
+                return
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3'
             loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
             if self.loco.loco_id != loco_id:
+                # If it doesn't match then perhaps this was for a different controller
                 print (f"PLOC ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
                 return
             # Update loco with session, speed and direction
@@ -377,22 +434,59 @@ class MainWindowUI(QMainWindow):
             self.update_lcd ()
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
+            # Depending upon the error code the data may have different interpretations
+            # Stored as Byte1, Byte2, ErrCode - where Byte1,Byte2 may eqal AddrHigh_AddrLow, or
+            # may be Byte1 = Session ID, Byte 2 = 0
+            # So only check after looking at the ErrCode
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
+            #loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
             # Check error code relates to the current loco
-            if self.loco.loco_id != loco_id:
-                print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
-                return
             if data_entry['ErrCode'] == 1:
+                # Only valid during aquiring status
+                if self.loco.is_aquiring() == False:
+                    return
+                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
+                if self.loco.loco_id != loco_id:
+                    if self.debug:
+                        print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                    return
                 self.ui.locoStatusLabel.setText ("Error - no sessions available")
-            # Todo - need to provide option to steal loco
+            # Already taken - option to steal
             elif data_entry['ErrCode'] == 2:
+                #Only for us if we haven't completed the session setup
+                #print (f"Session status {self.loco.status}")
+                if self.loco.status == "on":
+                    #print ("Not our session")
+                    return
+                elif self.loco.is_aquiring() == False:
+                    #print ("Not aquiring session")
+                    return
+                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
+                if self.debug:
+                    print ("Error code 2 - loco taken")
+                if self.loco.loco_id != loco_id:
+                    if self.debug:
+                        print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                    return
                 self.ui.locoStatusLabel.setText ("Error - address taken")
                 self.steal_dialog_signal.emit(loco_id)
-
+            elif data_entry['ErrCode'] == 8:
+                # If we are trying to aquire a session then this could be us resetting other node
+                if self.loco.is_aquiring():
+                    return
+                # byte 1 is now sessionid - byte2 is ignored - should be 00
+                session_id = int(data_entry['Byte1'])
+                # if not our current session_id then could be for a different controller so ignore
+                if session_id != 0 and session_id == self.loco.session:
+                    if self.debug:
+                        print (f"Session cancelled {session_id}")
+                    # This updates the loco and the GUI
+                    self.reset_loco()
+                else:
+                    if self.debug:
+                        print (f"Session not cancelled {session_id}, loco session {self.loco.session}")
             
-            
-    # Initial discover of modules    
+    # Initial discovery of modules    
     def discover (self):
         self.start_request(self.vlcb.discover())
         
@@ -493,6 +587,8 @@ class MainWindowUI(QMainWindow):
             # First line format is "Read,<start>,<end>,<numlines>"
             header = status_data[0].split(',', 3)
             
+            #print (f"Header {header}")
+            
             # check to see if field 3 is negative - if so then most likely that
             # the server has been restarted and we are ahead
             # Here just reset last_packet to 0 and then continue
@@ -510,6 +606,7 @@ class MainWindowUI(QMainWindow):
             this_last_packet = int(header[2])
             if self.last_packet == None or self.last_packet < this_last_packet:
                 self.last_packet = this_last_packet
+            #print (f"Status {status_data}")                
             data_packets = status_data[1].split('\n')
             #print (f"Data packets: {data_packets}")
             for data_packet in data_packets:
@@ -533,11 +630,9 @@ class MainWindowUI(QMainWindow):
         self.update_in_progress = False
         
     def steal_loco_dialog (self):
-        #steal_dialog = loader.load("stealdialog.ui", None)
-        #steal_dialog = loader.load(os.path.join(basedir, "stealwindow.ui"), None)
         steal_dialog = StealDialog(self)
         steal_dialog.open()
-        #steal_dialog.exec_()
+        # Ignore the result of the dialog as it will emit own signals
         
     # Update the LCD display based on the speed
     def update_lcd (self):

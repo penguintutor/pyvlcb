@@ -3,12 +3,27 @@
 class Loco:
     # All arguments have default allowing creation of a dummy loco
     def __init__ (self, loco_id=0, session=0, direction=1, speed=0):
-        self.status = "off"   # Starts in off status - change to on when allocated
+        # status tarts in off, change to rloc when rloc sent, then on when allocated
+        # if error after ploc then set to off
+        # if gloc then set status to gloc - and then on after aquire (ploc)
+        self.status = "off"   
         self.loco_id = loco_id
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
         self.direction = direction # 1 = forward, 0 = reverse
         self.speed = speed #(0 to 127) - 1 = emergency stop (skip in normal use)
     
+    # Is setup in progress (rloc / gloc)
+    def is_aquiring (self):
+        if self.status == 'gloc' or self.status == 'rloc':
+            return True
+        return False
+    
+    # Same as release but also set loco_id to 0 to indicate none requested
+    def reset (self):
+        self.loc_id = 0
+        self.released()
+    
+    # Use when loco released
     def released (self):
         self.status = "off"
         self.session = 0

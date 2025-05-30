@@ -31,8 +31,14 @@ Send must be a single CBUS message starting with : and ending with ; (url encode
 All content must be alphanum - anything else and it will not be sent to CBUS
 
 
+Response 
+First line = Read,start,end,count
+If count is 0 then no new data
+If count is negative then indicates error
+Eg. if try to read beyond end of data
 
-
+remaining entries are
+msg_count,date,data_string
 
 
 
