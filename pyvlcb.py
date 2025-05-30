@@ -100,6 +100,18 @@ class VLCB:
     def num_to_4hexstr (num):
         return f"{hex(num).upper()[2:]:0>8}"
     
+    @staticmethod
+    # Where 2 bytes convert to addr id
+    def bytes_to_addr (byte1, byte2):
+        msb = int(byte1)
+        lsb = int(byte2)
+        return ((msb << 8) + lsb)
+    
+    @staticmethod
+    def bytes_to_hexstr (byte1, byte2):
+        return f"{hex(byte1).upper()[2:]:0>2}{hex(byte2).upper()[2:]:0>2}"
+        
+    
     # Create header using low priority and can_id (or self.can_id)
     def make_header (self, majpri = 0b10, minpri = 0b11, can_id = None):
         if can_id == None:
@@ -171,6 +183,24 @@ class VLCB:
     
     def release_loco (self, session_id):
         return f"{self.make_header()}21{VLCB.num_to_1hexstr(session_id)};"
+    
+    def steal_loco (self, loco_id, long=True):
+        # GLOC 61 - flag = 1 for steal, flag = for share
+        if long == False and loco_id >= 127:
+            print ("Invalid short code")
+            return False
+        if long == True:
+            loco_id = loco_id | 0xC000
+        return f"{self.make_header()}61{VLCB.num_to_2hexstr(loco_id)}01;"   
+        
+    def share_loco (self, loco_id, long=True):
+        # GLOC 61 - flag = 1 for steal, flag = for share
+        if long == False and loco_id >= 127:
+            print ("Invalid short code")
+            return False
+        if long == True:
+            loco_id = loco_id | 0xC000
+        return f"{self.make_header()}61{VLCB.num_to_2hexstr(loco_id)}02;" 
         
     def keep_alive (self, session_id):
         return f"{self.make_header()}23{VLCB.num_to_1hexstr(session_id)};"
