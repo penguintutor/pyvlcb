@@ -128,6 +128,9 @@ class MainWindowUI(QMainWindow):
         self.ui.locoComboBox.activated.connect(self.loco_change)
         self.ui.locoDial.valueChanged.connect(self.loco_change_speed)
         
+        # Update LCD - used to set '-' at start
+        self.update_lcd()
+        
         self.setCentralWidget(self.ui)
         self.ui.nodeTreeView.show()
         self.show()
@@ -202,9 +205,12 @@ class MainWindowUI(QMainWindow):
         self.kalive_timer.start()
         
         
+    # This is used based on the dial
     def loco_change_speed (self, new_speed):
-        self.loco.set_speed (new_speed)
-        self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        # If not in a session then ignore
+        if self.loco.is_active():
+            self.loco.set_speed (new_speed)
+            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
         self.update_lcd()
         
     def update_loco_list (self):
@@ -636,7 +642,14 @@ class MainWindowUI(QMainWindow):
         
     # Update the LCD display based on the speed
     def update_lcd (self):
-        self.ui.locoSpeedLcd.display(self.loco.speed)
+        # If not in a session show --
+        if self.loco.is_active() == False:
+            self.ui.locoSpeedLcd.display("--")
+        # If 0 then use string to ensure 0 displayed
+        elif self.loco.speed_value() == 0:
+            self.ui.locoSpeedLcd.display("0")
+        else:
+            self.ui.locoSpeedLcd.display(self.loco.speed_value())
         #self.ui.locoForwardRadio
         #self.ui.locoReverseRadio
         
