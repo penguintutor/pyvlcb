@@ -124,9 +124,18 @@ class MainWindowUI(QMainWindow):
         # Update other GUI components
         # Add locos to menu
         self.update_loco_list ()
-        #self.ui.locoComboBox.currentIndexChanged.connect(self.loco_change)
+        # Activated is based on user interaction (changing by code doesn't trigger)
         self.ui.locoComboBox.activated.connect(self.loco_change)
         self.ui.locoDial.valueChanged.connect(self.loco_change_speed)
+        
+        # With direction radio buttons just look for clicks (so can update without triggering)
+        self.ui.locoForwardRadio.clicked.connect(self.loco_forward)
+        self.ui.locoReverseRadio.clicked.connect(self.loco_reverse)
+        self.ui.locoForwardButton.clicked.connect(self.loco_forward)
+        self.ui.locoReverseButton.clicked.connect(self.loco_reverse)
+        
+        self.ui.locoStopButton.clicked.connect(self.loco_stop)
+        self.ui.locoStopAllButton.clicked.connect(self.loco_stop_all)
         
         # Update LCD - used to set '-' at start
         self.update_lcd()
@@ -209,6 +218,10 @@ class MainWindowUI(QMainWindow):
     def loco_change_speed (self, new_speed):
         # If not in a session then ignore
         if self.loco.is_active():
+            # Special case if stop and 0 then reset stop
+            if self.loco.status == "stop" and new_speed == 0:
+                self.loco.status = "on"
+                self.ui.locoStatusLabel.setText ("Ready")
             self.loco.set_speed (new_speed)
             self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
         self.update_lcd()
@@ -342,7 +355,6 @@ class MainWindowUI(QMainWindow):
         if (len(id_date_data) < 4):
             print (f"Invalid entry - skipping {response}")
             return
-        # Todo - id_date_data[2] is i / o - not yet implemented in console
         vlcb_entry = self.vlcb.parse_input(id_date_data[3])
         # If not a valid entry then ignore
         if vlcb_entry == False:
@@ -358,7 +370,12 @@ class MainWindowUI(QMainWindow):
         ret_opcode = vlcb_entry.opcode()    # Instead of calling method for each condition save it in a variable
         if self.debug:
             print (f"Op code {ret_opcode}")
-        if ret_opcode == 'PNN':    # PNN (Response to query node)
+        if ret_opcode == 'ERSTOP':    # Emergency stop all
+            # Emergency stop and stop all are the same
+            # except for the message
+            self.loco_stop ("STOP ALL!")
+            
+        elif ret_opcode == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Determine mode based on flags (bit 3)
             # Flags bit 0 = consumer, bit 1 = producer, bit 2= FliM, bit 3 = supports bootloading
@@ -643,15 +660,17 @@ class MainWindowUI(QMainWindow):
     # Update the LCD display based on the speed
     def update_lcd (self):
         # If not in a session show --
-        if self.loco.is_active() == False:
+        if self.loco.is_active() == False or self.loco.status == "stop" :
             self.ui.locoSpeedLcd.display("--")
         # If 0 then use string to ensure 0 displayed
         elif self.loco.speed_value() == 0:
             self.ui.locoSpeedLcd.display("0")
         else:
             self.ui.locoSpeedLcd.display(self.loco.speed_value())
-        #self.ui.locoForwardRadio
-        #self.ui.locoReverseRadio
+        if self.loco.direction == 1:
+            self.ui.locoForwardRadio.setChecked(True)
+        elif self.loco.direction == 0:
+            self.ui.locoReverseRadio.setChecked(True)
         
     # Keep alive - called every 4 secs
     # Add a keep alive to the send queue
@@ -664,7 +683,37 @@ class MainWindowUI(QMainWindow):
             
     def steal_loco_check (self, num_loco):
         steal_dialog = QDialog(self)
-        steal_dialog.exec_()    
+        steal_dialog.exec_()
+        
+    def loco_forward (self):
+        self.loco.set_direction (1)
+        if self.loco.is_active():
+            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.update_lcd()
+        
+    def loco_reverse (self):
+        self.loco.set_direction (0)
+        if self.loco.is_active():
+            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.update_lcd()
+        
+        
+    # Emergency stop - current loco
+    # To reset need to set speed to 0 on the dial
+    def loco_stop (self, msg="STOP!"):
+        # If calling from a clicked then gives False rather than msg
+        if msg == False:
+            msg = "STOP!"
+        self.loco.set_stop()
+        if self.loco.session != 0:
+            # check we have a session
+            # don't check status as this is emergency stop so send regardless
+            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.ui.locoStatusLabel.setText (msg)
+        self.update_lcd()
+        
+    def loco_stop_all (self):
+        self.start_request(self.vlcb.loco_stop_all())
         
 class Worker (QRunnable):
     def __init__(self, fn, *args, **kwargs):

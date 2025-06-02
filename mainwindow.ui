@@ -150,6 +150,12 @@
                 <property name="text">
                  <string/>
                 </property>
+                <property name="checked">
+                 <bool>true</bool>
+                </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">directionButtonGroup</string>
+                </attribute>
                </widget>
               </item>
               <item>
@@ -191,6 +197,9 @@
                 <property name="checked">
                  <bool>false</bool>
                 </property>
+                <attribute name="buttonGroup">
+                 <string notr="true">directionButtonGroup</string>
+                </attribute>
                </widget>
               </item>
              </layout>
@@ -598,4 +607,7 @@
  </widget>
  <resources/>
  <connections/>
+ <buttongroups>
+  <buttongroup name="directionButtonGroup"/>
+ </buttongroups>
 </ui>

@@ -47,9 +47,13 @@ class Loco:
         
     # get Dir/Speed combined value
     def get_speeddir (self):
+        # uses local variable for calculating return value
         speed = self.speed
         if self.speed > 127:
             speed = 127
+        # If emergency stop then send 1 as speed
+        if self.status == "stop":
+            speed = 1
         return (self.direction * 0x80) + speed
     
     # Takes combined speed & dir and updates direction / speed
@@ -60,7 +64,10 @@ class Loco:
         self.speed = speed_dir & 0x7F
         if self.speed > 1:
             self.speed += 1
-        
+    
+    # emergency stop
+    def set_stop (self):
+        self.status = "stop"
       
     # Sets speed only - keep current direction
     # 0 = stop, 1 = increase to 2 (1 is emergency stop - so don't allow here)
@@ -72,6 +79,13 @@ class Loco:
         if speed_value > 0 and speed_value < 127:
             speed_value += 1
         self.speed = speed_value
+        
+    # Direction is 1 for forward, 0 for reverse
+    # Could add support for other variable types
+    def set_direction (self, direction):
+        if isinstance(direction, int) and (direction ==  0 or direction == 1):
+            self.direction = direction
+        # Otherwise just ignore
         
     # Not currently included
     # Todo add functions
