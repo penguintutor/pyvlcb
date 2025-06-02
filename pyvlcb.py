@@ -139,6 +139,11 @@ class VLCB:
     def discover_nerd (self, node_id):
         return f"{self.make_header()}57{VLCB.num_to_2hexstr(node_id)};"
     
+    # Emergency stop all locos
+    # RESTP
+    def loco_stop_all (self):
+        return f"{self.make_header()}0A;"
+    
     # node and ev should be the IDs - state either "on" or "off" / True or False
     def accessory_command (self, node_id, ev_id, state):
         # determine if long or short
