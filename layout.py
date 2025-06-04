@@ -1,8 +1,22 @@
+# Class to hold details about the layout / locos etc
+# Reads data from layout.json file
+import json
+import os
+
+
 # Holds specific information about the layout
 # particularly useful for giving friendly names
 # to replace nodeIDs
 class Layout:
-    def __init__ (self):
+    def __init__ (self, layout_file):
+        self.layout_file = layout_file
+        # Create directory names
+        basedir = os.path.dirname(__file__)
+        self.data_dir = os.path.join(basedir, "data")
+        self.loco_dir = os.path.join(self.data_dir, "locos")
+        with open(os.path.join(self.data_dir, self.layout_file), 'r') as data_file:
+            self.layout_data = json.load(data_file)
+        
         self.node_names = {
             300: "Solenoid1",
             301: "Servo1"
@@ -13,6 +27,27 @@ class Layout:
             300: {1: "Solenoid01", 2: "Solenoid02"},
             301: {1: "Servo1"}
             }
+        
+    # Returns list of lists. Each entry ["Friendly name", "filename"]
+    def get_locos (self):
+        return self.layout_data['locos']
+    
+    def get_loco_names (self):
+        names = []
+        for loco_entry in self.layout_data['locos']:
+            names.append(loco_entry[0])
+        return names
+    
+    # Just return one loco name
+    def get_loco_name (self, num):
+        return self.layout_data['locos'][num][0]
+    
+    # Get loco filename based on position in list
+    # Based on same order as get_loco
+    # Returns full path
+    def get_loco_filename (self, num):
+        return os.path.join(self.loco_dir, self.layout_data['locos'][num][1])
+        
         
     def node_name (self, node_id):
         if (node_id in self.node_names.keys()):

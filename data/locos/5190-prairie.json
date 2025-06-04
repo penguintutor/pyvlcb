@@ -1,0 +1,35 @@
+{
+	"address": 5190,
+	"display-name": "5190 - Prairie",
+	"name": "Prairie",
+	"number": "5190",
+	"alt-name": "Large Prairie",
+	"type": "Steam",
+	"orig-company": "GWR",
+	"livery": "British Railways",
+	"orig-year": "1934",
+	"livery-year": "1948-1949",
+	"wheels": "2-6-2",
+	"model": "Dapol",
+	"decoder": "Zimo MX658N18 / Dapol Imperium",
+	"functions": 
+	[
+		["F1", "Sound fade in/out", "latch", ""],
+		["F2", "Short whistle", "trigger", ""],
+		["F3", "Long and short whistle", "trigger", ""],
+		["F4", "Coal shovelling", "trigger", ""],
+		["F5", "Injector on/off", "latch", ""],
+		["F6", "Steam ejector on/off", "latch", ""],  
+		["F7", "Brake application/release", "latch", ""],
+		["F8", "Flange squeal on/off", "latch", ""],
+		["F9", "Light engine mode", "latch", ""],
+		["F10", "Safety valve blow off", "latch", ""],
+		["F11", "More steam", "latch", ""],
+		["F12", "Manual draincocks", "latch", ""],
+		["F13", "Buffering up", "latch", ""],
+		["F14", "Coach door slam", "latch", ""],
+		["F15", "Guards whistle", "latch", ""],
+		["F16", "Distant whistle 1", "latch", ""],
+		["F17", "Distant whistle 2", "latch", ""]
+	]
+}

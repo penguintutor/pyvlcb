@@ -1,4 +1,7 @@
 # Holds a loco session
+# Typically a single loco being controlled by the GUI, but multiple instances can be created for
+# automation etc.
+import json
 
 class Loco:
     # All arguments have default allowing creation of a dummy loco
@@ -8,9 +11,19 @@ class Loco:
         # if gloc then set status to gloc - and then on after aquire (ploc)
         self.status = "off"   
         self.loco_id = loco_id
+        self.loco_name = ""
+        self.loco_data = {}
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
         self.direction = direction # 1 = forward, 0 = reverse
         self.speed = speed # Allow 0 to 128 but maximum sent is 127. Speed 1 = emergency stop (not used - instead status = stop)
+    
+    # Loads a json file with details of the loco
+    # there are more details in the file - just pull out id and name for quick reference
+    def load_file (self, filename):
+        with open(filename, 'r') as data_file:
+            self.loco_data = json.load(data_file)
+        self.loco_id = self.loco_data["address"]
+        self.loco_name = self.loco_data["display-name"]
     
     # Do we have an active session (respond True even if force stop)
     def is_active (self):

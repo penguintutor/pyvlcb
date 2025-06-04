@@ -1,8 +1,10 @@
 # Holds specific information about the locos
 # particularly useful for giving friendly names
+# No longer in use
 
 class LocoList:
     def __init__ (self):
+        print ("*** WARNING loading old LocoList ***")
         self.loco_names = {
             5190: "Prarie",
             1234: "Test"

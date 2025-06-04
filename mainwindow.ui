@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>945</width>
-    <height>694</height>
+    <height>733</height>
    </rect>
   </property>
   <property name="sizePolicy">
@@ -65,9 +65,12 @@
               <height>16777215</height>
              </size>
             </property>
+            <property name="currentText">
+             <string>Select Locomotive</string>
+            </property>
             <item>
              <property name="text">
-              <string>Loco Name / ID</string>
+              <string>Select Locomotive</string>
              </property>
             </item>
            </widget>
@@ -267,7 +270,7 @@
              </size>
             </property>
             <property name="currentIndex">
-             <number>1</number>
+             <number>2</number>
             </property>
             <widget class="QWidget" name="tab0">
              <attribute name="title">
@@ -303,86 +306,35 @@
            </widget>
           </item>
           <item>
-           <layout class="QHBoxLayout" name="horizontalLayout_3">
-            <item>
-             <widget class="QSpinBox" name="locoFuncSpinBox">
-              <property name="minimumSize">
-               <size>
-                <width>40</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="maximumSize">
-               <size>
-                <width>70</width>
-                <height>16777215</height>
-               </size>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="locoFuncOnButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>50</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>On</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <widget class="QPushButton" name="locoFuncOffButton">
-              <property name="sizePolicy">
-               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
-                <horstretch>0</horstretch>
-                <verstretch>0</verstretch>
-               </sizepolicy>
-              </property>
-              <property name="minimumSize">
-               <size>
-                <width>50</width>
-                <height>0</height>
-               </size>
-              </property>
-              <property name="text">
-               <string>Off</string>
-              </property>
-             </widget>
-            </item>
-            <item>
-             <spacer name="horizontalSpacer">
-              <property name="orientation">
-               <enum>Qt::Horizontal</enum>
-              </property>
-              <property name="sizeHint" stdset="0">
-               <size>
-                <width>40</width>
-                <height>20</height>
-               </size>
-              </property>
-             </spacer>
-            </item>
-           </layout>
-          </item>
-          <item>
-           <widget class="QRadioButton" name="locoFuncStatus">
-            <property name="maximumSize">
+           <widget class="QPushButton" name="locoFuncButton">
+            <property name="sizePolicy">
+             <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+              <horstretch>0</horstretch>
+              <verstretch>0</verstretch>
+             </sizepolicy>
+            </property>
+            <property name="minimumSize">
              <size>
-              <width>130</width>
-              <height>30</height>
+              <width>50</width>
+              <height>0</height>
              </size>
             </property>
             <property name="text">
-             <string>On/Off</string>
+             <string>Activate</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QLabel" name="locoImage">
+            <property name="text">
+             <string/>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QTextEdit" name="locoInfoText">
+            <property name="readOnly">
+             <bool>true</bool>
             </property>
            </widget>
           </item>
@@ -575,7 +527,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
