@@ -24,6 +24,16 @@ class Loco:
             self.loco_data = json.load(data_file)
         self.loco_id = self.loco_data["address"]
         self.loco_name = self.loco_data["display-name"]
+        
+    
+    def get_functions (self):
+        f_titles = []
+        if "functions" not in self.loco_data.keys():
+            return []
+        for this_function in self.loco_data["functions"]:
+            # Function titles includes Fx and text
+            f_titles.append(f"{this_function[0]} - {this_function[1]}")
+        return f_titles
     
     # Do we have an active session (respond True even if force stop)
     def is_active (self):

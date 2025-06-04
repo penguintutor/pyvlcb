@@ -11,12 +11,14 @@ from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
-from locolist import LocoList
+#from locolist import LocoList
 from loco import Loco
 from stealdialog import StealDialog
 
 loader = QUiLoader()
 basedir = os.path.dirname(__file__)
+
+layout_file = "layout.json"
 
 app_title = "VLCB App"
 #url = "http://127.0.0.1:8888/"
@@ -75,13 +77,14 @@ class MainWindowUI(QMainWindow):
         self.pc_can_id = 60      # CAN ID of CANUSB4
     
         # Layout is useful for giving real names to certain items
-        self.layout = Layout()
+        # Also provides list of valid locos
+        self.layout = Layout(layout_file)
         
         # VLCB and node creation
         self.vlcb = VLCB(self.pc_can_id)
         
         #Locos
-        self.loco_list = LocoList()
+        #self.loco_list = LocoList()
         # This is the loco being controlled through the interface
         self.loco = Loco()
         # Store the loco ids in the same number as the list
@@ -137,6 +140,9 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStopButton.clicked.connect(self.loco_stop)
         self.ui.locoStopAllButton.clicked.connect(self.loco_stop_all)
         
+        self.ui.locoFuncTab.tabBarClicked.connect(self.loco_change_functions)
+        self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
+        
         # Update LCD - used to set '-' at start
         self.update_lcd()
         
@@ -157,7 +163,8 @@ class MainWindowUI(QMainWindow):
             self.reset_loco()
             return
         loco_id = self.loco.loco_id
-        loco_name = self.loco_list.loco_name(loco_id)
+        #loco_name = self.loco_list.loco_name(loco_id)
+        loco_name = self.loco.loco_name
         self.ui.locoStatusLabel.setText(f"Stealing {loco_name}")
         self.loco.status = 'gloc'
         self.start_request(self.vlcb.steal_loco(loco_id))
@@ -168,7 +175,8 @@ class MainWindowUI(QMainWindow):
             self.reset_loco()
             return
         loco_id = self.loco.loco_id
-        loco_name = self.loco_list.loco_name(loco_id)
+        #loco_name = self.loco_list.loco_name(loco_id)
+        loco_name = self.loco.loco_name
         self.ui.locoStatusLabel.setText(f"Req sharing {loco_name}")
         self.start_request(self.vlcb.share_loco(loco_id))
         
@@ -200,18 +208,69 @@ class MainWindowUI(QMainWindow):
                 self.kalive_timer.stop()
             return
 
-        loco_id = self.loco_ids[index]
-        loco_name = self.loco_list.loco_name(loco_id)
+        # Update the self.loco entry once we start to aquire
+        
+        # Get the loc_filename and load
+        # index is -1 to skip None selected
+        filename = self.layout.get_loco_filename (index -1)
+        self.loco.load_file (filename)
+        loco_name = self.loco.loco_name
 
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         # Update with loco_id
-        self.loco.loco_id = loco_id
-        self.start_request(self.vlcb.allocate_loco(loco_id))
+        #self.loco.loco_id = loco_id
+        self.start_request(self.vlcb.allocate_loco(self.loco.loco_id))
         self.loco.status = 'rloc'
+        # Update the functions menu
+        self.loco_change_functions(0)
         # Don't check status - instead this will be picked up by the regular polling
         # This could result in a situation where it constantly says "Aquiring"
         # Perhaps consider a retry and/or timeout in future
         self.kalive_timer.start()
+        
+    def loco_function_selected (self):
+        # get current index, need both tab and position in tab
+        tab = self.ui.locoFuncTab.currentIndex()
+        combo = self.ui.locoFuncCombo.currentIndex()
+        #print (f"Tab {tab}, Combo {combo}")
+        func_index = combo + (10 * tab)
+        #print (f"Function {func_index}")
+        
+    # Update the functions list
+    # If index is not provided then use current
+    # otherrwise set to the index tab
+    def loco_change_functions (self, index=None):
+        functions = self.loco.get_functions()
+        if index != None and index >=0 and index <=2:
+            self.ui.locoFuncTab.setCurrentIndex(index)
+        else:
+            index = self.ui.locoFuncTab.currentIndex()
+
+        # Clear current
+        self.ui.locoFuncCombo.clear()
+
+        # put functions based on the tabs
+        # typically maximum of twenty something - but can be more
+        # all rest are put on last tab
+        #print (f"Current index {tab}")
+        #print (f"Functions {functions}")
+        start = 0
+        end = 10  # end is actually 1 after to fit in with range command
+        if index == 1:
+            start = 10
+            end = 20
+        elif index == 2:
+            start = 20
+            end = len(functions)
+            
+        if end > len(functions):
+            end = len(functions)
+            
+        for i in range(start, end):
+            self.ui.locoFuncCombo.addItem(functions[i])
+            
+        # Update function selected features
+        self.loco_function_selected ()
         
         
     # This is used based on the dial
@@ -229,12 +288,12 @@ class MainWindowUI(QMainWindow):
     def update_loco_list (self):
         self.ui.locoComboBox.clear()
         # Readd the default - none selected
-        self.ui.locoComboBox.addItem("Loco Name / ID")
+        self.ui.locoComboBox.addItem("Select Locomotive")
         self.loco_ids.append(0)
         # Returns the list of 
-        for loco_id in self.loco_list.get_locos():
-            self.loco_ids.append(loco_id)
-            self.ui.locoComboBox.addItem(self.loco_list.loco_name(loco_id))
+        for loco_name in self.layout.get_loco_names():
+            #self.loco_ids.append(loco_id)
+            self.ui.locoComboBox.addItem(loco_name)
         
     def tree_clicked(self, item):
         node_item = self.node_model.itemFromIndex(item)
