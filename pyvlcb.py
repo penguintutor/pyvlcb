@@ -216,6 +216,14 @@ class VLCB:
     # This uses the combined speed and direction value
     def loco_speeddir (self, session_id, speeddir):
         return f"{self.make_header()}47{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(speeddir)};"
+    
+    # Set function using DFUN - needs to be provided with the two bytes
+    # First byte is group (1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12)
+    # 4 = F13 to 19, 5 = F20 to F28
+    # Second byte is 1 bit per function - set 1 for on, 0 for off, lsb to right
+    # eg. 1 = 0001, 2 = 0010
+    def loco_set_dfun (self, session_id, byte1, byte2):
+        return f"{self.make_header()}60{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(byte1)}{VLCB.num_to_1hexstr(byte2)};"
         
     #manufaturer name  is requested by RQMN.
     #<0x11>
