@@ -14,6 +14,7 @@
 	"decoder": "Next 18 ESU Loksound Micro V5DCC",
 	"functions": 
 	[
+	    ["F0", "Not used", "none", ""],
 		["F1", "Sound on/off", "latch", ""],
 		["F2", "Brake", "trigger", "Brake sounds"],
 		["F3", "Cylinder drain cock", "latch", "Continuous (slow speed only)"],

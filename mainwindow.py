@@ -142,6 +142,7 @@ class MainWindowUI(QMainWindow):
         
         self.ui.locoFuncTab.tabBarClicked.connect(self.loco_change_functions)
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
+        self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
         # Update LCD - used to set '-' at start
         self.update_lcd()
@@ -221,13 +222,17 @@ class MainWindowUI(QMainWindow):
         #self.loco.loco_id = loco_id
         self.start_request(self.vlcb.allocate_loco(self.loco.loco_id))
         self.loco.status = 'rloc'
+        
         # Update the functions menu
         self.loco_change_functions(0)
+        self.loco.function_reset()
         # Don't check status - instead this will be picked up by the regular polling
         # This could result in a situation where it constantly says "Aquiring"
         # Perhaps consider a retry and/or timeout in future
         self.kalive_timer.start()
         
+    # Update function selected features
+    # When combobox / tab selected
     def loco_function_selected (self):
         # get current index, need both tab and position in tab
         tab = self.ui.locoFuncTab.currentIndex()
@@ -235,7 +240,69 @@ class MainWindowUI(QMainWindow):
         #print (f"Tab {tab}, Combo {combo}")
         func_index = combo + (10 * tab)
         #print (f"Function {func_index}")
+        # get [status, type]
+        status = self.loco.get_function_status(func_index)
+        # If we don't have a status then the function button doesn't exist
+        if status == None:
+            self.ui.locoFuncButton.setText(" - ")
+            return
+        # If trigger then button should be activate:
+        if status[1] == "trigger":
+            self.ui.locoFuncButton.setText("Activate")
+        elif status[1] == "latch":
+            # if on - button will turn off
+            if status[0] == 1:
+                self.ui.locoFuncButton.setText ("Turn Off")
+            else:
+                self.ui.locoFuncButton.setText ("Turn On")
+        # Eg if status is none then not supported
+        else:
+            self.ui.locoFuncButton.setText (" -- ")
         
+    # Button has been pressed
+    def loco_function_pressed (self):
+        # get current index, need both tab and position in tab
+        tab = self.ui.locoFuncTab.currentIndex()
+        combo = self.ui.locoFuncCombo.currentIndex()
+        #print (f"Tab {tab}, Combo {combo}")
+        func_index = combo + (10 * tab)
+        #print (f"Function {func_index}")
+        # get [status, type]
+        status = self.loco.get_function_status(func_index)
+        # If we don't have a status then the function doesn't exist
+        if status == None:
+            return
+        
+                # If trigger then button should be activate:
+        if status[1] == "trigger":
+            self.loco_func_trigger (func_index)
+            # no need to update button as still say activate
+        else:
+            # if <= F12 then send multiple times (NRMA standard)
+            if func_index <= 12:
+                print (f"Func {func_index}, current {status[0]}, new {1-status[0]}")
+                self.loco_func_change (func_index, 1-status[0], 3)
+            # otherwise send once
+            else:
+                self.loco_func_change (func_index, 1-status[0])
+            # Update button
+            self.loco_function_selected()
+    
+    # change value (if need to send multiple then set num_send to number of times
+    # Sent every 2 seconds (or change delay)
+    def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
+        byte1_2 = self.loco.set_function_dfun (func_index, value)
+        # If None then cancel
+        if byte1_2 == None:
+            return
+        self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
+        ## Todo add repeat
+    
+    # Sends on followed by off (typically 4 seconds later)
+    def loco_func_trigger (self, fun_index, delay = 4):
+        pass
+        # Todo implement this
+    
     # Update the functions list
     # If index is not provided then use current
     # otherrwise set to the index tab
@@ -250,7 +317,7 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.clear()
 
         # put functions based on the tabs
-        # typically maximum of twenty something - but can be more
+        # typically maximum of twenty something  (28 is the maximum officially supported) but some DCC controllers allow more
         # all rest are put on last tab
         #print (f"Current index {tab}")
         #print (f"Functions {functions}")

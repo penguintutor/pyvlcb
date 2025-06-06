@@ -16,6 +16,8 @@ class Loco:
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
         self.direction = direction # 1 = forward, 0 = reverse
         self.speed = speed # Allow 0 to 128 but maximum sent is 127. Speed 1 = emergency stop (not used - instead status = stop)
+        # Only F0 to F12 are supported by function status
+        self.function_status = [0] * 29
     
     # Loads a json file with details of the loco
     # there are more details in the file - just pull out id and name for quick reference
@@ -25,6 +27,15 @@ class Loco:
         self.loco_id = self.loco_data["address"]
         self.loco_name = self.loco_data["display-name"]
         
+    # Resets the functions - sets to all 0
+    def function_reset (self):
+        num_functions = len(self.loco_data["functions"])
+        # Minimum of 13 spaces F0 to F12 (even if not used)
+        # Minimum increased to 29 due to dfun return codes
+        # Alterntive could increase to function group max
+        if num_functions < 29:
+            num_functions = 29
+        self.function_status = [0] * num_functions
     
     def get_functions (self):
         f_titles = []
@@ -34,6 +45,15 @@ class Loco:
             # Function titles includes Fx and text
             f_titles.append(f"{this_function[0]} - {this_function[1]}")
         return f_titles
+    
+    # Returns status (ie. 1 on / 0 off) and type "toggle" vs "latch"
+    def get_function_status (self, func_num):
+        # Check valid - should not get this as func_num should be based on the loaded functions
+        if ("functions" not in self.loco_data.keys()) or (len(self.loco_data["functions"]) < func_num):
+            return None
+        this_function = self.loco_data["functions"][func_num]
+        # 2 is type
+        return [self.function_status[func_num], this_function[2]]
     
     # Do we have an active session (respond True even if force stop)
     def is_active (self):
@@ -112,8 +132,76 @@ class Loco:
         
     # Not currently included
     # Todo add functions
+    # This sets the value of the functions from a PLOC message
+    # Only stores values for F0 to F12
+    # fn1 = <Dat5> is the function byte F0 to F4 - bit 5 = dir lighting, bit 6 = direction, bit 7 = res, bit 8 = 0
+    # fn2 = <Dat6> is the function byte F5 to F8 - bit 5 upwards reserved
+    # fn3 = <Dat7> is the function byte F9 to F12
     def set_functions (self, fn1, fn2, fn3):
-        pass
+        data_in = [fn1, fn2, fn3]
+        mask = [0b0001, 0b0010, 0b0100, 0b1000]
+        for i in range (0, 3):
+            for j in range (0, 4):
+                self.function_status[(i*4)+j+1] = 1 if (data_in[i] & mask[j]) > 0 else 0
+                #print (f"Function {(i*4)+j+1} = {self.function_status[(i*4)+j+1]}")
     
 
+    # Sets function and returns bytes required for DFUN command
+    # First byte is group (1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12)
+    # 4 = F13 to 19, 5 = F20 to F28
+    # Second byte is 1 bit per function - set 1 for on, 0 for off, lsb to right
+    # eg. 1 = 0001, 2 = 0010
+    # function = function number, on_off = 1 or 0
+    def set_function_dfun (self, function, on_off):
+        if function  > len (self.function_status):
+            return None
+        self.function_status[function] = on_off
+        if function <= 4:
+            byte1 = 1
+            byte2 = (0b0001 * self.function_status[1] +
+                     0b0010 * self.function_status[2] +
+                     0b0100 * self.function_status[3] +
+                     0b1000 * self.function_status[4]
+                     )
+        elif function <= 8:
+            byte1 = 2
+            byte2 = (0b0001 * self.function_status[5] +
+                     0b0010 * self.function_status[6] +
+                     0b0100 * self.function_status[7] +
+                     0b1000 * self.function_status[8]
+                     )
+        elif function <= 12:
+            byte1 = 3
+            byte2 = (0b0001 * self.function_status[9] +
+                     0b0010 * self.function_status[10] +
+                     0b0100 * self.function_status[11] +
+                     0b1000 * self.function_status[12]
+                     )
+        elif function <= 19:
+            byte1 = 4
+            byte2 = (0b0001 * self.function_status[13] +
+                     0b0010 * self.function_status[14] +
+                     0b0100 * self.function_status[15] +
+                     0b1000 * self.function_status[16] +
+                     0b10000 * self.function_status[17] +
+                     0b100000 * self.function_status[18] +
+                     0b1000000 * self.function_status[19]
+                     )
+        # Documentation says to 28, but using 1 bit for each function
+        # only allows up to 27 within a single byte
+        elif function <= 28:
+            byte1 = 5
+            byte2 = (0b0001 * self.function_status[20] +
+                     0b0010 * self.function_status[21] +
+                     0b0100 * self.function_status[22] +
+                     0b1000 * self.function_status[23] +
+                     0b10000 * self.function_status[24] +
+                     0b100000 * self.function_status[25] +
+                     0b1000000 * self.function_status[26] +
+                     0b10000000 * self.function_status[27]
+                     )
+        # Do not support above 28 using DFUN
+        else:
+            return None
+        return [byte1, byte2]
     
