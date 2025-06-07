@@ -280,7 +280,7 @@ class MainWindowUI(QMainWindow):
         else:
             # if <= F12 then send multiple times (NRMA standard)
             if func_index <= 12:
-                print (f"Func {func_index}, current {status[0]}, new {1-status[0]}")
+                #print (f"Func {func_index}, current {status[0]}, new {1-status[0]}")
                 self.loco_func_change (func_index, 1-status[0], 3)
             # otherwise send once
             else:
@@ -289,19 +289,29 @@ class MainWindowUI(QMainWindow):
             self.loco_function_selected()
     
     # change value (if need to send multiple then set num_send to number of times
-    # Sent every 2 seconds (or change delay)
+    # Sent every 2 seconds (or change delay) - delay in seconds
     def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
         byte1_2 = self.loco.set_function_dfun (func_index, value)
         # If None then cancel
         if byte1_2 == None:
             return
         self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
-        ## Todo add repeat
+        num_send -= 1
+        if num_send > 0:
+            QTimer.singleShot(delay * 1000, lambda: self.loco_func_change(func_index, value, num_send, delay)) 
     
     # Sends on followed by off (typically 4 seconds later)
-    def loco_func_trigger (self, fun_index, delay = 4):
-        pass
-        # Todo implement this
+    def loco_func_trigger (self, func_index, delay = 4):
+        # Turn on
+        byte1_2 = self.loco.set_function_dfun (func_index, 1)
+        if byte1_2 == None:
+            return
+        self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
+        # Turn off (update value immediately, but delay request using single shot timer
+        byte1_2 = self.loco.set_function_dfun (func_index, 0)
+        # Don't check for None returned as if it worked before should be no reason for it to fail now
+        QTimer.singleShot(delay * 1000, lambda: self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))) 
+        
     
     # Update the functions list
     # If index is not provided then use current

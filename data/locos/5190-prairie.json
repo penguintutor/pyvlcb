@@ -24,13 +24,13 @@
 		["F7", "Brake application/release", "latch", ""],
 		["F8", "Flange squeal on/off", "latch", ""],
 		["F9", "Light engine mode", "latch", ""],
-		["F10", "Safety valve blow off", "latch", ""],
+		["F10", "Safety valve blow off", "trigger", ""],
 		["F11", "More steam", "latch", ""],
-		["F12", "Manual draincocks", "latch", ""],
-		["F13", "Buffering up", "latch", ""],
-		["F14", "Coach door slam", "latch", ""],
-		["F15", "Guards whistle", "latch", ""],
-		["F16", "Distant whistle 1", "latch", ""],
-		["F17", "Distant whistle 2", "latch", ""]
+		["F12", "Manual draincocks", "trigger", ""],
+		["F13", "Buffering up", "trigger", ""],
+		["F14", "Coach door slam", "trigger", ""],
+		["F15", "Guards whistle", "trigger", ""],
+		["F16", "Distant whistle 1", "trigger", ""],
+		["F17", "Distant whistle 2", "trigger", ""]
 	]
 }
