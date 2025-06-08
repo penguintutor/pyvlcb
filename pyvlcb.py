@@ -136,7 +136,7 @@ class VLCB:
     # Discover nodes
     def discover (self):
         # Return QNN 
-        return self.make_header() + '0D;'
+        return self.make_header(opcode='0D') + '0D;'
     
     # Discover number of events configured
     def discover_evn (self, node_id):
