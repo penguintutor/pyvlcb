@@ -250,6 +250,15 @@ class VLCBopcode:
     def opcode_extract (opcode_string):
         return opcode_string[0:2]
     
+    # Get min priority from opcode
+    @staticmethod
+    def opcode_priority (opcode):
+        opcode = VLCBopcode.opcode_extract(opcode)
+        if opcode in VLCBopcode.opcodes.keys():
+            return VLCBopcode.opcodes[opcode]['minpri']
+        else:
+            return None
+    
     # Title of opcode (used in tooltip)
     @staticmethod
     def opcode_title (opcode):
