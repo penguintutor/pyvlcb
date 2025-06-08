@@ -43,11 +43,12 @@ class ConsoleWindowUI(QMainWindow):
         self.ui.commandSelect.currentIndexChanged.connect (self.command_changed)
         self.ui.scrollCheckBox.toggled.connect (self.scroll_checkbox)
         self.ui.sendCommandButton.clicked.connect (self.send_command)
+        self.ui.makeCommandButton.clicked.connect (self.make_command)
         
         self.setCentralWidget(self.ui)
-        # Don't show - allows console to be created but not displayed
-        # Call show manually to open the windo
-        #self.show()
+        
+        # Run command changed to setup command combobox
+        self.command_changed()
         
     # log_details is unformatted string
     # Extract details and store as:
@@ -78,9 +79,72 @@ class ConsoleWindowUI(QMainWindow):
             self.ui.consoleTable.scrollToBottom()
         
     # Command pulldown menu (QComboBox)
+    # Set the other argument lists
     def command_changed (self):
-        if self.ui.commandSelect.currentText() == "Discover":
+        command = self.ui.commandSelect.currentText()
+        # Commands with no arguments
+        if  command == "Discover":
+            num_args = 0
+        # Commands which need a node id
+        elif (command == "Query Node Number Events Configured" or
+              command == "Query Node Number Available Events" or
+              command == "Query Node Stored Events" ):
+            num_args = 1
+            # Add nodes to arg1
+            self.ui.arg1Select.clear()
+            for node_id in sorted(self.mainwindow.nodes.keys()):
+                self.ui.arg1Select.addItem(str(node_id))
+        else:
+            num_args = 0
+        
+        # Only show arguments with options
+        if num_args < 1:
+            self.ui.arg1Select.hide()
+        else:
+            self.ui.arg1Select.show()
+        if num_args < 2:
+            self.ui.arg2Select.hide()
+        else:
+            self.ui.arg2Select.unhide()
+        if num_args < 3:
+            self.ui.arg3Select.hide()
+        else:
+            self.ui.arg3Select.unhide()
+
+            
+    # Generate command
+    def make_command (self):
+        command = self.ui.commandSelect.currentText()
+        if command == "Discover":
             self.ui.commandEdit.setText(self.vlcb.discover())
+        elif command == "Query Node Number Events Configured":
+            node_id = self.arg1_nodeid()
+            if node_id == None:
+                return
+            self.ui.commandEdit.setText(self.vlcb.discover_evn(node_id))
+        elif command == "Query Node Number Available Events":
+            node_id = self.arg1_nodeid()
+            if node_id == None:
+                return
+            self.ui.commandEdit.setText(self.vlcb.discover_nevn(node_id))
+        elif command == "Query Node Stored Events":
+            node_id = self.arg1_nodeid()
+            if node_id == None:
+                return
+            self.ui.commandEdit.setText(self.vlcb.discover_nerd(node_id))
+        
+    # Get nodeid from argument 1
+    def arg1_nodeid (self):
+        try :
+            node_str = self.ui.arg1Select.currentText()
+            node_id = int(node_str)
+            # If no node_id, or it's not a number return
+        except:
+            return None
+        # Also check number is not negative or too large
+        if node_id < 0 or node_id > 65535:
+            return None
+        return node_id
             
     # Uses main window to send the contents of commandEdit
     def send_command (self):
