@@ -44,6 +44,7 @@ class ConsoleWindowUI(QMainWindow):
         self.ui.scrollCheckBox.toggled.connect (self.scroll_checkbox)
         self.ui.sendCommandButton.clicked.connect (self.send_command)
         self.ui.makeCommandButton.clicked.connect (self.make_command)
+        self.ui.arg1Select.currentIndexChanged.connect (self.arg1_changed)
         
         self.setCentralWidget(self.ui)
         
@@ -94,6 +95,16 @@ class ConsoleWindowUI(QMainWindow):
             self.ui.arg1Select.clear()
             for node_id in sorted(self.mainwindow.nodes.keys()):
                 self.ui.arg1Select.addItem(str(node_id))
+        # Command that takes node_id, EV ID and State (on/off)
+        elif (command == "Accessory Command"):
+            num_args = 3
+            # Add nodes to arg1
+            self.ui.arg1Select.clear()
+            self.ui.arg2Select.clear()
+            for node_id in sorted(self.mainwindow.nodes.keys()):
+                self.ui.arg1Select.addItem(str(node_id))
+            # Now call arg1_changed to update next field with EVID
+            self.arg1_changed()
         else:
             num_args = 0
         
@@ -105,12 +116,42 @@ class ConsoleWindowUI(QMainWindow):
         if num_args < 2:
             self.ui.arg2Select.hide()
         else:
-            self.ui.arg2Select.unhide()
+            self.ui.arg2Select.show()
         if num_args < 3:
             self.ui.arg3Select.hide()
         else:
-            self.ui.arg3Select.unhide()
+            self.ui.arg3Select.show()
+            # It's arg1 that determines if this is needed
+            self.arg1_changed()
+            self.arg2_changed()
 
+    # This is called by commands that need arg 2 (eg. EVID) and typically arg 3 (On / Off)
+    def arg1_changed(self):
+        # Set arg 2
+        self.ui.arg2Select.clear()
+        # first get node_id - to lookup ev id
+        node_id = self.arg1_nodeid()
+        if node_id == None:
+            return
+        for ev_id in sorted(self.mainwindow.nodes[node_id].ev.keys()):
+            self.ui.arg2Select.addItem(str(ev_id))
+        # Assume arg 3 still gives On/Off
+            
+    # This is called by commands that need arg 3
+    # Defaults to On/Off
+    def arg2_changed(self):
+        pass
+    #    # Set arg 3
+    #    self.ui.arg3Select.clear()
+    #    # first get node_id - to lookup ev id
+    #    node_id = self.arg1_nodeid()
+    #    if node_id == None:
+    #        return
+    #    print (f"Node {node_id} + evs {self.mainwindow.nodes[node_id].ev.keys()}")
+    #    for ev_id in sorted(self.mainwindow.nodes[node_id].ev.keys()):
+    #        self.ui.arg3Select.addItem(str(ev_id))
+    #    # Assume arg 3 still gives On/Off
+            
             
     # Generate command
     def make_command (self):
@@ -132,6 +173,23 @@ class ConsoleWindowUI(QMainWindow):
             if node_id == None:
                 return
             self.ui.commandEdit.setText(self.vlcb.discover_nerd(node_id))
+        elif (command == "Accessory Command"):
+            node_id = self.arg1_nodeid()
+            if node_id == None:
+                return
+            ev_id = self.arg2_evid()
+            if ev_id == None:
+                return
+            state_str = self.ui.arg3Select.currentText()
+            if state_str == "On":
+                state_str = "on"
+            elif state_str == "Off":
+                state_str = "off"
+            else:
+                return
+            self.ui.commandEdit.setText(self.vlcb.accessory_command(node_id, ev_id, state_str))
+            
+            
         
     # Get nodeid from argument 1
     def arg1_nodeid (self):
@@ -145,6 +203,19 @@ class ConsoleWindowUI(QMainWindow):
         if node_id < 0 or node_id > 65535:
             return None
         return node_id
+    
+    # Get ev_id from argument 2
+    def arg2_evid (self):
+        try :
+            ev_str = self.ui.arg2Select.currentText()
+            ev_id = int(ev_str)
+            # If no node_id, or it's not a number return
+        except:
+            return None
+        # Also check number is not negative or too large
+        if ev_id < 0 or ev_id > 65535:
+            return None
+        return ev_id
             
     # Uses main window to send the contents of commandEdit
     def send_command (self):
