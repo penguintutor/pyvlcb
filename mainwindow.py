@@ -1,7 +1,7 @@
 import os
 from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal, Slot, QThreadPool, QRunnable
 from PySide6.QtWidgets import QMainWindow, QTextBrowser, QAbstractItemView, QTableWidgetItem
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap
 from PySide6.QtUiTools import QUiLoader
 import queue
 import time
@@ -222,6 +222,17 @@ class MainWindowUI(QMainWindow):
         #self.loco.loco_id = loco_id
         self.start_request(self.vlcb.allocate_loco(self.loco.loco_id))
         self.loco.status = 'rloc'
+        
+        # Add images and summary
+        if "image" in self.loco.loco_data:
+            loco_image = QPixmap(os.path.join(self.layout.loco_dir, self.loco.loco_data['image']))
+            self.ui.locoImage.setPixmap(loco_image)
+        else:
+            self.ui.locoImage.setPixmap(QPixmap())
+        if "summary" in self.loco.loco_data:
+            self.ui.locoInfoText.setText(self.loco.loco_data['summary'])
+        else:
+            self.ui.locoInfoText.setText("")
         
         # Update the functions menu
         self.loco_change_functions(0)

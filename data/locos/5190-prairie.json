@@ -32,5 +32,7 @@
 		["F15", "Guards whistle", "trigger", ""],
 		["F16", "Distant whistle 1", "trigger", ""],
 		["F17", "Distant whistle 2", "trigger", ""]
-	]
+	],
+	"summary": "The 5101 class of large prairie, updated versions of the 3100 class. These were built between 1929 and 1949. The British Railways livery (without crest) was used from 1948 to 1949.",
+	"image": "5190-prairie.png"
 }

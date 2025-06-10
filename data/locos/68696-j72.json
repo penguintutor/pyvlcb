@@ -37,5 +37,6 @@
 		["F20", "Inertia off", "latch", ""],
 		["F21", "Volume (cycle 6 levels)", "trigger", "Or mute (latch)"],
 		["F22", "Rail Join Clatter (speed variable)", "latch", "Continuous"]
-	]
+	],
+	"summary": "The North Eastern Railway Class E1. Later class J72 by the London and North Eastern Railway. The 68696 is here with British Railways loco."
 }
