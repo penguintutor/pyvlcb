@@ -14,6 +14,7 @@ class Layout:
         basedir = os.path.dirname(__file__)
         self.data_dir = os.path.join(basedir, "data")
         self.loco_dir = os.path.join(self.data_dir, "locos")
+        self.layout_dir = os.path.join(self.data_dir, "layout")
         with open(os.path.join(self.data_dir, self.layout_file), 'r') as data_file:
             self.layout_data = json.load(data_file)
         
@@ -27,6 +28,9 @@ class Layout:
             300: {1: "Solenoid01", 2: "Solenoid02"},
             301: {1: "Servo1"}
             }
+        
+    def get_layout_image (self):
+        return os.path.join(self.layout_dir, self.layout_data['layout-image'])
         
     # Returns list of lists. Each entry ["Friendly name", "filename"]
     def get_locos (self):

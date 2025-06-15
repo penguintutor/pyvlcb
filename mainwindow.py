@@ -1,5 +1,5 @@
 import os
-from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal, Slot, QThreadPool, QRunnable
+from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal, Slot, QThreadPool, QRunnable, QSize
 from PySide6.QtWidgets import QMainWindow, QTextBrowser, QAbstractItemView, QTableWidgetItem
 from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap
 from PySide6.QtUiTools import QUiLoader
@@ -61,6 +61,10 @@ class MainWindowUI(QMainWindow):
         # None is -5 to ensure see the initial discover
         self.last_packet = None
         #self.data_received = None
+        
+        # whenever changing canvas / pixmap size - do it through this
+        # so we use same size for pixmap and status images
+        self.canvas_size = QSize(200, 200)
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
@@ -144,6 +148,9 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
+        # Load layout background image
+        self.load_layout_image()
+        
         # Update LCD - used to set '-' at start
         self.update_lcd()
         
@@ -157,6 +164,31 @@ class MainWindowUI(QMainWindow):
     
         # Initial discover request
         self.discover()
+        
+    def resizeEvent(self, event=None):
+        #print (f"Window {event.size()}, label {self.ui.layoutLabel.size()}")
+        print (f"Window {self.ui.size()}, label {self.ui.layoutLabel.size()}")
+        self.canvas_size = self.ui.layoutLabel.size()
+        scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
+        self.ui.layoutLabel.setPixmap(scaled_pixmap)
+        
+    def load_layout_image (self):
+        image_file = self.layout.get_layout_image()
+        self.canvas = QPixmap(image_file)
+        # Adjust Size updates the label so that querying the size gives correct values
+        self.ui.layoutLabel.adjustSize()
+        
+        # Initial pixmap size is incorrect - instead use approximation based on window size
+        w = self.ui.size().width() - 330
+        h = self.ui.size().height() - 60
+        self.canvas_size = QSize(w, h)
+        
+        #print (f"Size {self.ui.layoutLabel.size()}")
+        scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
+        #self.ui.layoutLabel.setPixmap(scaled_pixmap)
+        self.ui.layoutLabel.setPixmap(scaled_pixmap)
+        self.ui.layoutLabel.adjustSize()
+        #self.resizeEvent()
         
     def steal_loco (self):
         # Check we have valid loco_id (if not reset)
