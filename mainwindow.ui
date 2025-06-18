@@ -546,7 +546,7 @@
        </widget>
       </item>
       <item>
-       <widget class="QLabel" name="layoutLabel">
+       <widget class="LayoutDisplay" name="layoutLabel">
         <property name="text">
          <string/>
         </property>
@@ -565,7 +565,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -580,8 +580,23 @@
     </property>
     <addaction name="actionDiscover"/>
    </widget>
+   <widget class="QMenu" name="menuTools">
+    <property name="title">
+     <string>Tools</string>
+    </property>
+    <addaction name="actionLayoutEdit"/>
+    <addaction name="actionSettings"/>
+   </widget>
+   <widget class="QMenu" name="menuHelp">
+    <property name="title">
+     <string>Help</string>
+    </property>
+    <addaction name="actionAbout"/>
+   </widget>
    <addaction name="menuFile"/>
    <addaction name="menuAssets"/>
+   <addaction name="menuTools"/>
+   <addaction name="menuHelp"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionExit">
@@ -594,7 +609,29 @@
     <string>Discover</string>
    </property>
   </action>
+  <action name="actionLayoutEdit">
+   <property name="text">
+    <string>Layout Edit</string>
+   </property>
+  </action>
+  <action name="actionSettings">
+   <property name="text">
+    <string>Settings</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>About</string>
+   </property>
+  </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>LayoutDisplay</class>
+   <extends>QLabel</extends>
+   <header>layoutdisplay.py</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
  <buttongroups>
