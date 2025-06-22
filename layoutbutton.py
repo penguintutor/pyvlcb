@@ -4,7 +4,7 @@
 
 import sys
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 from layoutobject import LayoutObject
 
@@ -23,17 +23,24 @@ from layoutobject import LayoutObject
 
 class LayoutButton (LayoutObject):
     def __init__ (self, parent, pos, button_type, settings = {}):
-        print (f"Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
+        #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
         super().__init__(parent, pos)
-        self.button_type = button_type,
-        # default size is 5% width and 1:1
+        self.button_type = button_type
+        # default size is 10% width and 1:1
         if ('size' in settings.keys()):
-            self.size = size
+            self.size = settings['size']
         else:
-            self.size = (5, 5)
+            self.size = (10, 10)
+        print ("Button ready")
+            
+    ### - remove# Need to run setup_painter after initialisation
+    #def setup_painter (self, mainwindow)
+        
+        
             
     # returns size as pixels rather than ratio
     def pixel_size (self):
+        #print ("Pixel Size")
         parent_size = self.parent.canvas_size
         width = parent_size.width() * self.size[0] / 100
         height = parent_size.width() * self.size[1] / 100
@@ -41,12 +48,15 @@ class LayoutButton (LayoutObject):
     
     def resize (self):
         print (f"Resize")
-        print (f"Parent size {self.parent.canvas_size}")
-        print (f"Pixel size {self.pixel_size()}")
+        #print (f"Parent size {self.parent.canvas_size}")
+        #print (f"Pixel size {self.pixel_size()}")
+        # Size is recalculated dynaically - so not sure if needed
+        # skip for now
+        pass
         
-    def draw (self):
-        print (f"parent {self.parent} canvas {self.parent.canvas}")
-        painter = QPainter(self.parent.canvas)
-        painter.setPen(QColor("darkblue"))
-        painter.drawRect(500, 500, 170, 150)
-        painter.end()
+    def draw (self, painter):
+        #print (f"Draw parent {self.parent} canvas {self.parent.canvas}")
+        #self.painter.clear()
+        painter.drawRect(*self.pixel_pos(), *self.pixel_size())
+        #painter.end()
+        pass

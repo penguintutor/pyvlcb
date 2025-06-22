@@ -2,9 +2,11 @@
 # and then other buttons etc.
 # This is a sbuclass of a QLabel class (which is used to house the image)
 
+# This is ui.layoutLabel
+
 import sys
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 from layout import Layout
 from layoutbutton import LayoutButton
@@ -26,16 +28,30 @@ class LayoutDisplay(QLabel):
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
 
-        button_settings = {}
-
-        self.buttons = [LayoutButton(self, (10,10), "circle", button_settings)]
+        self.buttons = []
         #self.buttons = []
         self.labels = []
         
+    def paintEvent (self, event):
+        super().paintEvent(event)
+#     def draw_objects (self):
+        #painter = QPainter(self.canvas)
+        painter = QPainter(self)
         
-    def draw_objects (self):
+        #Set global rendering hints for smoother drawing
+        painter.setRenderHint(QPainter.Antialiasing)
+        
+        painter.setPen(QColor("darkblue"))
+        brush = QBrush()
+        brush.setColor(QColor('darkblue'))
+        brush.setStyle(Qt.SolidPattern)
+        painter.setBrush(brush)
+         
         for button in self.buttons:
-            button.draw()
+            button.draw(painter)
+#             
+        painter.end()
+        self.update()
 
 
     def load_image (self, mainwindow):
@@ -54,36 +70,43 @@ class LayoutDisplay(QLabel):
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
         #self.ui.layoutLabel.setPixmap(scaled_pixmap)
         self.setPixmap(scaled_pixmap)
+        
+        print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
+        
         self.adjustSize()
         #self.resizeEvent()
         #self.testObject()
+        button_settings = {'size': (2,2)}
+        #test = LayoutButton(self, (10,10), "circle", button_settings)
+        self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
+
+        #self.draw_objects()
         
-        self.draw_objects()
         
-        
-    def testObject (self):
-        # Optional: Draw some content on the dummy pixmap
-        print (f"Test {self}, {self.canvas}")
-        painter = QPainter(self.canvas)
-        painter.setPen(QColor("darkred"))
-        #painter.drawRect(50, 50, 700, 500)
-        #painter.setFont(painter.font().setPointSize(24))
-        font = QFont()
-        font.setFamily('Times')
-        font.setBold(True)
-        font.setPointSize(40)
-        painter.setFont(font)
-        painter.drawText(100, 100, "Click and Drag Me!")
-        painter.end()
+#     def testObject (self):
+#         # Optional: Draw some content on the dummy pixmap
+#         print (f"Test {self}, {self.canvas}")
+#         painter = QPainter(self.canvas)
+#         painter.setPen(QColor("darkred"))
+#         #painter.drawRect(50, 50, 700, 500)
+#         #painter.setFont(painter.font().setPointSize(24))
+#         font = QFont()
+#         font.setFamily('Times')
+#         font.setBold(True)
+#         font.setPointSize(40)
+#         painter.setFont(font)
+#         painter.drawText(100, 100, "Click and Drag Me!")
+#         painter.end()
         
     def resizeEvent(self, event=None):
         #self.canvas_size = self.ui.layoutLabel.size()
         self.canvas_size = self.size()
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
         self.setPixmap(scaled_pixmap)
-        for button in self.buttons:
-            button.resize()
-            button.draw()
+        print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
+        #for button in self.buttons:
+        #    button.resize()
+        #    button.draw()
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:

@@ -8,12 +8,20 @@
 
 import sys
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 
 class LayoutObject:
     def __init__ (self, parent, pos):
-        print (f"Object {parent} {pos}")
+        #print (f"Object {parent} {pos}")
         self.parent = parent
-        self.pos = pos
-    
+        self.pos = pos	# Pos is % of position
+        
+    # Return position as percentage
+    # Note that for pos (unlike size) then needs to be percentage of both
+    # width and height
+    def pixel_pos (self):
+        parent_size = self.parent.canvas_size
+        width = parent_size.width() * self.pos[0] / 100
+        height = parent_size.height() * self.pos[1] / 100
+        return [width, height]

@@ -174,12 +174,16 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.discover()
         
+        
     def resizeEvent(self, event=None):
         #print (f"Window {self.ui.size()}, label {self.ui.layoutLabel.size()}")
         #self.canvas_size = self.ui.layoutLabel.size()
         #scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
         #self.ui.layoutLabel.setPixmap(scaled_pixmap)
-        self.ui.layoutLabel.resizeEvent(event)
+        
+        #commented out below
+        #self.ui.layoutLabel.resizeEvent(event)
+        pass
         
 #     def load_layout_image (self):
 #         image_file = self.layout.get_layout_image()
