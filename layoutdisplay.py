@@ -14,8 +14,6 @@ from layoutbutton import LayoutButton
 class LayoutDisplay(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
-        #print (f"Creating layout display {parent}")
-        #self.mainwindow = self.window()
         # Main window is not known here (as parent is within .ui) - store when loading file
         self.mainwindow = None
         self.setMouseTracking(True)  # Enable mouse tracking even when no button is pressed
@@ -28,15 +26,31 @@ class LayoutDisplay(QLabel):
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
 
+<<<<<<< HEAD
         self.buttons = []
         #self.buttons = []
+||||||| parent of b02ff6a (Start reorganising for event handling)
+        button_settings = {}
+
+        self.buttons = [LayoutButton(self, (10,10), "circle", button_settings)]
+        #self.buttons = []
+=======
+        self.buttons = []
+>>>>>>> b02ff6a (Start reorganising for event handling)
         self.labels = []
         
+<<<<<<< HEAD
     def paintEvent (self, event):
         super().paintEvent(event)
 #     def draw_objects (self):
         #painter = QPainter(self.canvas)
         painter = QPainter(self)
+||||||| parent of b02ff6a (Start reorganising for event handling)
+=======
+    def paintEvent (self, event):
+        super().paintEvent(event)
+        painter = QPainter(self)
+>>>>>>> b02ff6a (Start reorganising for event handling)
         
         #Set global rendering hints for smoother drawing
         painter.setRenderHint(QPainter.Antialiasing)
@@ -58,22 +72,27 @@ class LayoutDisplay(QLabel):
         self.mainwindow = mainwindow
         image_file = self.mainwindow.layout.get_layout_image()
         self.canvas = QPixmap(image_file)
-        # Adjust Size updates the label so that querying the size gives correct values
-        #self.adjustSize()
         
         # Initial pixmap size is incorrect - instead use approximation based on window size
         w = self.mainwindow.ui.size().width() - 330
         h = self.mainwindow.ui.size().height() - 60
         self.canvas_size = QSize(w, h)
         
-        #print (f"Size {self.ui.layoutLabel.size()}")
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
-        #self.ui.layoutLabel.setPixmap(scaled_pixmap)
         self.setPixmap(scaled_pixmap)
+<<<<<<< HEAD
         
         print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
         
+||||||| parent of b02ff6a (Start reorganising for event handling)
+=======
+        
+        #print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
+        
+        # Adjust Size updates the label so that querying the size gives correct values
+>>>>>>> b02ff6a (Start reorganising for event handling)
         self.adjustSize()
+<<<<<<< HEAD
         #self.resizeEvent()
         #self.testObject()
         button_settings = {'size': (2,2)}
@@ -81,6 +100,19 @@ class LayoutDisplay(QLabel):
         self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
 
         #self.draw_objects()
+||||||| parent of b02ff6a (Start reorganising for event handling)
+        #self.resizeEvent()
+        #self.testObject()
+        
+        self.draw_objects()
+=======
+        button_settings = {
+            'size': (2,2),
+            'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
+            }
+        self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
+
+>>>>>>> b02ff6a (Start reorganising for event handling)
         
         
 #     def testObject (self):
@@ -103,10 +135,20 @@ class LayoutDisplay(QLabel):
         self.canvas_size = self.size()
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
         self.setPixmap(scaled_pixmap)
+<<<<<<< HEAD
         print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
         #for button in self.buttons:
         #    button.resize()
         #    button.draw()
+||||||| parent of b02ff6a (Start reorganising for event handling)
+        for button in self.buttons:
+            button.resize()
+            button.draw()
+=======
+        # other objects are drawn through a paintEvent which is called
+        # whenever the Pixmap is replaced
+
+>>>>>>> b02ff6a (Start reorganising for event handling)
 
     def mousePressEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:

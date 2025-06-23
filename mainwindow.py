@@ -14,6 +14,7 @@ from vlcbclient import VLCBClient
 from layoutdisplay import LayoutDisplay
 from loco import Loco
 from stealdialog import StealDialog
+from deviceevents import DeviceEvents
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -153,6 +154,9 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncTab.tabBarClicked.connect(self.loco_change_functions)
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
+        
+        # Device events passes events to devices and updates layout objects
+        self.device_events = DeviceEvents()
         
         # Load layout background image
         # Moved to layoutdisplay
