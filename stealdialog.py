@@ -23,6 +23,7 @@ class StealDialog(QDialog):
         
     def steal (self):
         self.gui.steal_loco_signal.emit()
+        #print ("Steal accept")
         self.accept()
         
     def share (self):

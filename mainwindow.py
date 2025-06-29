@@ -14,7 +14,9 @@ from vlcbclient import VLCBClient
 from layoutdisplay import LayoutDisplay
 from loco import Loco
 from stealdialog import StealDialog
-from deviceevents import DeviceEvents
+from controldevices import ControlDevices
+from controllayout import ControlLayout
+from controlloco import ControlLoco
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -93,7 +95,8 @@ class MainWindowUI(QMainWindow):
         #Locos
         #self.loco_list = LocoList()
         # This is the loco being controlled through the interface
-        self.loco = Loco()
+        ####loco now moved to control_loco
+        #self.loco = Loco()
         # Store the loco ids in the same number as the list
         # Makes it easier to lookup from locoComboList
         self.loco_ids = []
@@ -155,8 +158,14 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
+        # Handle events - can be bidirectional - can also include some static items
         # Device events passes events to devices and updates layout objects
-        self.device_events = DeviceEvents()
+        self.control_devices = ControlDevices()
+        # Layout events is used for items in the GUI (eg. buttons, leds and labels)
+        self.control_layout = ControlLayout()
+        # Used to generate codes for loco etc.
+        self.control_loco = ControlLoco(self, self.vlcb)
+        
         
         # Load layout background image
         # Moved to layoutdisplay
@@ -178,79 +187,23 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.discover()
         
-        
-    def resizeEvent(self, event=None):
-        #print (f"Window {self.ui.size()}, label {self.ui.layoutLabel.size()}")
-        #self.canvas_size = self.ui.layoutLabel.size()
-        #scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
-        #self.ui.layoutLabel.setPixmap(scaled_pixmap)
-        
-        #commented out below
-        #self.ui.layoutLabel.resizeEvent(event)
-        pass
-        
-#     def load_layout_image (self):
-#         image_file = self.layout.get_layout_image()
-#         self.canvas = QPixmap(image_file)
-#         # Adjust Size updates the label so that querying the size gives correct values
-#         self.ui.layoutLabel.adjustSize()
-#         
-#         # Initial pixmap size is incorrect - instead use approximation based on window size
-#         w = self.ui.size().width() - 330
-#         h = self.ui.size().height() - 60
-#         self.canvas_size = QSize(w, h)
-#         
-#         #print (f"Size {self.ui.layoutLabel.size()}")
-#         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
-#         #self.ui.layoutLabel.setPixmap(scaled_pixmap)
-#         self.ui.layoutLabel.setPixmap(scaled_pixmap)
-#         self.ui.layoutLabel.adjustSize()
-#         #self.resizeEvent()
+
         
     def steal_loco (self):
-        # Check we have valid loco_id (if not reset)
-        if (self.loco.loco_id == 0):
-            self.reset_loco()
-            return
-        loco_id = self.loco.loco_id
-        #loco_name = self.loco_list.loco_name(loco_id)
-        loco_name = self.loco.loco_name
-        self.ui.locoStatusLabel.setText(f"Stealing {loco_name}")
-        self.loco.status = 'gloc'
-        self.start_request(self.vlcb.steal_loco(loco_id))
+        self.control_loco.steal_loco ()
     
     def share_loco (self):
-        # Check we have valid loco_id (if not reset)
-        if (self.loco.loco_id == 0):
-            self.reset_loco()
-            return
-        loco_id = self.loco.loco_id
-        #loco_name = self.loco_list.loco_name(loco_id)
-        loco_name = self.loco.loco_name
-        self.ui.locoStatusLabel.setText(f"Req sharing {loco_name}")
-        self.start_request(self.vlcb.share_loco(loco_id))
+        self.control_loco.share_loco ()
         
     # Reset loco selection in GUI and remove references
     def reset_loco (self):
-        # remove keep alive timer if active
-        if self.kalive_timer.isActive():
-                self.kalive_timer.stop()
-        self.loco.reset()
-        # Change combo after reset - that way the post change
-        # will not send a release message
-        self.ui.locoComboBox.setCurrentIndex(0)
-        self.ui.locoStatusLabel.setText(f"None active") 
+        self.control_loco.reset_loco ()
         
        
     # When loco change requested through combobox
     def loco_change (self, index):
         # Release old loco
-        if self.loco.status == "on" and self.loco.session != 0:
-            # Sends a release but doesn't check for a response
-            self.start_request(self.vlcb.release_loco(self.loco.session))
-            self.loco.released()
-            # Normally would want to stop the keep alive but we are hoping to aquire a new session immediately after
-            # So the keep alive will just ignore until aquired
+        self.control_loco.release()
 
         # Check for a valid loco chosen (ie if gone back to 0 then return)
         if index == 0:
@@ -263,33 +216,23 @@ class MainWindowUI(QMainWindow):
         # Get the loc_filename and load
         # index is -1 to skip None selected
         filename = self.layout.get_loco_filename (index -1)
-        self.loco.load_file (filename)
-        loco_name = self.loco.loco_name
+        
+        self.control_loco.load_file(filename)
+        
+        self.control_loco.loco.load_file (filename)
+        loco_name = self.control_loco.loco.loco_name
 
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         # Update with loco_id
-        #self.loco.loco_id = loco_id
-        self.start_request(self.vlcb.allocate_loco(self.loco.loco_id))
-        self.loco.status = 'rloc'
-        
-        # Add images and summary
-        if "image" in self.loco.loco_data:
-            loco_image = QPixmap(os.path.join(self.layout.loco_dir, self.loco.loco_data['image']))
-            self.ui.locoImage.setPixmap(loco_image)
-        else:
-            self.ui.locoImage.setPixmap(QPixmap())
-        if "summary" in self.loco.loco_data:
-            self.ui.locoInfoText.setText(self.loco.loco_data['summary'])
-        else:
-            self.ui.locoInfoText.setText("")
+        #self.control_loco.loco.loco_id = loco_id
+        self.start_request(self.vlcb.allocate_loco(self.control_loco.loco.loco_id))
+        self.control_loco.loco.status = 'rloc'
         
         # Update the functions menu
         self.loco_change_functions(0)
-        self.loco.function_reset()
-        # Don't check status - instead this will be picked up by the regular polling
-        # This could result in a situation where it constantly says "Aquiring"
-        # Perhaps consider a retry and/or timeout in future
-        self.kalive_timer.start()
+        self.control_loco.loco.function_reset()
+
+        
         
     # Update function selected features
     # When combobox / tab selected
@@ -299,25 +242,8 @@ class MainWindowUI(QMainWindow):
         combo = self.ui.locoFuncCombo.currentIndex()
         #print (f"Tab {tab}, Combo {combo}")
         func_index = combo + (10 * tab)
-        #print (f"Function {func_index}")
-        # get [status, type]
-        status = self.loco.get_function_status(func_index)
-        # If we don't have a status then the function button doesn't exist
-        if status == None:
-            self.ui.locoFuncButton.setText(" - ")
-            return
-        # If trigger then button should be activate:
-        if status[1] == "trigger":
-            self.ui.locoFuncButton.setText("Activate")
-        elif status[1] == "latch":
-            # if on - button will turn off
-            if status[0] == 1:
-                self.ui.locoFuncButton.setText ("Turn Off")
-            else:
-                self.ui.locoFuncButton.setText ("Turn On")
-        # Eg if status is none then not supported
-        else:
-            self.ui.locoFuncButton.setText (" -- ")
+        
+        self.control_loco.function_selected(func_index)
         
     # Button has been pressed
     def loco_function_pressed (self):
@@ -326,36 +252,16 @@ class MainWindowUI(QMainWindow):
         combo = self.ui.locoFuncCombo.currentIndex()
         #print (f"Tab {tab}, Combo {combo}")
         func_index = combo + (10 * tab)
-        #print (f"Function {func_index}")
-        # get [status, type]
-        status = self.loco.get_function_status(func_index)
-        # If we don't have a status then the function doesn't exist
-        if status == None:
-            return
-        
-                # If trigger then button should be activate:
-        if status[1] == "trigger":
-            self.loco_func_trigger (func_index)
-            # no need to update button as still say activate
-        else:
-            # if <= F12 then send multiple times (NRMA standard)
-            if func_index <= 12:
-                #print (f"Func {func_index}, current {status[0]}, new {1-status[0]}")
-                self.loco_func_change (func_index, 1-status[0], 3)
-            # otherwise send once
-            else:
-                self.loco_func_change (func_index, 1-status[0])
-            # Update button
-            self.loco_function_selected()
+        self.control_loco.function_pressed(func_index)
     
     # change value (if need to send multiple then set num_send to number of times
     # Sent every 2 seconds (or change delay) - delay in seconds
     def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
-        byte1_2 = self.loco.set_function_dfun (func_index, value)
+        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, value)
         # If None then cancel
         if byte1_2 == None:
             return
-        self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
+        self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))
         num_send -= 1
         if num_send > 0:
             QTimer.singleShot(delay * 1000, lambda: self.loco_func_change(func_index, value, num_send, delay)) 
@@ -363,21 +269,21 @@ class MainWindowUI(QMainWindow):
     # Sends on followed by off (typically 4 seconds later)
     def loco_func_trigger (self, func_index, delay = 4):
         # Turn on
-        byte1_2 = self.loco.set_function_dfun (func_index, 1)
+        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 1)
         if byte1_2 == None:
             return
-        self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
+        self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))
         # Turn off (update value immediately, but delay request using single shot timer
-        byte1_2 = self.loco.set_function_dfun (func_index, 0)
+        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 0)
         # Don't check for None returned as if it worked before should be no reason for it to fail now
-        QTimer.singleShot(delay * 1000, lambda: self.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))) 
+        QTimer.singleShot(delay * 1000, lambda: self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))) 
         
     
     # Update the functions list
     # If index is not provided then use current
     # otherrwise set to the index tab
     def loco_change_functions (self, index=None):
-        functions = self.loco.get_functions()
+        functions = self.control_loco.loco.get_functions()
         if index != None and index >=0 and index <=2:
             self.ui.locoFuncTab.setCurrentIndex(index)
         else:
@@ -389,8 +295,6 @@ class MainWindowUI(QMainWindow):
         # put functions based on the tabs
         # typically maximum of twenty something  (28 is the maximum officially supported) but some DCC controllers allow more
         # all rest are put on last tab
-        #print (f"Current index {tab}")
-        #print (f"Functions {functions}")
         start = 0
         end = 10  # end is actually 1 after to fit in with range command
         if index == 1:
@@ -412,15 +316,7 @@ class MainWindowUI(QMainWindow):
         
     # This is used based on the dial
     def loco_change_speed (self, new_speed):
-        # If not in a session then ignore
-        if self.loco.is_active():
-            # Special case if stop and 0 then reset stop
-            if self.loco.status == "stop" and new_speed == 0:
-                self.loco.status = "on"
-                self.ui.locoStatusLabel.setText ("Ready")
-            self.loco.set_speed (new_speed)
-            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
-        self.update_lcd()
+        self.control_loco.change_speed(new_speed)
         
     def update_loco_list (self):
         self.ui.locoComboBox.clear()
@@ -633,22 +529,22 @@ class MainWindowUI(QMainWindow):
         # Indicates allocation of loco - need to verify this is expected
         elif ret_opcode == 'PLOC':
             # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc
-            if self.loco.is_aquiring() == False:
+            if self.control_loco.loco.is_aquiring() == False:
                 return
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3'
             loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
-            if self.loco.loco_id != loco_id:
+            if self.control_loco.loco.loco_id != loco_id:
                 # If it doesn't match then perhaps this was for a different controller
-                print (f"PLOC ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                print (f"PLOC ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
                 return
             # Update loco with session, speed and direction
-            self.loco.session = data_entry['Session']
-            self.loco.set_speeddir (data_entry['SpeedDir'])
-            self.loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
+            self.control_loco.loco.session = data_entry['Session']
+            self.control_loco.loco.set_speeddir (data_entry['SpeedDir'])
+            self.control_loco.loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
             self.ui.locoStatusLabel.setText ("Ready")
             # Set status to on last gives time to ensure all entries updated
-            self.loco.status = "on"
+            self.control_loco.loco.status = "on"
             # Todo update controller with new values
             self.update_lcd ()
         # ERR is error from DCC controller - eg. problem aquiring loco
@@ -662,48 +558,48 @@ class MainWindowUI(QMainWindow):
             # Check error code relates to the current loco
             if data_entry['ErrCode'] == 1:
                 # Only valid during aquiring status
-                if self.loco.is_aquiring() == False:
+                if self.control_loco.loco.is_aquiring() == False:
                     return
                 loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
-                if self.loco.loco_id != loco_id:
+                if self.control_loco.loco.loco_id != loco_id:
                     if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                        print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
                     return
                 self.ui.locoStatusLabel.setText ("Error - no sessions available")
             # Already taken - option to steal
             elif data_entry['ErrCode'] == 2:
                 #Only for us if we haven't completed the session setup
-                #print (f"Session status {self.loco.status}")
-                if self.loco.status == "on":
+                #print (f"Session status {self.control_loco.loco.status}")
+                if self.control_loco.loco.status == "on":
                     #print ("Not our session")
                     return
-                elif self.loco.is_aquiring() == False:
+                elif self.control_loco.loco.is_aquiring() == False:
                     #print ("Not aquiring session")
                     return
                 loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
                 if self.debug:
                     print ("Error code 2 - loco taken")
-                if self.loco.loco_id != loco_id:
+                if self.control_loco.loco.loco_id != loco_id:
                     if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.loco.loco_id}")
+                        print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
                     return
                 self.ui.locoStatusLabel.setText ("Error - address taken")
                 self.steal_dialog_signal.emit(loco_id)
             elif data_entry['ErrCode'] == 8:
                 # If we are trying to aquire a session then this could be us resetting other node
-                if self.loco.is_aquiring():
+                if self.control_loco.loco.is_aquiring():
                     return
                 # byte 1 is now sessionid - byte2 is ignored - should be 00
                 session_id = int(data_entry['Byte1'])
                 # if not our current session_id then could be for a different controller so ignore
-                if session_id != 0 and session_id == self.loco.session:
+                if session_id != 0 and session_id == self.control_loco.loco.session:
                     if self.debug:
                         print (f"Session cancelled {session_id}")
                     # This updates the loco and the GUI
                     self.reset_loco()
                 else:
                     if self.debug:
-                        print (f"Session not cancelled {session_id}, loco session {self.loco.session}")
+                        print (f"Session not cancelled {session_id}, loco session {self.control_loco.loco.session}")
             
     # Initial discovery of modules    
     def discover (self):
@@ -856,16 +752,16 @@ class MainWindowUI(QMainWindow):
     # Update the LCD display based on the speed
     def update_lcd (self):
         # If not in a session show --
-        if self.loco.is_active() == False or self.loco.status == "stop" :
+        if self.control_loco.loco.is_active() == False or self.control_loco.loco.status == "stop" :
             self.ui.locoSpeedLcd.display("--")
         # If 0 then use string to ensure 0 displayed
-        elif self.loco.speed_value() == 0:
+        elif self.control_loco.loco.speed_value() == 0:
             self.ui.locoSpeedLcd.display("0")
         else:
-            self.ui.locoSpeedLcd.display(self.loco.speed_value())
-        if self.loco.direction == 1:
+            self.ui.locoSpeedLcd.display(self.control_loco.loco.speed_value())
+        if self.control_loco.loco.direction == 1:
             self.ui.locoForwardRadio.setChecked(True)
-        elif self.loco.direction == 0:
+        elif self.control_loco.loco.direction == 0:
             self.ui.locoReverseRadio.setChecked(True)
         
     # Keep alive - called every 4 secs
@@ -873,8 +769,8 @@ class MainWindowUI(QMainWindow):
     def keep_alive (self):
         # Check we have a session to send a keep alive (ie. not in process of trying
         # to aquire a new loco
-        if self.loco.status == "on" and self.loco.session != 0:
-            self.start_request(self.vlcb.keep_alive(self.loco.session))
+        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
+            self.start_request(self.vlcb.keep_alive(self.control_loco.loco.session))
             
             
     def steal_loco_check (self, num_loco):
@@ -882,15 +778,11 @@ class MainWindowUI(QMainWindow):
         steal_dialog.exec_()
         
     def loco_forward (self):
-        self.loco.set_direction (1)
-        if self.loco.is_active():
-            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.control_loco.forward()
         self.update_lcd()
         
     def loco_reverse (self):
-        self.loco.set_direction (0)
-        if self.loco.is_active():
-            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.control_loco.reverse()
         self.update_lcd()
         
         
@@ -900,16 +792,14 @@ class MainWindowUI(QMainWindow):
         # If calling from a clicked then gives False rather than msg
         if msg == False:
             msg = "STOP!"
-        self.loco.set_stop()
-        if self.loco.session != 0:
-            # check we have a session
-            # don't check status as this is emergency stop so send regardless
-            self.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        self.control_loco.stop(msg)
         self.ui.locoStatusLabel.setText (msg)
         self.update_lcd()
         
     def loco_stop_all (self):
-        self.start_request(self.vlcb.loco_stop_all())
+        self.control_loco.stop_all()
+        self.ui.locoStatusLabel.setText ("Stop All!")
+        self.update_lcd()
         
 class Worker (QRunnable):
     def __init__(self, fn, *args, **kwargs):
