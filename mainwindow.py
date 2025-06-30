@@ -261,10 +261,8 @@ class MainWindowUI(QMainWindow):
         # If None then cancel
         if byte1_2 == None:
             return
-        self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))
-        num_send -= 1
-        if num_send > 0:
-            QTimer.singleShot(delay * 1000, lambda: self.loco_func_change(func_index, value, num_send, delay)) 
+        request = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        self.start_request_repeat (request, num_send, delay)
     
     # Sends on followed by off (typically 4 seconds later)
     def loco_func_trigger (self, func_index, delay = 4):
@@ -272,12 +270,12 @@ class MainWindowUI(QMainWindow):
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 1)
         if byte1_2 == None:
             return
-        self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))
-        # Turn off (update value immediately, but delay request using single shot timer
+        request_on = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 0)
-        # Don't check for None returned as if it worked before should be no reason for it to fail now
-        QTimer.singleShot(delay * 1000, lambda: self.start_request(self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2))) 
+        request_off = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
         
+        self.start_request_onoff (request_on, request_off, delay)    
     
     # Update the functions list
     # If index is not provided then use current
@@ -615,24 +613,7 @@ class MainWindowUI(QMainWindow):
     def discover_nerd (self, node_id):
         self.start_request(self.vlcb.discover_nerd(node_id))
     
-    # Places request onwait list
-    # type is what kind of command to prepend with - eg. send (for cbus) or server etc.
-    # comma is added automatically
-    # set to "" if already formatted
-    # Adding priority pushes to front of queue
-    def start_request (self, request, type="send", priority=False):
-        # add type to request
-            
-        # Priority ignores list length and just inserts at front
-        # pushes other priority items further down the list as well
-        if priority:
-            self.send_queue.insert(0, request)
-        # only add to the list if <= 10 items already
-        if len(self.send_queue) > 10:
-            return False
-        self.send_queue.append(request)
-        #print (f"New queue {self.send_queue}")
-        return True
+
         
     # Gets request off the queue
     # Returns false if no requests, otherwise returns request string
@@ -652,6 +633,110 @@ class MainWindowUI(QMainWindow):
     def quit_app(self):
         QCoreApplication.quit()
         
+        
+    def steal_loco_dialog (self):
+        steal_dialog = StealDialog(self)
+        steal_dialog.open()
+        # Ignore the result of the dialog as it will emit own signals
+        
+    # Update the LCD display based on the speed
+    def update_lcd (self):
+        # If not in a session show --
+        if self.control_loco.loco.is_active() == False or self.control_loco.loco.status == "stop" :
+            self.ui.locoSpeedLcd.display("--")
+        # If 0 then use string to ensure 0 displayed
+        elif self.control_loco.loco.speed_value() == 0:
+            self.ui.locoSpeedLcd.display("0")
+        else:
+            self.ui.locoSpeedLcd.display(self.control_loco.loco.speed_value())
+        if self.control_loco.loco.direction == 1:
+            self.ui.locoForwardRadio.setChecked(True)
+        elif self.control_loco.loco.direction == 0:
+            self.ui.locoReverseRadio.setChecked(True)
+        
+    # Keep alive - called every 4 secs
+    # Add a keep alive to the send queue
+    def keep_alive (self):
+        # Check we have a session to send a keep alive (ie. not in process of trying
+        # to aquire a new loco
+        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
+            self.start_request(self.vlcb.keep_alive(self.control_loco.loco.session))
+            
+            
+    def steal_loco_check (self, num_loco):
+        steal_dialog = QDialog(self)
+        steal_dialog.exec_()
+        
+    def loco_forward (self):
+        self.control_loco.forward()
+        self.update_lcd()
+        
+    def loco_reverse (self):
+        self.control_loco.reverse()
+        self.update_lcd()
+        
+        
+    # Emergency stop - current loco
+    # To reset need to set speed to 0 on the dial
+    def loco_stop (self, msg="STOP!"):
+        # If calling from a clicked then gives False rather than msg
+        if msg == False:
+            msg = "STOP!"
+        self.control_loco.stop(msg)
+        self.ui.locoStatusLabel.setText (msg)
+        self.update_lcd()
+        
+    def loco_stop_all (self):
+        self.control_loco.stop_all()
+        self.ui.locoStatusLabel.setText ("Stop All!")
+        self.update_lcd()
+
+
+    ### Threading
+    # Functions related to sending on CANBUS (via API), but need to be part of
+    # main window to access GUI QThread
+    
+    # Use for sending multiple requests (needed for some messages)
+    # Sent every 2 seconds (or change delay) - delay in seconds
+    # Send num_send times
+    def start_request_repeat (self, request, num_send = 1, delay = 2):
+        self.start_request(request)
+        num_send -= 1
+        if num_send > 0:
+            QTimer.singleShot(delay * 1000, lambda: self.start_request_repeat(request, num_send, delay))
+
+
+    # Used for trigger commands where on is sent folloewd by off
+    # Sends on followed by off (typically 4 seconds later)
+    def start_request_onoff (self, request_on, request_off, delay = 4):
+        # Turn on
+        self.start_request(request_on)
+        # Turn off after delay
+        # Don't check for None returned as if it worked before should be no reason for it to fail now
+        QTimer.singleShot(delay * 1000, lambda: self.start_request(request_off)) 
+
+
+
+    # Places request onwait list
+    # type is what kind of command to prepend with - eg. send (for cbus) or server etc.
+    # comma is added automatically
+    # set to "" if already formatted
+    # Adding priority pushes to front of queue
+    def start_request (self, request, type="send", priority=False):
+        # add type to request
+            
+        # Priority ignores list length and just inserts at front
+        # pushes other priority items further down the list as well
+        if priority:
+            self.send_queue.insert(0, request)
+        # only add to the list if <= 10 items already
+        if len(self.send_queue) > 10:
+            return False
+        self.send_queue.append(request)
+        #print (f"New queue {self.send_queue}")
+        return True
+
+
     # Run in thread
     # Query web - get data
     # If from web notify newdata
@@ -743,64 +828,9 @@ class MainWindowUI(QMainWindow):
             print (f"Unrecognised response {response}")
         
         self.update_in_progress = False
-        
-    def steal_loco_dialog (self):
-        steal_dialog = StealDialog(self)
-        steal_dialog.open()
-        # Ignore the result of the dialog as it will emit own signals
-        
-    # Update the LCD display based on the speed
-    def update_lcd (self):
-        # If not in a session show --
-        if self.control_loco.loco.is_active() == False or self.control_loco.loco.status == "stop" :
-            self.ui.locoSpeedLcd.display("--")
-        # If 0 then use string to ensure 0 displayed
-        elif self.control_loco.loco.speed_value() == 0:
-            self.ui.locoSpeedLcd.display("0")
-        else:
-            self.ui.locoSpeedLcd.display(self.control_loco.loco.speed_value())
-        if self.control_loco.loco.direction == 1:
-            self.ui.locoForwardRadio.setChecked(True)
-        elif self.control_loco.loco.direction == 0:
-            self.ui.locoReverseRadio.setChecked(True)
-        
-    # Keep alive - called every 4 secs
-    # Add a keep alive to the send queue
-    def keep_alive (self):
-        # Check we have a session to send a keep alive (ie. not in process of trying
-        # to aquire a new loco
-        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
-            self.start_request(self.vlcb.keep_alive(self.control_loco.loco.session))
-            
-            
-    def steal_loco_check (self, num_loco):
-        steal_dialog = QDialog(self)
-        steal_dialog.exec_()
-        
-    def loco_forward (self):
-        self.control_loco.forward()
-        self.update_lcd()
-        
-    def loco_reverse (self):
-        self.control_loco.reverse()
-        self.update_lcd()
-        
-        
-    # Emergency stop - current loco
-    # To reset need to set speed to 0 on the dial
-    def loco_stop (self, msg="STOP!"):
-        # If calling from a clicked then gives False rather than msg
-        if msg == False:
-            msg = "STOP!"
-        self.control_loco.stop(msg)
-        self.ui.locoStatusLabel.setText (msg)
-        self.update_lcd()
-        
-    def loco_stop_all (self):
-        self.control_loco.stop_all()
-        self.ui.locoStatusLabel.setText ("Stop All!")
-        self.update_lcd()
-        
+
+
+
 class Worker (QRunnable):
     def __init__(self, fn, *args, **kwargs):
         super().__init__()
