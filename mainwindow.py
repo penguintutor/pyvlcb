@@ -27,7 +27,7 @@ basedir = os.path.dirname(__file__)
 layout_file = "layout.json"
 
 app_title = "VLCB App"
-#url = "http://127.0.0.1:8888/"
+
 url = "http://127.0.0.1:5000/"
 
 read_rate = 200
@@ -55,7 +55,7 @@ class MainWindowUI(QMainWindow):
         self.update_in_progress = False
         
         #self.api = ApiHandler(self.threadpool)
-        self.api = ApiHandler(self, self.threadpool)
+        self.api = ApiHandler(self, self.threadpool, url)
         
 #         # The class is called client, but as it's used to communicate
 #         # with the server it's referred to in this as self.server

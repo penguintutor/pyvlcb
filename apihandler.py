@@ -2,13 +2,12 @@ from PySide6.QtCore import Qt, QTimer, QObject, QThreadPool, QRunnable
 from worker import Worker
 from vlcbclient import VLCBClient
 
-url = "http://127.0.0.1:5000/"
-
 class ApiHandler(QObject):
-    def __init__(self, mw, thread_pool: QThreadPool):
+    def __init__(self, mw, thread_pool: QThreadPool, url):
         super().__init__()
         self.threadpool = thread_pool
         self.mw = mw
+        self.url = url
         # Subscribe to commands from the GUI/App logic
         #event_bus.set_device_power_command.connect(self._handle_set_power_command)
         
@@ -19,7 +18,7 @@ class ApiHandler(QObject):
         
         # The class is called client, but as it's used to communicate
         # with the server it's referred to in this as self.server
-        self.server = VLCBClient(url)
+        self.server = VLCBClient(self.url)
         
         # Add request to be sent next time timer expires
         #self.send_queue = []
