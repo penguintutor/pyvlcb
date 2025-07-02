@@ -17,6 +17,8 @@ from stealdialog import StealDialog
 from controldevices import ControlDevices
 from controllayout import ControlLayout
 from controlloco import ControlLoco
+from apihandler import ApiHandler
+from worker import Worker
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -52,19 +54,22 @@ class MainWindowUI(QMainWindow):
         self.threadpool = QThreadPool()
         self.update_in_progress = False
         
-        # The class is called client, but as it's used to communicate
-        # with the server it's referred to in this as self.server
-        self.server = VLCBClient(url)
+        #self.api = ApiHandler(self.threadpool)
+        self.api = ApiHandler(self, self.threadpool)
         
-        # Add request to be sent next time timer expires
-        self.send_queue = []
-        
-        # Current position in server log entries and amount of data received
-        # If -1 will try and get all including old entries
-        # If None just get the last few packets received (effectively start from current instead of history)
-        # None is -5 to ensure see the initial discover
-        self.last_packet = None
-        #self.data_received = None
+#         # The class is called client, but as it's used to communicate
+#         # with the server it's referred to in this as self.server
+#         self.server = VLCBClient(url)
+#         
+#         # Add request to be sent next time timer expires
+#         #self.send_queue = []
+#         
+#         # Current position in server log entries and amount of data received
+#         # If -1 will try and get all including old entries
+#         # If None just get the last few packets received (effectively start from current instead of history)
+#         # None is -5 to ensure see the initial discover
+#         self.last_packet = None
+#         #self.data_received = None
         
         # Moved to layout display
         # whenever changing canvas / pixmap size - do it through this
@@ -74,7 +79,7 @@ class MainWindowUI(QMainWindow):
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
         self.timer.setInterval(read_rate)
-        self.timer.timeout.connect(self.poll_server)
+        self.timer.timeout.connect(self.api.poll_server)
         self.timer.start()
         
         # Keep alive timer - used for DCC keep alive
@@ -343,15 +348,15 @@ class MainWindowUI(QMainWindow):
         if show:
             self.console_window.show()    
     
-    def poll_server(self):
-        # Only allow one check_responses thread to run at a time
-        if self.update_in_progress == True:
-            #print ("Still running - skipping")
-            return
-        
-        worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
-        self.threadpool.start(worker)
-        return
+#     def poll_server(self):
+#         # Only allow one check_responses thread to run at a time
+#         if self.update_in_progress == True:
+#             #print ("Still running - skipping")
+#             return
+#         
+#         worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
+#         self.threadpool.start(worker)
+#         return
         
     def update_console (self):
         self.console_window.update_log()
@@ -615,18 +620,18 @@ class MainWindowUI(QMainWindow):
     
 
         
-    # Gets request off the queue
-    # Returns false if no requests, otherwise returns request string
-    # If remove = True (default) then remove entry from the queue
-    def get_request (self, remove=True):
-        # If no entries then return false
-        if len(self.send_queue) < 1:
-            return False
-        # if no remove then just return value
-        if remove == False:
-            return self.send_queue[0]
-        # Otherwise pop the entry
-        return self.send_queue.pop(0)
+#     # Gets request off the queue
+#     # Returns false if no requests, otherwise returns request string
+#     # If remove = True (default) then remove entry from the queue
+#     def get_request (self, remove=True):
+#         # If no entries then return false
+#         if len(self.send_queue) < 1:
+#             return False
+#         # if no remove then just return value
+#         if remove == False:
+#             return self.send_queue[0]
+#         # Otherwise pop the entry
+#         return self.send_queue.pop(0)
         
         
     # Send exit to automate as well as closing app
@@ -728,11 +733,11 @@ class MainWindowUI(QMainWindow):
         # Priority ignores list length and just inserts at front
         # pushes other priority items further down the list as well
         if priority:
-            self.send_queue.insert(0, request)
+            self.api.send_queue.insert(0, request)
         # only add to the list if <= 10 items already
-        if len(self.send_queue) > 10:
+        if len(self.api.send_queue) > 10:
             return False
-        self.send_queue.append(request)
+        self.api.send_queue.append(request)
         #print (f"New queue {self.send_queue}")
         return True
 
@@ -747,7 +752,7 @@ class MainWindowUI(QMainWindow):
         self.update_in_progress = True
                
         # see if there is a specific request
-        request = self.get_request()
+        request = self.api.get_request()
         if request != False:
             #print (f"Sending request {request}")
             response = self.server.send (request)
@@ -831,13 +836,14 @@ class MainWindowUI(QMainWindow):
 
 
 
-class Worker (QRunnable):
-    def __init__(self, fn, *args, **kwargs):
-        super().__init__()
-        self.fn = fn
-        self.args = args
-        self.kwargs = kwargs
-        
-    @Slot() # Pyside6.QtCore.Slot
-    def run(self):
-        self.fn(*self.args, **self.kwargs)
+# class Worker (QRunnable):
+#     def __init__(self, fn, *args, **kwargs):
+#         super().__init__()
+#         self.fn = fn
+#         self.args = args
+#         self.kwargs = kwargs
+#         
+#     @Slot() # Pyside6.QtCore.Slot
+#     def run(self):
+#         self.fn(*self.args, **self.kwargs)
+# 

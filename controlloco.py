@@ -135,19 +135,6 @@ class ControlLoco:
     def func_trigger (self, func_index):
          self.mw.loco_func_trigger(func_index)
             
-#     # change value (if need to send multiple then set num_send to number of times
-#     # Sent every 2 seconds (or change delay) - delay in seconds
-#     def func_change (self, func_index, value, num_send = 1, delay = 2):
-#         byte1_2 = self.loco.set_function_dfun (func_index, value)
-#         # If None then cancel
-#         if byte1_2 == None:
-#             return
-#         self.mw.start_request(self.vlcb.loco_set_dfun(self.loco.session, *byte1_2))
-#         num_send -= 1
-#         if num_send > 0:
-#             QTimer.singleShot(delay * 1000, lambda: self.func_change(func_index, value, num_send, delay)) 
-
-
     # This is used based on the dial
     def change_speed (self, new_speed):
         # If not in a session then ignore
