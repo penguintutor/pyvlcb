@@ -673,9 +673,10 @@ class MainWindowUI(QMainWindow):
     # Signal to indicate kalive needs to be checked
     # start / stop as appropriate
     def update_kalive (self):
-        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
-            self.kalive_timer.start()
-        else:
+        if self.control_loco.loco.is_active():
+            if not self.kalive_timer.isActive():
+                self.kalive_timer.start()
+        elif self.kalive_timer.isActive():
             self.kalive_timer.stop()
     
     # Keep alive - called every 4 secs
@@ -683,7 +684,7 @@ class MainWindowUI(QMainWindow):
     def keep_alive (self):
         # Check we have a session to send a keep alive (ie. not in process of trying
         # to aquire a new loco
-        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
+        if self.control_loco.loco.is_active():
             self.api.start_request(self.api.vlcb.keep_alive(self.control_loco.loco.session))
             
             
