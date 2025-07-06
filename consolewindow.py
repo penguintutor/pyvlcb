@@ -2,6 +2,7 @@ import os
 from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal
 from PySide6.QtWidgets import QMainWindow, QTextBrowser, QTableWidget, QTableWidgetItem
 from PySide6.QtUiTools import QUiLoader
+from eventbus import EventBus, event_bus
 from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 import queue
@@ -24,6 +25,9 @@ class ConsoleWindowUI(QMainWindow):
         # Holds new entries as they are added
         # the UI will then update and remove them
         self.new_entries = []
+        
+        # Monitor event bus for app updates
+        event_bus.app_event_signal.connect (self.app_update)
         
         # Each entry represents a row on the table
         # Each row is a list of the individual entries
@@ -50,6 +54,10 @@ class ConsoleWindowUI(QMainWindow):
         
         # Run command changed to setup command combobox
         self.command_changed()
+        
+    def app_update (self, app_event):
+        if app_event.event_type == "newdata":
+            self.update_log()
         
     # log_details is unformatted string
     # Extract details and store as:
@@ -223,7 +231,7 @@ class ConsoleWindowUI(QMainWindow):
         command_string = self.ui.commandEdit.text()
         if command_string == "":
             return
-        self.mainwindow.start_request(command_string)
+        self.mainwindow.api.start_request(command_string)
         
     # Update checkbox wording
     def scroll_checkbox (self):
