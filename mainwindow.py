@@ -56,27 +56,7 @@ class MainWindowUI(QMainWindow):
         self.threadpool = QThreadPool()
         self.update_in_progress = False
         
-        #self.api = ApiHandler(self.threadpool)
         self.api = ApiHandler(self, self.threadpool, url)
-        
-#         # The class is called client, but as it's used to communicate
-#         # with the server it's referred to in this as self.server
-#         self.server = VLCBClient(url)
-#         
-#         # Add request to be sent next time timer expires
-#         #self.send_queue = []
-#         
-#         # Current position in server log entries and amount of data received
-#         # If -1 will try and get all including old entries
-#         # If None just get the last few packets received (effectively start from current instead of history)
-#         # None is -5 to ensure see the initial discover
-        self.last_packet = None
-#         #self.data_received = None
-        
-        # Moved to layout display
-        # whenever changing canvas / pixmap size - do it through this
-        # so we use same size for pixmap and status images
-        #self.canvas_size = QSize(200, 200)
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
@@ -95,25 +75,10 @@ class MainWindowUI(QMainWindow):
         # Layout is useful for giving real names to certain items
         # Also provides list of valid locos
         self.layout = Layout(layout_file)
-         
-        # VLCB and node creation
-        #self.vlcb = VLCB(self.pc_can_id)
-        
-        #Locos
-        #self.loco_list = LocoList()
-        # This is the loco being controlled through the interface
-        ####loco now moved to control_loco
-        #self.loco = Loco()
-        # Store the loco ids in the same number as the list
-        # Makes it easier to lookup from locoComboList
-        self.loco_ids = []
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
-        #self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), self)
         self.setWindowTitle(app_title)
         
-        #print (f"MW {self} Layout in main {self.layout}")
-        #print (f"MW UI {self.ui}")
         
         # Signals
         self.newdata_loaded_signal.connect (self.update_console)
@@ -128,7 +93,7 @@ class MainWindowUI(QMainWindow):
         self.ui.actionExit.triggered.connect(self.quit_app)
         
         # Asset Menu
-        self.ui.actionDiscover.triggered.connect(self.discover)
+        self.ui.actionDiscover.triggered.connect(self.api.discover)
         
         # Tree view
         self.node_model = QStandardItemModel()
@@ -173,12 +138,8 @@ class MainWindowUI(QMainWindow):
         #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
         self.control_loco = ControlLoco(self, self.api.vlcb)
-        
-        
+                
         # Load layout background image
-        # Moved to layoutdisplay
-        #self.load_layout_image() 
-        #self.exitEditButton = QPushButton("Exit edit mode", parent=self.ui.layoutLabel)
         self.ui.layoutLabel.load_image(self)
         
         # Update LCD - used to set '-' at start
@@ -195,8 +156,7 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.api.discover()
         
-
-        
+    
     def steal_loco (self):
         self.control_loco.steal_loco ()
     
@@ -240,8 +200,7 @@ class MainWindowUI(QMainWindow):
         self.loco_change_functions(0)
         self.control_loco.loco.function_reset()
 
-        
-        
+                
     # Update function selected features
     # When combobox / tab selected
     def loco_function_selected (self):
@@ -328,10 +287,8 @@ class MainWindowUI(QMainWindow):
         self.ui.locoComboBox.clear()
         # Readd the default - none selected
         self.ui.locoComboBox.addItem("Select Locomotive")
-        self.loco_ids.append(0)
-        # Returns the list of 
+        # Returns the list of locos
         for loco_name in self.layout.get_loco_names():
-            #self.loco_ids.append(loco_id)
             self.ui.locoComboBox.addItem(loco_name)
         
     def tree_clicked(self, item):
@@ -350,16 +307,6 @@ class MainWindowUI(QMainWindow):
         self.console_window = ConsoleWindowUI(self)
         if show:
             self.console_window.show()    
-    
-#     def poll_server(self):
-#         # Only allow one check_responses thread to run at a time
-#         if self.update_in_progress == True:
-#             #print ("Still running - skipping")
-#             return
-#         
-#         worker = Worker(self.thread_getupdate, self.newdata_loaded_signal, self.node_updated_signal)
-#         self.threadpool.start(worker)
-#         return
         
     def update_console (self):
         self.console_window.update_log()
@@ -433,217 +380,6 @@ class MainWindowUI(QMainWindow):
         item.setText(f"{self.nodes[nn].ev[ev_id].en:#08x}")
         item = self.ui.nodeTable.item(4,0)
         item.setText(f"{self.nodes[nn].ev[ev_id].long_string()}")
-
-        
-    # This method is called whenever we get a valid response
-    # Used to determine if further action is required (eg. discovery or update status)
-    # Note this will see all cbus messages, including ones sent to/from other nodes
-    # <id>,<timestamp>,<incoming>,<message>
-    # Note incoming is either i (incoming) or o (outgoing)
-    
-    # Moved to api
-    def handle_incoming_data_old (self, response):
-        if self.debug:
-            print (f"Incoming data {response}")
-        # pass to console (unparsed)
-        #self.console_window.add_log(response)
-        # strip date off (don't need except for the log)
-        #print (f"Entry {response}")
-        id_date_data = response.split(',',3)
-        #print (f"ID Date Data {id_date_data}")
-        if (len(id_date_data) < 4):
-            print (f"Invalid entry - skipping {response}")
-            return
-        vlcb_entry = self.api.vlcb.parse_input(id_date_data[3])
-        # If not a valid entry then ignore
-        if vlcb_entry == False:
-            if self.debug:
-                print (f"Not a valid entry {id_date_data}")
-            return
-        # Look for specific responses
-        # todo - should we check timestamp first? If the entry is from before the first request then may not be
-        # interested as it's an old node. Alternatively we could load anyway (max 100 past entries are stored)
-        # or we could not retrieve any previous messages by first checking for -1 entries and using that for
-        # the start value
-        # For now we handle all responses including old ones - but check for whether there are any changes
-        ret_opcode = vlcb_entry.opcode()    # Instead of calling method for each condition save it in a variable
-        if self.debug:
-            print (f"Op code {ret_opcode}")
-        if ret_opcode == 'ERSTOP':    # Emergency stop all
-            # Emergency stop and stop all are the same
-            # except for the message
-            self.loco_stop ("STOP ALL!")
-            
-        elif ret_opcode == 'PNN':    # PNN (Response to query node)
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            # Determine mode based on flags (bit 3)
-            # Flags bit 0 = consumer, bit 1 = producer, bit 2= FliM, bit 3 = supports bootloading
-            if data_entry['Flags'] & 0x4:
-                mode = "FLiM"
-            else:
-                mode = "SLiM"
-            # if we don't already have this device add it
-            if not data_entry['NN'] in self.nodes.keys():
-                self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
-                self.nodes[data_entry['NN']].set_name(self.layout.node_name(data_entry['NN']))
-                # Add to Tree View
-                #print ("Adding entry")
-                #node = QStandardItem(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
-                self.node_model.appendRow(self.nodes[data_entry['NN']].gui_node)
-            else:
-                # Update existing entry
-                items_changed = self.nodes[data_entry['NN']].update_node({'Mode': mode, 'ManfId': data_entry['ManufId'], 'ModId': data_entry['ModId'], 'Flags': data_entry['Flags']})
-                # If no items changed then no need to check for further updates
-                if items_changed == 0:
-                    return
-                # Node is updated as part of update_node - so next block of text not reqired
-                #node_string = f" {data_entry['NN']}"        # Includes a space as that's part of the string
-                #for i in range (0, self.node_model.rowCount()):
-                #    this_item = self.node_model.item(i).text()
-                #    this_item_parts = this_item.split(',')
-                #    if this_item_parts[1] == node_string:
-                #        self.node_model.item(i).setText(f"Unknown, {data_entry['NN']}, {vlcb_entry.can_id}")
-            # If this is new, or has changed then we can also get the number of events
-            self.discover_evn (data_entry['NN'])
-        elif ret_opcode == 'NUMEV':    # Number of configured events
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            # If we don't already have this node then didn't see a PNN response - so likely error
-            if not data_entry['NN'] in self.nodes.keys():
-                print (f"NUMV response from Unknown node {data_entry['NN']}")
-                return
-            # Update node with evnum value
-            self.nodes[data_entry['NN']].set_numev(data_entry['NumEvents'])
-        elif ret_opcode == 'EVNLF':    # Number of event space left in node
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            # If we don't already have this node then didn't see a PNN response - so likely error
-            if not data_entry['NN'] in self.nodes.keys():
-                print (f"EVNLF response from Unknown node {data_entry['NN']}")
-                return
-            # Update node with evnum value
-            self.nodes[data_entry['NN']].set_evspc(data_entry['EVSPC'])
-            # Add a query for the next discovery stage - get a list of all the events
-            self.discover_nerd (data_entry['NN'])
-        elif ret_opcode == 'ENRSP':    # EV discovery
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            # If we don't already have this node then didn't see a PNN response - so likely error
-            if not data_entry['NN'] in self.nodes.keys():
-                print (f"ENRSP response from Unknown node {data_entry['NN']}")
-                return
-            # Add event to node
-            #print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
-            self.nodes[data_entry['NN']].add_ev(data_entry['EnIndex'], data_entry['En3_0'])
-            self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
-        # Indicates allocation of loco - need to verify this is expected
-        elif ret_opcode == 'PLOC':
-            # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc
-            if self.control_loco.loco.is_aquiring() == False:
-                return
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            # Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3'
-            loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
-            if self.control_loco.loco.loco_id != loco_id:
-                # If it doesn't match then perhaps this was for a different controller
-                print (f"PLOC ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
-                return
-            # Update loco with session, speed and direction
-            self.control_loco.loco.session = data_entry['Session']
-            self.control_loco.loco.set_speeddir (data_entry['SpeedDir'])
-            self.control_loco.loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
-            self.ui.locoStatusLabel.setText ("Ready")
-            # Set status to on last gives time to ensure all entries updated
-            self.control_loco.loco.status = "on"
-            # Todo update controller with new values
-            self.update_lcd ()
-        # ERR is error from DCC controller - eg. problem aquiring loco
-        elif ret_opcode == 'ERR':
-            # Depending upon the error code the data may have different interpretations
-            # Stored as Byte1, Byte2, ErrCode - where Byte1,Byte2 may eqal AddrHigh_AddrLow, or
-            # may be Byte1 = Session ID, Byte 2 = 0
-            # So only check after looking at the ErrCode
-            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            #loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
-            # Check error code relates to the current loco
-            if data_entry['ErrCode'] == 1:
-                # Only valid during aquiring status
-                if self.control_loco.loco.is_aquiring() == False:
-                    return
-                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
-                if self.control_loco.loco.loco_id != loco_id:
-                    if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
-                    return
-                self.ui.locoStatusLabel.setText ("Error - no sessions available")
-            # Already taken - option to steal
-            elif data_entry['ErrCode'] == 2:
-                #Only for us if we haven't completed the session setup
-                #print (f"Session status {self.control_loco.loco.status}")
-                if self.control_loco.loco.status == "on":
-                    #print ("Not our session")
-                    return
-                elif self.control_loco.loco.is_aquiring() == False:
-                    #print ("Not aquiring session")
-                    return
-                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
-                if self.debug:
-                    print ("Error code 2 - loco taken")
-                if self.control_loco.loco.loco_id != loco_id:
-                    if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
-                    return
-                self.ui.locoStatusLabel.setText ("Error - address taken")
-                self.steal_dialog_signal.emit(loco_id)
-            elif data_entry['ErrCode'] == 8:
-                # If we are trying to aquire a session then this could be us resetting other node
-                if self.control_loco.loco.is_aquiring():
-                    return
-                # byte 1 is now sessionid - byte2 is ignored - should be 00
-                session_id = int(data_entry['Byte1'])
-                # if not our current session_id then could be for a different controller so ignore
-                if session_id != 0 and session_id == self.control_loco.loco.session:
-                    if self.debug:
-                        print (f"Session cancelled {session_id}")
-                    # This updates the loco and the GUI
-                    self.reset_loco()
-                else:
-                    if self.debug:
-                        print (f"Session not cancelled {session_id}, loco session {self.control_loco.loco.session}")
-            
-    # Initial discovery of modules    
-    def discover (self):
-        #self.start_request(self.api.vlcb.discover())
-        print ("Deprecated discover moved to api")
-        self.api.discover()
-        
-    # 2nd phase in discovery RQEVN to get number of events
-    # and NNEVN - get number of events available
-    def discover_evn (self, node_id):
-        #self.start_request(self.api.vlcb.discover_evn(node_id))
-        #self.start_request(self.api.vlcb.discover_nevn(node_id))
-        print ("Deprecated discover_evn moved to api")
-        self.api.discover_evn(node_id)
-        
-    # 3rd phase of discover Read back all stored events in a node (NERD)
-    def discover_nerd (self, node_id):
-        #self.start_request(self.api.vlcb.discover_nerd(node_id))
-        print ("Deprecated discover moved to api")
-        self.api.discover_nerd(node_id)
-        
-    
-
-        
-#     # Gets request off the queue
-#     # Returns false if no requests, otherwise returns request string
-#     # If remove = True (default) then remove entry from the queue
-#     def get_request (self, remove=True):
-#         # If no entries then return false
-#         if len(self.send_queue) < 1:
-#             return False
-#         # if no remove then just return value
-#         if remove == False:
-#             return self.send_queue[0]
-#         # Otherwise pop the entry
-#         return self.send_queue.pop(0)
-        
         
     # Send exit to automate as well as closing app
     def quit_app(self):
@@ -716,159 +452,3 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText ("Stop All!")
         self.update_lcd()
 
-
-
-    ### Functions in process of being moved to API
-        
-    ### Threading
-    # Functions related to sending on CANBUS (via API), but need to be part of
-    # main window to access GUI QThread
-    
-    # Use for sending multiple requests (needed for some messages)
-    # Sent every 2 seconds (or change delay) - delay in seconds
-    # Send num_send times
-    def start_request_repeat (self, request, num_send = 1, delay = 2):
-        self.start_request(request)
-        num_send -= 1
-        if num_send > 0:
-            QTimer.singleShot(delay * 1000, lambda: self.start_request_repeat(request, num_send, delay))
-
-
-    # Used for trigger commands where on is sent folloewd by off
-    # Sends on followed by off (typically 4 seconds later)
-    def start_request_onoff (self, request_on, request_off, delay = 4):
-        # Turn on
-        self.start_request(request_on)
-        # Turn off after delay
-        # Don't check for None returned as if it worked before should be no reason for it to fail now
-        QTimer.singleShot(delay * 1000, lambda: self.start_request(request_off)) 
-
-
-
-    # Places request onwait list
-    # type is what kind of command to prepend with - eg. send (for cbus) or server etc.
-    # comma is added automatically
-    # set to "" if already formatted
-    # Adding priority pushes to front of queue
-    def start_request_old (self, request, type="send", priority=False):
-        # add type to request
-        print ("Deprecated start_request moved to api")
-        return self.api.start_request(request, type, priority)
-            
-        # Priority ignores list length and just inserts at front
-        # pushes other priority items further down the list as well
-        if priority:
-            self.api.send_queue.insert(0, request)
-        # only add to the list if <= 10 items already
-        if len(self.api.send_queue) > 10:
-            return False
-        self.api.send_queue.append(request)
-        #print (f"New queue {self.send_queue}")
-        return True
-
-
-    # Run in thread
-    # Query web - get data
-    # If from web notify newdata
-    # If update to node / events then update nodes and
-    # notify updatenode
-    def thread_getupdate_old(self, nodes, newdata_emit=None, updatenode_emit=None, response=None):
-        #Only allow one thread at a time
-        #self.update_in_progress = True
-               
-#         # see if there is a specific request
-#         request = self.api.get_request()
-#         if request != False:
-#             #print (f"Sending request {request}")
-#             response = self.server.send (request)
-#             if response == None:
-#                 self.update_in_progress = False
-#                 self.status = "Not connected"
-#                 return
-#             else:
-#                 self.status = "Connected"
-#             # Todo handle response
-#             # Just a True / false response
-#             # clear send_request ready for next request
-#             
-#         # Get updates since last_packet
-#         response = self.server.read (self.last_packet)
-#         # If response None then error getting update - skip for now and
-#         # try again next time we poll
-#         if response == None:
-#             self.update_in_progress = False
-#             self.status = "Not connected"
-#             return
-#         else:
-#             self.status = "Connected"
-        
-        #print (f"**** Response {response}")
-        # First line is summary
-        # Check for an empty data first as we can ignore
-        if response[0:10] == "Read,0,0,0":
-            # No new data received
-            pass
-        # Check response starts with "Read,"
-        elif response[0:5] == "Read,":
-            # split into status_line and data
-            status_data = response.split('\n',1)
-            #print (f"Status data {status_data}")
-
-            # First line format is "Read,<start>,<end>,<numlines>"
-            header = status_data[0].split(',', 3)
-            
-            #print (f"Header {header}")
-            
-            # check to see if field 3 is negative - if so then most likely that
-            # the server has been restarted and we are ahead
-            # Here just reset last_packet to 0 and then continue
-            # If prefer could continue, or perhaps request a negative number
-            # to just get a fixed number of entries
-            packets_received = int (header[3])
-            if packets_received < 0:
-                #print (f"Out of step with server, {self.last_packet} {packets_received}")
-                print ("Restarting after possible server restart")
-                self.last_packet = None
-                self.update_in_progress = False
-                return
-            
-            # need end to know what our last stored value is
-            this_last_packet = int(header[2])
-            if self.last_packet == None or self.last_packet < this_last_packet:
-                self.last_packet = this_last_packet
-            #print (f"Status {status_data}")                
-            data_packets = status_data[1].split('\n')
-            #print (f"Data packets: {data_packets}")
-            for data_packet in data_packets:
-                # if data_packet is empty then skip completely - without any notice as most likely due to \n at end
-                if data_packet == '':
-                    continue
-                
-                #print (f"Handling packet {data_packet}")
-                if len(data_packet) < 5:    # If data too short (perhaps empty line) - in reality this is much longer as includes date
-                    print ("Skipping empty packet")
-                    print (f"This packet {data_packet}")
-                    print (f"Data packets {data_packets}")
-                    continue
-                #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
-                # passes entire line to 
-                self.handle_incoming_data(data_packet)
-            self.newdata_loaded_signal.emit()
-        else:
-            print (f"Unrecognised response {response}")
-        
-        self.update_in_progress = False
-
-
-
-# class Worker (QRunnable):
-#     def __init__(self, fn, *args, **kwargs):
-#         super().__init__()
-#         self.fn = fn
-#         self.args = args
-#         self.kwargs = kwargs
-#         
-#     @Slot() # Pyside6.QtCore.Slot
-#     def run(self):
-#         self.fn(*self.args, **self.kwargs)
-# 
