@@ -43,6 +43,9 @@ class MainWindowUI(QMainWindow):
     reset_loco_signal = Signal()
     steal_loco_signal = Signal() # Attempt to steal loco
     share_loco_signal = Signal() # Attempt to share loco
+    # Keep alive timer must always be started and stopped on the GUI thread
+    # this will start or stop as appropriate based on loco state
+    update_kalive_signal = Signal()
     
     def __init__(self):
         super().__init__()
@@ -119,6 +122,7 @@ class MainWindowUI(QMainWindow):
         self.reset_loco_signal.connect (self.reset_loco)
         self.steal_loco_signal.connect (self.steal_loco)
         self.share_loco_signal.connect (self.share_loco)
+        self.update_kalive_signal.connect (self.update_kalive)
         
         # File Menu
         self.ui.actionExit.triggered.connect(self.quit_app)
@@ -229,7 +233,7 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         # Update with loco_id
         #self.control_loco.loco.loco_id = loco_id
-        self.start_request(self.api.vlcb.allocate_loco(self.control_loco.loco.loco_id))
+        self.api.start_request(self.api.vlcb.allocate_loco(self.control_loco.loco.loco_id))
         self.control_loco.loco.status = 'rloc'
         
         # Update the functions menu
@@ -260,7 +264,7 @@ class MainWindowUI(QMainWindow):
     
     # change value (if need to send multiple then set num_send to number of times
     # Sent every 2 seconds (or change delay) - delay in seconds
-    def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
+    def loco_func_change_old (self, func_index, value, num_send = 1, delay = 2):
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, value)
         # If None then cancel
         if byte1_2 == None:
@@ -269,7 +273,7 @@ class MainWindowUI(QMainWindow):
         self.start_request_repeat (request, num_send, delay)
     
     # Sends on followed by off (typically 4 seconds later)
-    def loco_func_trigger (self, func_index, delay = 4):
+    def loco_func_trigger_old (self, func_index, delay = 4):
         # Turn on
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 1)
         if byte1_2 == None:
@@ -437,7 +441,8 @@ class MainWindowUI(QMainWindow):
     # <id>,<timestamp>,<incoming>,<message>
     # Note incoming is either i (incoming) or o (outgoing)
     
-    def handle_incoming_data (self, response):
+    # Moved to api
+    def handle_incoming_data_old (self, response):
         if self.debug:
             print (f"Incoming data {response}")
         # pass to console (unparsed)
@@ -664,14 +669,22 @@ class MainWindowUI(QMainWindow):
             self.ui.locoForwardRadio.setChecked(True)
         elif self.control_loco.loco.direction == 0:
             self.ui.locoReverseRadio.setChecked(True)
-        
+    
+    # Signal to indicate kalive needs to be checked
+    # start / stop as appropriate
+    def update_kalive (self):
+        if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
+            self.kalive_timer.start()
+        else:
+            self.kalive_timer.stop()
+    
     # Keep alive - called every 4 secs
     # Add a keep alive to the send queue
     def keep_alive (self):
         # Check we have a session to send a keep alive (ie. not in process of trying
         # to aquire a new loco
         if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
-            self.start_request(self.api.vlcb.keep_alive(self.control_loco.loco.session))
+            self.api.start_request(self.api.vlcb.keep_alive(self.control_loco.loco.session))
             
             
     def steal_loco_check (self, num_loco):
@@ -736,7 +749,7 @@ class MainWindowUI(QMainWindow):
     # comma is added automatically
     # set to "" if already formatted
     # Adding priority pushes to front of queue
-    def start_request (self, request, type="send", priority=False):
+    def start_request_old (self, request, type="send", priority=False):
         # add type to request
         print ("Deprecated start_request moved to api")
         return self.api.start_request(request, type, priority)

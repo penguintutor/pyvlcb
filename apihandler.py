@@ -20,6 +20,9 @@ class ApiHandler(QObject):
         # Subscribe to commands from the GUI/App logic
         #event_bus.set_device_power_command.connect(self._handle_set_power_command)
         
+        # Keep alive timer must run on mainwindow and must be started / stopped using signals
+        
+        
         self.debug = False
         
         # Queue to hold commands as they are sent from the queue
@@ -221,14 +224,6 @@ class ApiHandler(QObject):
                 print (f"Not a valid entry {id_date_data}")
             return
         
-        # Remove once fully handled
-        # This createst the data model within mw - remaining code uses device_model
-        #self.mw.handle_incoming_data(response)
-        #return
-        
-        #todo
-        ###nyi   - any references to this not yet implemented - fix and remove return
-        
         # Look for specific responses
         # todo - should we check timestamp first? If the entry is from before the first request then may not be
         # interested as it's an old node. Alternatively we could load anyway (max 100 past entries are stored)
@@ -293,11 +288,8 @@ class ApiHandler(QObject):
                 print (f"ENRSP response from Unknown node {data_entry['NN']}")
                 return
             # Add event to node
-            #print (f"Adding to {data_entry['NN']}, Ev {data_entry['EnIndex']}, Name {data_entry['En3_0']:#08x}")
-            #self.nodes[data_entry['NN']].add_ev(data_entry['EnIndex'], data_entry['En3_0'])
             device_model.add_ev(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0'])
             device_model.update_ev(data_entry['NN'], data_entry['EnIndex'], "name", self.mw.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
-            #self.nodes[data_entry['NN']].ev[data_entry['EnIndex']].set_name(self.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
         # Indicates allocation of loco - need to verify this is expected
         elif ret_opcode == 'PLOC':
             # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc
@@ -319,10 +311,12 @@ class ApiHandler(QObject):
             self.mw.control_loco.loco.status = "on"
             # Todo update controller with new values
             self.mw.update_lcd ()
+            # Start the keepalive timer
+            self.mw.update_kalive_signal.emit()
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
-            #nyi
-            return
+            if self.debug:
+                print ("Error message received")
             # Depending upon the error code the data may have different interpretations
             # Stored as Byte1, Byte2, ErrCode - where Byte1,Byte2 may eqal AddrHigh_AddrLow, or
             # may be Byte1 = Session ID, Byte 2 = 0
@@ -333,6 +327,8 @@ class ApiHandler(QObject):
             if data_entry['ErrCode'] == 1:
                 # Only valid during aquiring status
                 if self.mw.control_loco.loco.is_aquiring() == False:
+                    if self.debug:
+                        print ("Not aquiring loco - ignoring error")
                     return
                 loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
                 if self.mw.control_loco.loco.loco_id != loco_id:
@@ -343,7 +339,6 @@ class ApiHandler(QObject):
             # Already taken - option to steal
             elif data_entry['ErrCode'] == 2:
                 #Only for us if we haven't completed the session setup
-                #print (f"Session status {self.control_loco.loco.status}")
                 if self.mw.control_loco.loco.status == "on":
                     #print ("Not our session")
                     return
@@ -353,7 +348,7 @@ class ApiHandler(QObject):
                 loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
                 if self.debug:
                     print ("Error code 2 - loco taken")
-                if self.control_loco.loco.loco_id != loco_id:
+                if self.mw.control_loco.loco.loco_id != loco_id:
                     if self.debug:
                         print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.loco.loco_id}")
                     return
@@ -390,6 +385,37 @@ class ApiHandler(QObject):
     # 3rd phase of discover Read back all stored events in a node (NERD)
     def discover_nerd (self, node_id):
         self.start_request(self.vlcb.discover_nerd(node_id))
+        
+        # change value (if need to send multiple then set num_send to number of times
+    # Sent every 2 seconds (or change delay) - delay in seconds
+    def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
+        byte1_2 = self.mw.control_loco.loco.set_function_dfun (func_index, value)
+        # If None then cancel
+        if byte1_2 == None:
+            return
+        request = self.vlcb.loco_set_dfun(self.mw.control_loco.loco.session, *byte1_2)
+        self.start_request_repeat (request, num_send, delay)
+    
+    # Sends on followed by off (typically 4 seconds later)
+    def loco_func_trigger (self, func_index, delay = 4):
+        # Turn on
+        byte1_2 = self.mw.control_loco.loco.set_function_dfun (func_index, 1)
+        if byte1_2 == None:
+            return
+        request_on = self.vlcb.loco_set_dfun(self.mw.control_loco.loco.session, *byte1_2)
+        # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
+        byte1_2 = self.mw.control_loco.loco.set_function_dfun (func_index, 0)
+        request_off = self.vlcb.loco_set_dfun(self.mw.control_loco.loco.session, *byte1_2)
+        
+        self.start_request_onoff (request_on, request_off, delay)
+        
+    # Keep alive - called every 4 secs
+    # Add a keep alive to the send queue
+#     def keep_alive (self):
+#         # Check we have a session to send a keep alive (ie. not in process of trying
+#         # to aquire a new loco
+#         if self.mw.control_loco.loco.status == "on" and self.mw.control_loco.loco.session != 0:
+#             self.start_request(self.vlcb.keep_alive(self.mw.control_loco.loco.session))
 
 #     def _handle_set_power_command(self, command: SetDevicePowerCommand):
 #         print(f"API Handler: Received command to set power for {command.device_id} to {command.power_on}")
