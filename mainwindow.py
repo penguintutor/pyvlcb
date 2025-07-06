@@ -14,11 +14,10 @@ from vlcbclient import VLCBClient
 from layoutdisplay import LayoutDisplay
 from loco import Loco
 from stealdialog import StealDialog
-from controldevices import ControlDevices
-from controllayout import ControlLayout
 from controlloco import ControlLoco
 from apihandler import ApiHandler
 from worker import Worker
+from eventbus import EventBus, event_bus
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -68,7 +67,7 @@ class MainWindowUI(QMainWindow):
 #         # If -1 will try and get all including old entries
 #         # If None just get the last few packets received (effectively start from current instead of history)
 #         # None is -5 to ensure see the initial discover
-#         self.last_packet = None
+        self.last_packet = None
 #         #self.data_received = None
         
         # Moved to layout display
@@ -88,14 +87,14 @@ class MainWindowUI(QMainWindow):
         self.kalive_timer.setInterval(4000)
         self.kalive_timer.timeout.connect(self.keep_alive)
         
-        self.pc_can_id = 60      # CAN ID of CANUSB4
+        #self.pc_can_id = 60      # CAN ID of CANUSB4
     
         # Layout is useful for giving real names to certain items
         # Also provides list of valid locos
         self.layout = Layout(layout_file)
          
         # VLCB and node creation
-        self.vlcb = VLCB(self.pc_can_id)
+        #self.vlcb = VLCB(self.pc_can_id)
         
         #Locos
         #self.loco_list = LocoList()
@@ -165,11 +164,11 @@ class MainWindowUI(QMainWindow):
         
         # Handle events - can be bidirectional - can also include some static items
         # Device events passes events to devices and updates layout objects
-        self.control_devices = ControlDevices()
+        #self.controlnodes = ControlDevices()
         # Layout events is used for items in the GUI (eg. buttons, leds and labels)
-        self.control_layout = ControlLayout()
+        #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
-        self.control_loco = ControlLoco(self, self.vlcb)
+        self.control_loco = ControlLoco(self, self.api.vlcb)
         
         
         # Load layout background image
@@ -190,7 +189,7 @@ class MainWindowUI(QMainWindow):
         self.status = "Not connected"
     
         # Initial discover request
-        self.discover()
+        self.api.discover()
         
 
         
@@ -230,7 +229,7 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         # Update with loco_id
         #self.control_loco.loco.loco_id = loco_id
-        self.start_request(self.vlcb.allocate_loco(self.control_loco.loco.loco_id))
+        self.start_request(self.api.vlcb.allocate_loco(self.control_loco.loco.loco_id))
         self.control_loco.loco.status = 'rloc'
         
         # Update the functions menu
@@ -266,7 +265,7 @@ class MainWindowUI(QMainWindow):
         # If None then cancel
         if byte1_2 == None:
             return
-        request = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        request = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
         self.start_request_repeat (request, num_send, delay)
     
     # Sends on followed by off (typically 4 seconds later)
@@ -275,10 +274,10 @@ class MainWindowUI(QMainWindow):
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 1)
         if byte1_2 == None:
             return
-        request_on = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        request_on = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
         # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
         byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 0)
-        request_off = self.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        request_off = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
         
         self.start_request_onoff (request_on, request_off, delay)    
     
@@ -368,12 +367,12 @@ class MainWindowUI(QMainWindow):
         # None selected (shouldn't normally be the case)
         if self.selected_ev == None:
             return
-        self.start_request(self.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
+        self.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
         
     def ev_clicked_on (self):
         if self.selected_ev == None:
             return
-        self.start_request(self.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
+        self.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
 
         
     # Have the node table show the node information
@@ -442,7 +441,7 @@ class MainWindowUI(QMainWindow):
         if self.debug:
             print (f"Incoming data {response}")
         # pass to console (unparsed)
-        self.console_window.add_log(response)
+        #self.console_window.add_log(response)
         # strip date off (don't need except for the log)
         #print (f"Entry {response}")
         id_date_data = response.split(',',3)
@@ -450,7 +449,7 @@ class MainWindowUI(QMainWindow):
         if (len(id_date_data) < 4):
             print (f"Invalid entry - skipping {response}")
             return
-        vlcb_entry = self.vlcb.parse_input(id_date_data[3])
+        vlcb_entry = self.api.vlcb.parse_input(id_date_data[3])
         # If not a valid entry then ignore
         if vlcb_entry == False:
             if self.debug:
@@ -606,17 +605,24 @@ class MainWindowUI(QMainWindow):
             
     # Initial discovery of modules    
     def discover (self):
-        self.start_request(self.vlcb.discover())
+        #self.start_request(self.api.vlcb.discover())
+        print ("Deprecated discover moved to api")
+        self.api.discover()
         
     # 2nd phase in discovery RQEVN to get number of events
     # and NNEVN - get number of events available
     def discover_evn (self, node_id):
-        self.start_request(self.vlcb.discover_evn(node_id))
-        self.start_request(self.vlcb.discover_nevn(node_id))
+        #self.start_request(self.api.vlcb.discover_evn(node_id))
+        #self.start_request(self.api.vlcb.discover_nevn(node_id))
+        print ("Deprecated discover_evn moved to api")
+        self.api.discover_evn(node_id)
         
     # 3rd phase of discover Read back all stored events in a node (NERD)
     def discover_nerd (self, node_id):
-        self.start_request(self.vlcb.discover_nerd(node_id))
+        #self.start_request(self.api.vlcb.discover_nerd(node_id))
+        print ("Deprecated discover moved to api")
+        self.api.discover_nerd(node_id)
+        
     
 
         
@@ -665,7 +671,7 @@ class MainWindowUI(QMainWindow):
         # Check we have a session to send a keep alive (ie. not in process of trying
         # to aquire a new loco
         if self.control_loco.loco.status == "on" and self.control_loco.loco.session != 0:
-            self.start_request(self.vlcb.keep_alive(self.control_loco.loco.session))
+            self.start_request(self.api.vlcb.keep_alive(self.control_loco.loco.session))
             
             
     def steal_loco_check (self, num_loco):
@@ -697,6 +703,9 @@ class MainWindowUI(QMainWindow):
         self.update_lcd()
 
 
+
+    ### Functions in process of being moved to API
+        
     ### Threading
     # Functions related to sending on CANBUS (via API), but need to be part of
     # main window to access GUI QThread
@@ -729,6 +738,8 @@ class MainWindowUI(QMainWindow):
     # Adding priority pushes to front of queue
     def start_request (self, request, type="send", priority=False):
         # add type to request
+        print ("Deprecated start_request moved to api")
+        return self.api.start_request(request, type, priority)
             
         # Priority ignores list length and just inserts at front
         # pushes other priority items further down the list as well
@@ -747,35 +758,35 @@ class MainWindowUI(QMainWindow):
     # If from web notify newdata
     # If update to node / events then update nodes and
     # notify updatenode
-    def thread_getupdate(self, nodes, newdata_emit=None, updatenode_emit=None):
+    def thread_getupdate_old(self, nodes, newdata_emit=None, updatenode_emit=None, response=None):
         #Only allow one thread at a time
-        self.update_in_progress = True
+        #self.update_in_progress = True
                
-        # see if there is a specific request
-        request = self.api.get_request()
-        if request != False:
-            #print (f"Sending request {request}")
-            response = self.server.send (request)
-            if response == None:
-                self.update_in_progress = False
-                self.status = "Not connected"
-                return
-            else:
-                self.status = "Connected"
-            # Todo handle response
-            # Just a True / false response
-            # clear send_request ready for next request
-            
-        # Get updates since last_packet
-        response = self.server.read (self.last_packet)
-        # If response None then error getting update - skip for now and
-        # try again next time we poll
-        if response == None:
-            self.update_in_progress = False
-            self.status = "Not connected"
-            return
-        else:
-            self.status = "Connected"
+#         # see if there is a specific request
+#         request = self.api.get_request()
+#         if request != False:
+#             #print (f"Sending request {request}")
+#             response = self.server.send (request)
+#             if response == None:
+#                 self.update_in_progress = False
+#                 self.status = "Not connected"
+#                 return
+#             else:
+#                 self.status = "Connected"
+#             # Todo handle response
+#             # Just a True / false response
+#             # clear send_request ready for next request
+#             
+#         # Get updates since last_packet
+#         response = self.server.read (self.last_packet)
+#         # If response None then error getting update - skip for now and
+#         # try again next time we poll
+#         if response == None:
+#             self.update_in_progress = False
+#             self.status = "Not connected"
+#             return
+#         else:
+#             self.status = "Connected"
         
         #print (f"**** Response {response}")
         # First line is summary

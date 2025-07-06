@@ -56,6 +56,18 @@ class VLCBNode():
         # add as child to self.gui_node
         self.gui_node.appendRow(self.ev[ev_id].gui_node)
         
+    # field is to be updated - this needs to be coded manually
+    # Features included = "name"
+    def update_ev(self, ev_id, field, value):
+        if not ev_id in self.ev.keys():
+            return False
+        if field == "name":
+           self.ev[ev_id].set_name(value)
+           return True
+        # Unknown field
+        else:
+            return False
+        
     # updates any of the entries - based on dict
     # Node_id cannot be changed as that is the unique identifier for the node
     # That will be ignored along with any unrecognised values
