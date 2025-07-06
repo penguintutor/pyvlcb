@@ -57,6 +57,7 @@ class ConsoleWindowUI(QMainWindow):
         
     def app_update (self, app_event):
         if app_event.event_type == "newdata":
+            self.add_log(app_event.get_response())
             self.update_log()
         
     # log_details is unformatted string

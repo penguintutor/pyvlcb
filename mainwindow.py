@@ -33,10 +33,6 @@ read_rate = 200
 
 class MainWindowUI(QMainWindow):
     
-    # Signal whenever data is loaded
-    newdata_loaded_signal = Signal()
-    # If nodes are updated then need to update elements
-    node_updated_signal = Signal()
     steal_dialog_signal = Signal(int)
     # Handle loco selection
     # reset loco to none selected (if aquire failed or loco stolen by another controller)
@@ -51,7 +47,7 @@ class MainWindowUI(QMainWindow):
         super().__init__()
         self.debug = False
         
-        self.nodes = {} # dict of nodes indexed by NN
+        #self.nodes = {} # dict of nodes indexed by NN
         
         self.threadpool = QThreadPool()
         self.update_in_progress = False
@@ -81,8 +77,6 @@ class MainWindowUI(QMainWindow):
         
         
         # Signals
-        self.newdata_loaded_signal.connect (self.update_console)
-        self.node_updated_signal.connect (self.update_nodes)
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
         self.reset_loco_signal.connect (self.reset_loco)
         self.steal_loco_signal.connect (self.steal_loco)
@@ -308,11 +302,6 @@ class MainWindowUI(QMainWindow):
         if show:
             self.console_window.show()    
         
-    def update_console (self):
-        self.console_window.update_log()
-    
-    def update_nodes (self):
-        pass
     
     def ev_clicked_off (self):
         # None selected (shouldn't normally be the case)

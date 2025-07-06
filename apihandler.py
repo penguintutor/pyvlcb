@@ -6,6 +6,7 @@ from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
+from appevent import AppEvent
 
 
 # Todo mw is used for layout - can this be decoupled
@@ -106,7 +107,7 @@ class ApiHandler(QObject):
     # If from web notify newdata
     # If update to node / events then update nodes and
     # notify updatenode
-    def thread_getupdate(self, nodes, newdata_emit=None, updatenode_emit=None):
+    def thread_getupdate(self):
         #Only allow one thread at a time
         self.update_in_progress = True
                
@@ -184,7 +185,8 @@ class ApiHandler(QObject):
                 #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
                 # passes entire line to 
                 self.handle_incoming_data(data_packet)
-            self.mw.newdata_loaded_signal.emit()
+            #event_bus.publish(AppEvent("newdata")) 
+            #self.mw.newdata_loaded_signal.emit()
         else:
             print (f"Unrecognised response {response}")
         
@@ -197,7 +199,7 @@ class ApiHandler(QObject):
             #print ("Still running - skipping")
             return
         
-        worker = Worker(self.thread_getupdate, self.mw.newdata_loaded_signal, self.mw.node_updated_signal)
+        worker = Worker(self.thread_getupdate)
         self.threadpool.start(worker)
         return
     
@@ -207,13 +209,10 @@ class ApiHandler(QObject):
             print (f"Incoming data {response}")
             
         # pass to console (unparsed)
-        # this is not using the event model - revisit later when all events are published
-        self.mw.console_window.add_log(response)
+        event_bus.publish(AppEvent("newdata", {"response":response}))
         
         # strip date off (don't need except for the log)
-        #print (f"Entry {response}")
         id_date_data = response.split(',',3)
-        #print (f"ID Date Data {id_date_data}")
         if (len(id_date_data) < 4):
             print (f"Invalid entry - skipping {response}")
             return
@@ -409,20 +408,3 @@ class ApiHandler(QObject):
         
         self.start_request_onoff (request_on, request_off, delay)
         
-    # Keep alive - called every 4 secs
-    # Add a keep alive to the send queue
-#     def keep_alive (self):
-#         # Check we have a session to send a keep alive (ie. not in process of trying
-#         # to aquire a new loco
-#         if self.mw.control_loco.loco.status == "on" and self.mw.control_loco.loco.session != 0:
-#             self.start_request(self.vlcb.keep_alive(self.mw.control_loco.loco.session))
-
-#     def _handle_set_power_command(self, command: SetDevicePowerCommand):
-#         print(f"API Handler: Received command to set power for {command.device_id} to {command.power_on}")
-#         worker = DevicePowerSetter(command.device_id, command.power_on)
-#         self.threadpool.start(worker) # Execute API call in a worker thread
-# 
-#     def shutdown(self):
-#         self.device_a_feeder.stop()
-#         # Wait for threads to finish if necessary (QThreadPool.waitForDone())
-#         # but in many GUI apps, just stopping feeders is enough.
