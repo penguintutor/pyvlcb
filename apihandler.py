@@ -184,15 +184,9 @@ class ApiHandler(QObject):
                     print (f"This packet {data_packet}")
                     print (f"Data packets {data_packets}")
                     continue
-                #self.data_received += 1    # Count packets received (not needed instead trust last packet number)
-                # passes entire line to
-                #print (f"Incoming {data_packet}")
                 self.handle_incoming_data(data_packet)
-            #event_bus.publish(AppEvent("newdata")) 
-            #self.mw.newdata_loaded_signal.emit()
         else:
             print (f"Unrecognised response {response}")
-        
         self.update_in_progress = False
 
 
@@ -313,17 +307,15 @@ class ApiHandler(QObject):
             self.mw.control_loco.set_session (data_entry['Session'])
             self.mw.control_loco.set_speeddir (data_entry['SpeedDir'])
             self.mw.control_loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
-            self.mw.ui.locoStatusLabel.setText ("Ready")
+            #self.mw.ui.locoStatusLabel.setText ("Ready")
+            event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Ready"}))
             # Set status to on last gives time to ensure all entries updated
-            #print ("API PLOC Setting status on")
             self.mw.control_loco.set_status ("on")
-            #print ("Status set - updating LCD")
             # Todo update controller with new values
             self.mw.update_lcd ()
-            #print ("Startin kalive")
             # Start the keepalive timer
-            self.mw.update_kalive_signal.emit()
-            #print ("Finished ploc")
+            #self.mw.update_kalive_signal.emit()
+            event_bus.publish(AppEvent("keepalive", {}))
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
             if self.debug:
@@ -346,7 +338,9 @@ class ApiHandler(QObject):
                     if self.debug:
                         print (f"ERR ID {loco_id} does not match current Loco ID {self.mw.control_loco.loco.loco_id}")
                     return
-                self.mw.ui.locoStatusLabel.setText ("Error - no sessions available")
+                #self.mw.ui.locoStatusLabel.setText ("Error - no sessions available")
+                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available"}))
+
             # Already taken - option to steal
             elif data_entry['ErrCode'] == 2:
                 #Only for us if we haven't completed the session setup
@@ -363,8 +357,11 @@ class ApiHandler(QObject):
                     if self.debug:
                         print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.get_id()}")
                     return
-                self.mw.ui.locoStatusLabel.setText ("Error - address taken")
-                self.mw.steal_dialog_signal.emit(loco_id)
+                
+                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - address taken"}))
+                #self.mw.ui.locoStatusLabel.setText ("Error - address taken")
+                event_bus.publish(AppEvent("stealdialog", {'loco_id': loco_id}))
+                #self.mw.steal_dialog_signal.emit(loco_id)
             elif data_entry['ErrCode'] == 8:
                 # If we are trying to aquire a session then this could be us resetting other node
                 if self.mw.control_loco.is_aquiring():

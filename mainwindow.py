@@ -137,6 +137,7 @@ class MainWindowUI(QMainWindow):
         #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
         self.control_loco = ControlLoco(self, self.api.vlcb)
+        event_bus.app_event_signal.connect(self.app_event)
                 
         # Load layout background image
         self.ui.layoutLabel.load_image(self)
@@ -155,6 +156,15 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.api.discover()
         
+    # App event is used to send events from other parts of the app
+    def app_event (self, app_event):
+        if app_event.event_type == "uitext":
+            if app_event.data['label'] == "locoStatusLabel":
+                self.ui.locoStatusLabel.setText (app_event.data['value'])
+        elif app_event.event_type == "keepalive":
+            self.update_kalive_signal.emit()
+        elif app_event.event_type == "stealdialog":
+            self.steal_dialog_signal.emit(app_event.data['loco_id'])
     
     # Show console always calls show
     # If window already open then bring to front
