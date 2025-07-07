@@ -59,6 +59,11 @@ class ConsoleWindowUI(QMainWindow):
         if app_event.event_type == "newdata":
             self.add_log(app_event.get_response())
             self.update_log()
+        if app_event.event_type == "showconsole":
+            self.show()
+            self.showNormal()
+            self.raise_()
+            self.activateWindow()
         
     # log_details is unformatted string
     # Extract details and store as:

@@ -586,6 +586,7 @@
     </property>
     <addaction name="actionLayoutEdit"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionShowConsole"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -622,6 +623,11 @@
   <action name="actionAbout">
    <property name="text">
     <string>About</string>
+   </property>
+  </action>
+  <action name="actionShowConsole">
+   <property name="text">
+    <string>Show Console</string>
    </property>
   </action>
  </widget>

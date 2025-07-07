@@ -19,6 +19,9 @@ class Loco:
         # Track all functions. Only F0 to F12 are found from PLOC - rest assume start off
         self.function_status = [0] * 29
     
+    def set_status (self, value):
+        self.status = value
+    
     # Loads a json file with details of the loco
     # there are more details in the file - just pull out id and name for quick reference
     def load_file (self, filename):
@@ -150,12 +153,13 @@ class Loco:
     # eg. 1 = 0001, 2 = 0010
     # function = function number, on_off = 1 or 0
     def set_function_dfun (self, function, on_off):
+        #print (f"Loco set_function_dfun - {function}, {on_off}, {self.function_status}")
         if function  > len (self.function_status):
             return None
         self.function_status[function] = on_off
         if function <= 4:
             byte1 = 1
-            byte2 = (0b10000 * self.function_status[0] +
+            byte2 = (0b10000 * self.function_status[0] +  # fn0 is higher nibble (bit 5)
                      0b0001 * self.function_status[1] +
                      0b0010 * self.function_status[2] +
                      0b0100 * self.function_status[3] +
@@ -199,6 +203,8 @@ class Loco:
                      )
         # Do not support above 28 using DFUN - would need to use DFNON / DFNOF instead
         else:
+            print ("Functions above 28 are not supported")
             return None
+        #print (f"Returning {byte1}, {byte2}")
         return [byte1, byte2]
     

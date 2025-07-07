@@ -8,25 +8,28 @@ from vlcbclient import VLCBClient
 from eventbus import EventBus, event_bus
 from deviceevent import DeviceEvent
 from layoutevent import LayoutEvent
+from loco import Loco
 
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
     # to react to state changes in the core data.
     model_updated = Signal(str) # Emits device_id when its state changes
     
-    ### nodes
-    #self.nodes[data_entry['NN']] = VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags'])
-    #self.nodes[data_entry['NN']].set_name(self.layout.node_name(data_entry['NN']))
 
     def __init__(self):
         super().__init__()
         # dict of nodes indexed by NN
-        self.nodes = {
-            #"device": {"status": "UNKNOWN", "event": None}
-        }
+        self.nodes = {}
+        # typically the GUI will have one loco = [0]
+        # allow more to allow automation
+        self.locos = []
         # Subscribe to events from the API layer
         #event_bus.device_event_signal.connect(self._update_device_status)
         #event_bus.layout_event_signal.connect(self._update_layout_status)
+        
+    def add_loco (self):
+        self.locos.append(Loco())
+        return (len(self.locos)-1)
         
     def node_exists (self, node):
         if node in self.nodes.keys():

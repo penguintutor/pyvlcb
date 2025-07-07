@@ -5,8 +5,10 @@ from layout import Layout
 from pyvlcb import VLCB
 from loco import Loco
 from apihandler import ApiHandler
+from devicemodel import DeviceModel, device_model
 
-# Tracks and geneerates events(activities) against a loco
+
+# Tracks and generates events(activities) against a loco
 # When we receive / send an event do we need to update devices and corresponding objects
 # Currently heavily reliant on mw (mainwindow) from the parent
 # perhaps decouple in futures
@@ -15,36 +17,93 @@ class ControlLoco:
         self.mw = parent
         self.api = parent.api
         self.vlcb = vlcb
-        self.loco = Loco()
+        # Index is the position in the list in the device_model
+        # Create new loco in device_model and get index
+        # For interactive this is normally position 0
+        self.loco_index = device_model.add_loco()
+        # If this i
+        # loco moved to devicemodel
+        #device_model.locos[self.loco_index] = Loco()
+        
+    def is_active(self):
+        return device_model.locos[self.loco_index].is_active()
+    
+    def get_direction(self):
+        return device_model.locos[self.loco_index].direction
+    
+    def speed_value(self):
+        return device_model.locos[self.loco_index].speed_value()
+    
+    def get_name(self):
+        return device_model.locos[self.loco_index].loco_name
+    
+    # Id is the loco id (eg DCC/running number) not index
+    def get_id(self):
+        #print (f"Loco index {self.loco_index} id {device_model.locos[self.loco_index].loco_id} name {device_model.locos[self.loco_index].loco_name}")
+        return device_model.locos[self.loco_index].loco_id
+    
+    def is_aquiring(self):
+        return device_model.locos[self.loco_index].is_aquiring
+    
+    def get_session (self):
+        return device_model.locos[self.loco_index].session
+    
+    def set_session (self, session):
+        device_model.locos[self.loco_index].session = session
+    
+    # Sets speed and direction together
+    def set_speeddir (self, speeddir):
+        device_model.locos[self.loco_index].set_speeddir(speeddir)
+    
+    def get_functions (self):
+        return device_model.locos[self.loco_index].get_functions()
+    
+    def set_functions (self, fn1, fn2, fn3):
+        device_model.locos[self.loco_index].set_functions(fn1, fn2, fn3)
+    
+    # This is the low level status - perhaps use is_aquiring or a similar method instead
+    def get_status (self):
+        return device_model.locos[self.loco_index].status
+    
+    def set_status (self, value):
+        device_model.locos[self.loco_index].set_status(value)
+        
+    def set_function_dfun (self, func_index, value):
+        # for a list need brackets around the method - or store in temp variable
+        return (device_model.locos[self.loco_index].set_function_dfun (func_index, value))
+
+        
+    def function_reset (self):
+        device_model.locos[self.loco_index].function_reset()
 
     def release (self):
         # Release old loco
-        if self.loco.status == "on" and self.loco.session != 0:
+        if device_model.locos[self.loco_index].status == "on" and device_model.locos[self.loco_index].session != 0:
             # Sends a release but doesn't check for a response
-            self.api.start_request(self.vlcb.release_loco(self.loco.session))
-            self.loco.released()
+            self.api.start_request(self.vlcb.release_loco(device_model.locos[self.loco_index].session))
+            device_model.locos[self.loco_index].released()
             # Normally would want to stop the keep alive but we are hoping to aquire a new session immediately after
             # So the keep alive will just ignore until aquired
 
     def load_file (self, filename):
 
-        self.loco.load_file (filename)
-        loco_name = self.loco.loco_name
+        device_model.locos[self.loco_index].load_file (filename)
+        loco_name = device_model.locos[self.loco_index].loco_name
 
         self.mw.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
 
-        #self.api.start_request(self.vlcb.allocate_loco(self.loco.loco_id))
+        #self.api.start_request(self.vlcb.allocate_loco(device_model.locos[self.loco_index].loco_id))
         # start_request moved away from controlloco
-        self.loco.status = 'rloc'
+        device_model.locos[self.loco_index].status = 'rloc'
         
         # Add images and summary
-        if "image" in self.loco.loco_data:
-            loco_image = QPixmap(os.path.join(self.mw.layout.loco_dir, self.loco.loco_data['image']))
+        if "image" in device_model.locos[self.loco_index].loco_data:
+            loco_image = QPixmap(os.path.join(self.mw.layout.loco_dir, device_model.locos[self.loco_index].loco_data['image']))
             self.mw.ui.locoImage.setPixmap(loco_image)
         else:
             self.mw.ui.locoImage.setPixmap(QPixmap())
-        if "summary" in self.loco.loco_data:
-            self.mw.ui.locoInfoText.setText(self.loco.loco_data['summary'])
+        if "summary" in device_model.locos[self.loco_index].loco_data:
+            self.mw.ui.locoInfoText.setText(device_model.locos[self.loco_index].loco_data['summary'])
         else:
             self.mw.ui.locoInfoText.setText("")
         
@@ -52,7 +111,7 @@ class ControlLoco:
     # When combobox / tab selected
     def function_selected (self, func_index):
         # get [status, type]
-        status = self.loco.get_function_status(func_index)
+        status = device_model.locos[self.loco_index].get_function_status(func_index)
         # If we don't have a status then the function button doesn't exist
         if status == None:
             self.mw.ui.locoFuncButton.setText(" - ")
@@ -74,7 +133,7 @@ class ControlLoco:
     # Button has been pressed
     def function_pressed (self, func_index):
         # get [status, type]
-        status = self.loco.get_function_status(func_index)
+        status = device_model.locos[self.loco_index].get_function_status(func_index)
         # If we don't have a status then the function doesn't exist
         if status == None:
             return
@@ -97,24 +156,24 @@ class ControlLoco:
             
     def steal_loco (self):
         # Check we have valid loco_id (if not reset)
-        if (self.loco.loco_id == 0):
+        if (device_model.locos[self.loco_index].loco_id == 0):
             self.reset_loco()
             return
-        loco_id = self.loco.loco_id
-        #loco_name = self.loco_list.loco_name(loco_id)
-        loco_name = self.loco.loco_name
+        loco_id = device_model.locos[self.loco_index].loco_id
+        #loco_name = device_model.locos[self.loco_index]_list.loco_name(loco_id)
+        loco_name = device_model.locos[self.loco_index].loco_name
         self.mw.ui.locoStatusLabel.setText(f"Stealing {loco_name}")
-        self.loco.status = 'gloc'
+        device_model.locos[self.loco_index].status = 'gloc'
         self.api.start_request(self.vlcb.steal_loco(loco_id))
         
     def share_loco (self):
         # Check we have valid loco_id (if not reset)
-        if (self.loco.loco_id == 0):
+        if (device_model.locos[self.loco_index].loco_id == 0):
             self.reset_loco()
             return
-        loco_id = self.loco.loco_id
-        #loco_name = self.loco_list.loco_name(loco_id)
-        loco_name = self.loco.loco_name
+        loco_id = device_model.locos[self.loco_index].loco_id
+        #loco_name = device_model.locos[self.loco_index]_list.loco_name(loco_id)
+        loco_name = device_model.locos[self.loco_index].loco_name
         self.mw.ui.locoStatusLabel.setText(f"Req sharing {loco_name}")
         self.api.start_request(self.vlcb.share_loco(loco_id))
         
@@ -123,7 +182,7 @@ class ControlLoco:
         # remove keep alive timer if active
         if self.api.kalive_timer.isActive():
                 self.api.kalive_timer.stop()
-        self.loco.reset()
+        device_model.locos[self.loco_index].reset()
         # Change combo after reset - that way the post change
         # will not send a release message
         self.mw.ui.locoComboBox.setCurrentIndex(0)
@@ -141,37 +200,37 @@ class ControlLoco:
     # This is used based on the dial
     def change_speed (self, new_speed):
         # If not in a session then ignore
-        if self.loco.is_active():
+        if device_model.locos[self.loco_index].is_active():
             # Special case if stop and 0 then reset stop
-            if self.loco.status == "stop" and new_speed == 0:
-                self.loco.status = "on"
+            if device_model.locos[self.loco_index].status == "stop" and new_speed == 0:
+                device_model.locos[self.loco_index].status = "on"
                 self.mw.ui.locoStatusLabel.setText ("Ready")
-            self.loco.set_speed (new_speed)
-            self.api.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+            device_model.locos[self.loco_index].set_speed (new_speed)
+            self.api.start_request(self.vlcb.loco_speeddir(device_model.locos[self.loco_index].session, device_model.locos[self.loco_index].get_speeddir()))
         self.mw.update_lcd()
         
         
     def forward (self):
-        self.loco.set_direction (1)
-        if self.loco.is_active():
-            self.api.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        device_model.locos[self.loco_index].set_direction (1)
+        if device_model.locos[self.loco_index].is_active():
+            self.api.start_request(self.vlcb.loco_speeddir(device_model.locos[self.loco_index].session, device_model.locos[self.loco_index].get_speeddir()))
         self.mw.update_lcd()
         
     def reverse (self):
-        self.loco.set_direction (0)
-        if self.loco.is_active():
-            self.api.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+        device_model.locos[self.loco_index].set_direction (0)
+        if device_model.locos[self.loco_index].is_active():
+            self.api.start_request(self.vlcb.loco_speeddir(device_model.locos[self.loco_index].session, device_model.locos[self.loco_index].get_speeddir()))
         self.mw.update_lcd()
         
         
     # Emergency stop - current loco
     # To reset need to set speed to 0 on the dial
     def stop (self, msg="STOP!"):
-        self.loco.set_stop()
-        if self.loco.session != 0:
+        device_model.locos[self.loco_index].set_stop()
+        if device_model.locos[self.loco_index].session != 0:
             # check we have a session
             # don't check status as this is emergency stop so send regardless
-            self.api.start_request(self.vlcb.loco_speeddir(self.loco.session, self.loco.get_speeddir()))
+            self.api.start_request(self.vlcb.loco_speeddir(device_model.locos[self.loco_index].session, device_model.locos[self.loco_index].get_speeddir()))
         self.mw.ui.locoStatusLabel.setText (msg)
         self.mw.update_lcd()
         

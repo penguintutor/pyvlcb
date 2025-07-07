@@ -18,6 +18,8 @@ from controlloco import ControlLoco
 from apihandler import ApiHandler
 from worker import Worker
 from eventbus import EventBus, event_bus
+from appevent import AppEvent
+from devicemodel import DeviceModel, device_model
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -89,6 +91,9 @@ class MainWindowUI(QMainWindow):
         # Asset Menu
         self.ui.actionDiscover.triggered.connect(self.api.discover)
         
+        # Tools Menu
+        self.ui.actionShowConsole.triggered.connect(self.show_console)
+        
         # Tree view
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
@@ -151,6 +156,13 @@ class MainWindowUI(QMainWindow):
         self.api.discover()
         
     
+    # Show console always calls show
+    # If window already open then bring to front
+    def show_console (self):
+        # Send as an app event to decouple
+        event_bus.publish(AppEvent("showconsole"))
+        
+    
     def steal_loco (self):
         self.control_loco.steal_loco ()
     
@@ -161,7 +173,6 @@ class MainWindowUI(QMainWindow):
     def reset_loco (self):
         self.control_loco.reset_loco ()
         
-       
     # When loco change requested through combobox
     def loco_change (self, index):
         # Release old loco
@@ -179,20 +190,24 @@ class MainWindowUI(QMainWindow):
         # index is -1 to skip None selected
         filename = self.layout.get_loco_filename (index -1)
         
-        self.control_loco.load_file(filename)
+        self.control_loco.load_file (filename)
         
-        self.control_loco.loco.load_file (filename)
-        loco_name = self.control_loco.loco.loco_name
+        loco_name = self.control_loco.get_name()
+
+        #print (f"Aquiring {loco_name}")
 
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         # Update with loco_id
-        #self.control_loco.loco.loco_id = loco_id
-        self.api.start_request(self.api.vlcb.allocate_loco(self.control_loco.loco.loco_id))
-        self.control_loco.loco.status = 'rloc'
+        #self.control_loco.loco_id = loco_id
+        self.api.start_request(self.api.vlcb.allocate_loco(self.control_loco.get_id()))
+        self.control_loco.set_status('rloc')
         
+        #print ("Change functions")
         # Update the functions menu
         self.loco_change_functions(0)
-        self.control_loco.loco.function_reset()
+        #print ("Function reset")
+        self.control_loco.function_reset()
+        #print ("Reset complete")
 
                 
     # Update function selected features
@@ -218,23 +233,23 @@ class MainWindowUI(QMainWindow):
     # change value (if need to send multiple then set num_send to number of times
     # Sent every 2 seconds (or change delay) - delay in seconds
     def loco_func_change_old (self, func_index, value, num_send = 1, delay = 2):
-        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, value)
+        byte1_2 = self.control_loco.set_function_dfun (func_index, value)
         # If None then cancel
         if byte1_2 == None:
             return
-        request = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        request = self.api.vlcb.loco_set_dfun(self.control_loco.session, *byte1_2)
         self.start_request_repeat (request, num_send, delay)
     
     # Sends on followed by off (typically 4 seconds later)
     def loco_func_trigger_old (self, func_index, delay = 4):
         # Turn on
-        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 1)
+        byte1_2 = self.control_loco.set_function_dfun (func_index, 1)
         if byte1_2 == None:
             return
-        request_on = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        request_on = self.api.vlcb.loco_set_dfun(self.control_loco.session, *byte1_2)
         # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
-        byte1_2 = self.control_loco.loco.set_function_dfun (func_index, 0)
-        request_off = self.api.vlcb.loco_set_dfun(self.control_loco.loco.session, *byte1_2)
+        byte1_2 = self.control_loco.set_function_dfun (func_index, 0)
+        request_off = self.api.vlcb.loco_set_dfun(self.control_loco.session, *byte1_2)
         
         self.start_request_onoff (request_on, request_off, delay)    
     
@@ -242,7 +257,7 @@ class MainWindowUI(QMainWindow):
     # If index is not provided then use current
     # otherrwise set to the index tab
     def loco_change_functions (self, index=None):
-        functions = self.control_loco.loco.get_functions()
+        functions = self.control_loco.get_functions()
         if index != None and index >=0 and index <=2:
             self.ui.locoFuncTab.setCurrentIndex(index)
         else:
@@ -297,7 +312,7 @@ class MainWindowUI(QMainWindow):
                     self.node_table_show_ev(new_item)
         
         
-    def create_console(self, show=True):
+    def create_console(self, show=False):
         self.console_window = ConsoleWindowUI(self)
         if show:
             self.console_window.show()    
@@ -383,22 +398,22 @@ class MainWindowUI(QMainWindow):
     # Update the LCD display based on the speed
     def update_lcd (self):
         # If not in a session show --
-        if self.control_loco.loco.is_active() == False or self.control_loco.loco.status == "stop" :
+        if self.control_loco.is_active() == False or self.control_loco.get_status() == "stop" :
             self.ui.locoSpeedLcd.display("--")
         # If 0 then use string to ensure 0 displayed
-        elif self.control_loco.loco.speed_value() == 0:
+        elif self.control_loco.speed_value() == 0:
             self.ui.locoSpeedLcd.display("0")
         else:
-            self.ui.locoSpeedLcd.display(self.control_loco.loco.speed_value())
-        if self.control_loco.loco.direction == 1:
+            self.ui.locoSpeedLcd.display(self.control_loco.speed_value())
+        if self.control_loco.get_direction() == 1:
             self.ui.locoForwardRadio.setChecked(True)
-        elif self.control_loco.loco.direction == 0:
+        elif self.control_loco.get_direction() == 0:
             self.ui.locoReverseRadio.setChecked(True)
     
     # Signal to indicate kalive needs to be checked
     # start / stop as appropriate
     def update_kalive (self):
-        if self.control_loco.loco.is_active():
+        if self.control_loco.is_active():
             if not self.kalive_timer.isActive():
                 self.kalive_timer.start()
         elif self.kalive_timer.isActive():
@@ -409,8 +424,8 @@ class MainWindowUI(QMainWindow):
     def keep_alive (self):
         # Check we have a session to send a keep alive (ie. not in process of trying
         # to aquire a new loco
-        if self.control_loco.loco.is_active():
-            self.api.start_request(self.api.vlcb.keep_alive(self.control_loco.loco.session))
+        if self.control_loco.is_active():
+            self.api.start_request(self.api.vlcb.keep_alive(self.control_loco.get_session()))
             
             
     def steal_loco_check (self, num_loco):
