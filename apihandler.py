@@ -245,7 +245,7 @@ class ApiHandler(QObject):
             # if we don't already have this device add it
             if not device_model.node_exists(data_entry['NN']):
                 device_model.add_node(VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags']))
-                device_model.set_name(data_entry['NN'], self.mw.layout.node_name(data_entry['NN']))
+                #device_model.set_name(data_entry['NN'], self.mw.layout.node_name(data_entry['NN']))
                 # Add to Tree View
                 # todo review where / how node_model is updated
                 self.mw.node_model.appendRow(device_model.get_gui_node(data_entry['NN']))
@@ -288,7 +288,7 @@ class ApiHandler(QObject):
                 return
             # Add event to node
             device_model.add_ev(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0'])
-            device_model.update_ev(data_entry['NN'], data_entry['EnIndex'], "name", self.mw.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
+            #device_model.update_ev(data_entry['NN'], data_entry['EnIndex'], "name", self.mw.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
         # Indicates allocation of loco - need to verify this is expected
         elif ret_opcode == 'PLOC':
             # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc

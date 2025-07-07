@@ -73,6 +73,8 @@ class MainWindowUI(QMainWindow):
         # Layout is useful for giving real names to certain items
         # Also provides list of valid locos
         self.layout = Layout(layout_file)
+        # pass the layout to the devicemodel
+        device_model.set_layout(self.layout)
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)

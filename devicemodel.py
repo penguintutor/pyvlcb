@@ -26,6 +26,12 @@ class DeviceModel(QObject):
         # Subscribe to events from the API layer
         #event_bus.device_event_signal.connect(self._update_device_status)
         #event_bus.layout_event_signal.connect(self._update_layout_status)
+        # layout used for getting user name for devices
+        self.layout = None
+        
+    # set layout from mainwindow
+    def set_layout (self, layout):
+        self.layout = layout
         
     def add_loco (self):
         self.locos.append(Loco())
@@ -41,7 +47,10 @@ class DeviceModel(QObject):
         if not node in self.nodes.keys():
             self.nodes[node.node_id] = node
             return True
+        # Also set name
+        self.set_name (node.node_id, self.layout.node_name(node))
         return False
+    
 
     def set_name (self, node_id, name):
         if not node_id in self.nodes.keys():
@@ -64,7 +73,11 @@ class DeviceModel(QObject):
     def add_ev(self, node_id, ev_id, en):
         if not node_id in self.nodes.keys():
             return False
+        # Add the EV
         self.nodes[node_id].add_ev(ev_id, en)
+        # Update the name based on layout
+        name = self.layout.ev_name(node_id, ev_id, en)
+        self.update_ev(node_id, ev_id, "name", name)
         return True
 
     def update_node (self, node_id, upd_dict):
