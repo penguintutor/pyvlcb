@@ -6,6 +6,7 @@ from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
+from guievent import GuiEvent
 from appevent import AppEvent
 
 
@@ -46,8 +47,21 @@ class ApiHandler(QObject):
         self.last_packet = None
         #self.data_received = None
         
+        # Get events from the event_bus
+        #event_bus.gui_event_signal.connect(self.gui_event)
+        
         # VLCB and node creation
         self.vlcb = VLCB(self.pc_can_id)
+
+#     def gui_event (self, gui_event):
+#         # Is the event a start request - if so handle the request
+#         if gui_event.event_type == "start_request":
+#             if gui_event.data['command'] == release_loco:
+#                 request = self.vlcb.release_loco(gui_event.data['arg1'])
+#             # unknown request - cancel
+#             else:
+#                 return
+#             self.start_request (request)
 
         
     # Gets request off the queue
@@ -232,7 +246,9 @@ class ApiHandler(QObject):
         if ret_opcode == 'ERSTOP':    # Emergency stop all
             # Emergency stop and stop all are the same
             # except for the message
-            self.loco_stop ("STOP ALL!")
+            #self.loco_stop ("STOP ALL!")
+            pass
+            # Todo update UI when stop all
             
         elif ret_opcode == 'PNN':    # PNN (Response to query node)
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
@@ -396,25 +412,25 @@ class ApiHandler(QObject):
         
         # change value (if need to send multiple then set num_send to number of times
     # Sent every 2 seconds (or change delay) - delay in seconds
-    def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
-        byte1_2 = self.mw.control_loco.set_function_dfun (func_index, value)
-        # If None then cancel
-        if byte1_2 == None:
-            return
-        request = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-        self.start_request_repeat (request, num_send, delay)
+#     def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
+#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, value)
+#         # If None then cancel
+#         if byte1_2 == None:
+#             return
+#         request = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
+#         self.start_request_repeat (request, num_send, delay)
     
-    # Sends on followed by off (typically 4 seconds later)
-    def loco_func_trigger (self, func_index, delay = 4):
-        #print (f"Func trigger api {func_index}")
-        # Turn on
-        byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 1)
-        if byte1_2 == None:
-            return
-        request_on = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-        # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
-        byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 0)
-        request_off = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-        
-        self.start_request_onoff (request_on, request_off, delay)
+#     # Sends on followed by off (typically 4 seconds later)
+#     def loco_func_trigger (self, func_index, delay = 4):
+#         #print (f"Func trigger api {func_index}")
+#         # Turn on
+#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 1)
+#         if byte1_2 == None:
+#             return
+#         request_on = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
+#         # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
+#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 0)
+#         request_off = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
+#         
+#         self.start_request_onoff (request_on, request_off, delay)
         

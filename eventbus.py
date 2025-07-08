@@ -4,7 +4,7 @@
 
 from PySide6.QtCore import Qt, QTimer, QObject, Signal, Slot
 from deviceevent import DeviceEvent
-from layoutevent import LayoutEvent
+from guievent import GuiEvent
 from appevent import AppEvent
 
 
@@ -14,7 +14,7 @@ class EventBus(QObject):
     # The payload of the signal is the event object
     # To register for the event notifications connect to these signals 
     device_event_signal = Signal(DeviceEvent)
-    layout_event_signal = Signal(LayoutEvent)
+    gui_event_signal = Signal(GuiEvent)
     app_event_signal = Signal(AppEvent)
 
     _instance = None
@@ -28,8 +28,8 @@ class EventBus(QObject):
     def publish(self, event):
         if isinstance(event, DeviceEvent):
             self.device_event_signal.emit(event)
-        elif isinstance(event, LayoutEvent):
-            self.layout_event_signal.emit(event)
+        elif isinstance(event, GuiEvent):
+            self.gui_event_signal.emit(event)
         elif isinstance(event, AppEvent):
             self.app_event_signal.emit(event)
         # Add more event types here

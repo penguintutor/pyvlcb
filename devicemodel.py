@@ -6,8 +6,8 @@ from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
 from eventbus import EventBus, event_bus
-from deviceevent import DeviceEvent
-from layoutevent import LayoutEvent
+#from deviceevent import DeviceEvent
+#from guievent import GuiEvent
 from loco import Loco
 
 class DeviceModel(QObject):
@@ -25,7 +25,7 @@ class DeviceModel(QObject):
         self.locos = []
         # Subscribe to events from the API layer
         #event_bus.device_event_signal.connect(self._update_device_status)
-        #event_bus.layout_event_signal.connect(self._update_layout_status)
+        #event_bus.gui_event_signal.connect(self._update_layout_status)
         # layout used for getting user name for devices
         self.layout = None
         
@@ -93,17 +93,17 @@ class DeviceModel(QObject):
     def get_gui_node (self, node_id):
         return self.nodes[node_id].gui_node
 
-    def _update_device_status(self, event: DeviceEvent):
-        if event.device_id in self._devices:
-            self._devices[event.device_id]["status"] = event.status
-            print(f"Model: {event.device_id} status updated to {event.status}")
-            self.model_updated.emit(event.device_id) # Notify others of change
-
-    def _update_layout_status(self, event: LayoutEvent):
-        if event.device_id in self._devices:
-            self._devices[event.device_id]["layout"] = event.layout_event
-            print(f"Model: {event.device_id} updated to {event.layout_event}")
-            self.model_updated.emit(event.device_id) # Notify others of change
+#     def _update_device_status(self, event: DeviceEvent):
+#         if event.device_id in self._devices:
+#             self._devices[event.device_id]["status"] = event.status
+#             print(f"Model: {event.device_id} status updated to {event.status}")
+#             self.model_updated.emit(event.device_id) # Notify others of change
+# 
+#     def _update_layout_status(self, event: LayoutEvent):
+#         if event.device_id in self._devices:
+#             self._devices[event.device_id]["layout"] = event.layout_event
+#             print(f"Model: {event.device_id} updated to {event.layout_event}")
+#             self.model_updated.emit(event.device_id) # Notify others of change
 
     def get_device_info(self, device_id: str):
         return self._devices.get(device_id, {})
