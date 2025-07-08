@@ -132,10 +132,13 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
+        # Handle events - can be bidirectional - can also include some static items
+        # Device events passes events to devices and updates layout objects
+        #self.controlnodes = ControlDevices()
         # GUI events is used for items in the GUI (eg. buttons, leds and labels)
         #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
-        self.control_loco = ControlLoco(self)
+        self.control_loco = ControlLoco()
         event_bus.app_event_signal.connect(self.app_event)
         #event_bus.gui_event_signal.connect(self.gui_event)
                 
@@ -176,15 +179,22 @@ class MainWindowUI(QMainWindow):
     
     def steal_loco (self):
         self.api.start_request(self.api.vlcb.steal_loco(self.control_loco.get_id()))
-        self.control_loco.steal_loco ()
+        response = self.control_loco.steal_loco ()
+        self.ui.locoStatusLabel.setText(response)
     
     def share_loco (self):
         self.api.start_request(self.api.vlcb.share_loco(self.control_loco.get_id()))
-        self.control_loco.share_loco ()
+        response = self.control_loco.share_loco ()
+        self.mw.ui.locoStatusLabel.setText(response)
         
     # Reset loco selection in GUI and remove references
     def reset_loco (self):
         self.control_loco.reset_loco ()
+        self.update_kalive()
+        # Change combo after reset - that way the post change
+        # will not send a release message
+        self.ui.locoComboBox.setCurrentIndex(0)
+        self.ui.locoStatusLabel.setText(f"None active")
         
     # When loco change requested through combobox
     def loco_change (self, index):
@@ -202,27 +212,29 @@ class MainWindowUI(QMainWindow):
         
         # Get the loc_filename and load
         # index is -1 to skip None selected
+        loco_index = self.control_loco.loco_index
         filename = self.layout.get_loco_filename (index -1)
-        
-        self.control_loco.load_file (filename)
-        
-        loco_name = self.control_loco.get_name()
-
-        #print (f"Aquiring {loco_name}")
-
+        device_model.locos[loco_index].load_file (filename)
+        loco_name = device_model.locos[loco_index].loco_name
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
-        # Update with loco_id
-        #self.control_loco.loco_id = loco_id
+        device_model.locos[loco_index].status = 'rloc'
+        # Add images and summary
+        if "image" in device_model.locos[loco_index].loco_data:
+            loco_image = QPixmap(os.path.join(self.layout.loco_dir, device_model.locos[loco_index].loco_data['image']))
+            self.ui.locoImage.setPixmap(loco_image)
+        else:
+            self.ui.locoImage.setPixmap(QPixmap())
+        if "summary" in device_model.locos[loco_index].loco_data:
+            self.ui.locoInfoText.setText(device_model.locos[loco_index].loco_data['summary'])
+        else:
+            self.ui.locoInfoText.setText("")
+        
         self.api.start_request(self.api.vlcb.allocate_loco(self.control_loco.get_id()))
         self.control_loco.set_status('rloc')
         
-        #print ("Change functions")
         # Update the functions menu
         self.loco_change_functions(0)
-        #print ("Function reset")
         self.control_loco.function_reset()
-        #print ("Reset complete")
-
                 
     # Update function selected features
     # When combobox / tab selected
@@ -232,8 +244,8 @@ class MainWindowUI(QMainWindow):
         combo = self.ui.locoFuncCombo.currentIndex()
         #print (f"Tab {tab}, Combo {combo}")
         func_index = combo + (10 * tab)
-        
-        self.control_loco.function_selected(func_index)
+        status_text = self.control_loco.function_selected(func_index)
+        self.ui.locoFuncButton.setText (status_text)
         
     # Button has been pressed
     def loco_function_pressed (self):
@@ -330,7 +342,11 @@ class MainWindowUI(QMainWindow):
         # If returns false then loco not active so ignore
         if (self.control_loco.change_speed(new_speed)):
             self.api.start_request(self.api.vlcb.loco_speeddir(self.control_loco.get_session(), self.control_loco.get_speeddir()))
+            self.ui.locoStatusLabel.setText ("Ready")
             self.update_lcd()
+        else:
+            self.ui.locoStatusLabel.setText ("Released")
+            
         
     def update_loco_list (self):
         self.ui.locoComboBox.clear()

@@ -13,8 +13,7 @@ from devicemodel import DeviceModel, device_model
 # Currently heavily reliant on mw (mainwindow) from the parent
 # perhaps decouple in futures
 class ControlLoco:
-    def __init__(self, parent):
-        self.mw = parent
+    def __init__(self):
         # Index is the position in the list in the device_model
         # Create new loco in device_model and get index
         # For interactive this is normally position 0
@@ -90,26 +89,6 @@ class ControlLoco:
             # Normally would want to stop the keep alive but we are hoping to aquire a new session immediately after
             # So the keep alive will just ignore until aquired
 
-    def load_file (self, filename):
-
-        device_model.locos[self.loco_index].load_file (filename)
-        loco_name = device_model.locos[self.loco_index].loco_name
-
-        self.mw.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
-
-        # start_request moved away from controlloco
-        device_model.locos[self.loco_index].status = 'rloc'
-        
-        # Add images and summary
-        if "image" in device_model.locos[self.loco_index].loco_data:
-            loco_image = QPixmap(os.path.join(self.mw.layout.loco_dir, device_model.locos[self.loco_index].loco_data['image']))
-            self.mw.ui.locoImage.setPixmap(loco_image)
-        else:
-            self.mw.ui.locoImage.setPixmap(QPixmap())
-        if "summary" in device_model.locos[self.loco_index].loco_data:
-            self.mw.ui.locoInfoText.setText(device_model.locos[self.loco_index].loco_data['summary'])
-        else:
-            self.mw.ui.locoInfoText.setText("")
         
     # Update function selected features
     # When combobox / tab selected
@@ -118,81 +97,49 @@ class ControlLoco:
         status = device_model.locos[self.loco_index].get_function_status(func_index)
         # If we don't have a status then the function button doesn't exist
         if status == None:
-            self.mw.ui.locoFuncButton.setText(" - ")
-            return
+            return (" - ")
         # If trigger then button should be activate:
         if status[1] == "trigger":
-            self.mw.ui.locoFuncButton.setText("Activate")
+            return ("Activate")
         elif status[1] == "latch":
             # if on - button will turn off
             if status[0] == 1:
-                self.mw.ui.locoFuncButton.setText ("Turn Off")
+                return ("Turn Off")
             else:
-                self.mw.ui.locoFuncButton.setText ("Turn On")
+                return ("Turn On")
         # Eg if status is none then not supported
         else:
-            self.mw.ui.locoFuncButton.setText (" -- ")
+            return (" -- ")
             
-            
-    # Button has been pressed
-#    def function_pressed (self, func_index):
-        # get [status, type]
-#        status = device_model.locos[self.loco_index].get_function_status(func_index)
-        # If we don't have a status then the function doesn't exist
-#        return status
-#        if status == None:
-#            return
-#
-#        
-#         # If trigger then button should be activate:
-#         if status[1] == "trigger":
-#             self.func_trigger (func_index)
-#             # no need to update button as still say activate
-#         else:
-#             # if <= F12 then send multiple times (NRMA standard)
-#             if func_index <= 12:
-#                 #print (f"Func {func_index}, current {status[0]}, new {1-status[0]}")
-#                 self.func_change (func_index, 1-status[0], 3)
-#             # otherwise send once
-#             else:
-#                 self.func_change (func_index, 1-status[0])
-#             # Update button
-#             # perhaps separate functions to what is required
-#             self.mw.loco_function_selected()
             
     def steal_loco (self):
         # Check we have valid loco_id (if not reset)
         if (device_model.locos[self.loco_index].loco_id == 0):
             self.reset_loco()
-            return
+            return ""
         loco_id = device_model.locos[self.loco_index].loco_id
         #loco_name = device_model.locos[self.loco_index]_list.loco_name(loco_id)
         loco_name = device_model.locos[self.loco_index].loco_name
-        self.mw.ui.locoStatusLabel.setText(f"Stealing {loco_name}")
         device_model.locos[self.loco_index].status = 'gloc'
+        return (f"Stealing {loco_name}")
         
     def share_loco (self):
         # Check we have valid loco_id (if not reset)
         if (device_model.locos[self.loco_index].loco_id == 0):
             self.reset_loco()
-            return
+            return ""
         loco_id = device_model.locos[self.loco_index].loco_id
         loco_name = device_model.locos[self.loco_index].loco_name
-        self.mw.ui.locoStatusLabel.setText(f"Req sharing {loco_name}")
+        return (f"Req sharing {loco_name}")
+        
         
     # Reset loco selection in GUI and remove references
     def reset_loco (self):
-        # remove keep alive timer if active
-        #if self.api.kalive_timer.isActive():
-        #        self.api.kalive_timer.stop()
         device_model.locos[self.loco_index].reset()
         # Send keepalive signal
-        event_bus.publish(AppEvent("keepalive", {}))
+        #event_bus.publish(AppEvent("keepalive", {'loco_id': self.loco_id}))
         # Change combo after reset - that way the post change
         # will not send a release message
-        self.mw.ui.locoComboBox.setCurrentIndex(0)
-        self.mw.ui.locoStatusLabel.setText(f"None active")
-        
         
     ### Function change and Function Trigger are tied into QTimer so need to be part of mainwindow
     # This is used based on the dial
@@ -203,7 +150,6 @@ class ControlLoco:
             # Special case if stop and 0 then reset stop
             if device_model.locos[self.loco_index].status == "stop" and new_speed == 0:
                 device_model.locos[self.loco_index].status = "on"
-                self.mw.ui.locoStatusLabel.setText ("Ready")
             device_model.locos[self.loco_index].set_speed (new_speed)
             return True
         return False
