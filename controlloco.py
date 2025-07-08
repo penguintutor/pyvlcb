@@ -13,10 +13,8 @@ from devicemodel import DeviceModel, device_model
 # Currently heavily reliant on mw (mainwindow) from the parent
 # perhaps decouple in futures
 class ControlLoco:
-    def __init__(self, parent, vlcb):
+    def __init__(self, parent):
         self.mw = parent
-        #self.api = parent.api
-        self.vlcb = vlcb
         # Index is the position in the list in the device_model
         # Create new loco in device_model and get index
         # For interactive this is normally position 0

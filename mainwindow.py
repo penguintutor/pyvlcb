@@ -132,13 +132,10 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
-        # Handle events - can be bidirectional - can also include some static items
-        # Device events passes events to devices and updates layout objects
-        #self.controlnodes = ControlDevices()
         # GUI events is used for items in the GUI (eg. buttons, leds and labels)
         #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
-        self.control_loco = ControlLoco(self, self.api.vlcb)
+        self.control_loco = ControlLoco(self)
         event_bus.app_event_signal.connect(self.app_event)
         #event_bus.gui_event_signal.connect(self.gui_event)
                 
