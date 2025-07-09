@@ -30,55 +30,18 @@ class LayoutButton (LayoutObject):
         if ('size' in settings.keys()):
             self.size = settings['size']
         else:
-<<<<<<< HEAD
-            self.size = (10, 10)
-        print ("Button ready")
-            
-    ### - remove# Need to run setup_painter after initialisation
-    #def setup_painter (self, mainwindow)
-        
-        
-||||||| parent of b02ff6a (Start reorganising for event handling)
-            self.size = (5, 5)
-=======
             self.size = (10, 10)
             
         
->>>>>>> b02ff6a (Start reorganising for event handling)
             
     # returns size as pixels rather than ratio
     def pixel_size (self):
-<<<<<<< HEAD
-        #print ("Pixel Size")
-        parent_size = self.parent.canvas_size
-        width = parent_size.width() * self.size[0] / 100
-        height = parent_size.width() * self.size[1] / 100
-||||||| parent of b02ff6a (Start reorganising for event handling)
-        parent_size = self.parent.canvas_size
-        width = parent_size.width() * self.size[0] / 100
-        height = parent_size.width() * self.size[1] / 100
-=======
         #label_size = self.parent.canvas_size
         image_size = self.parent.pixmap().size()
         width = image_size.width() * self.size[0] / 100
         height = image_size.width() * self.size[1] / 100
->>>>>>> b02ff6a (Start reorganising for event handling)
         return [width, height]
     
-<<<<<<< HEAD
-    def resize (self):
-        print (f"Resize")
-        #print (f"Parent size {self.parent.canvas_size}")
-        #print (f"Pixel size {self.pixel_size()}")
-        # Size is recalculated dynaically - so not sure if needed
-        # skip for now
-        pass
-||||||| parent of b02ff6a (Start reorganising for event handling)
-    def resize (self):
-        print (f"Resize")
-        print (f"Parent size {self.parent.canvas_size}")
-        print (f"Pixel size {self.pixel_size()}")
-=======
 #     def resize (self):
 #         print (f"Resize")
 #         #print (f"Parent size {self.parent.canvas_size}")
@@ -86,23 +49,9 @@ class LayoutButton (LayoutObject):
 #         # Size is recalculated dynaically - so not sure if needed
 #         # skip for now
 #         pass
->>>>>>> b02ff6a (Start reorganising for event handling)
         
-<<<<<<< HEAD
     def draw (self, painter):
-        #print (f"Draw parent {self.parent} canvas {self.parent.canvas}")
-        #self.painter.clear()
-        painter.drawRect(*self.pixel_pos(), *self.pixel_size())
-        #painter.end()
-        pass
-||||||| parent of b02ff6a (Start reorganising for event handling)
-    def draw (self):
-        print (f"parent {self.parent} canvas {self.parent.canvas}")
-        painter = QPainter(self.parent.canvas)
-        painter.setPen(QColor("darkblue"))
-        painter.drawRect(500, 500, 170, 150)
-        painter.end()
-=======
-    def draw (self, painter):
-        painter.drawRect(*self.pixel_pos(), *self.pixel_size())
->>>>>>> b02ff6a (Start reorganising for event handling)
+        if self.button_type == "rect":
+            painter.drawRect(*self.pixel_pos(), *self.pixel_size())
+        elif self.button_type == "circle":
+            painter.drawEllipse(*self.pixel_pos(), *self.pixel_size())

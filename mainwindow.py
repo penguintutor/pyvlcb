@@ -87,6 +87,7 @@ class MainWindowUI(QMainWindow):
         
         # Tools Menu
         self.ui.actionShowConsole.triggered.connect(self.show_console)
+        self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
         
         # Tree view
         #self.node_model = device_model.node_model
@@ -146,6 +147,9 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.api.discover()
         
+        #print (f"LD {self.ui.layoutLabel}")
+        #self.ui.layoutLabel.test ("new message")
+        
     # App event is used to send events from other parts of the app
     def app_event (self, app_event):
         # If there is a loco_index then only interested in loco 0 (gui controlled loco)
@@ -169,6 +173,15 @@ class MainWindowUI(QMainWindow):
             # Only reset gui parts - already reset in controlloco
             self.reset_loco_gui()
             
+    # Toggles between layout edit and control mode
+    def layout_edit (self):
+        # Change layoutdisplay mode
+        if self.ui.layoutLabel.mode == "control":
+            self.ui.layoutLabel.mode = "edit"
+            self.ui.actionLayoutEdit.setText("Layout Control")
+        else:
+            self.ui.layoutLabel.mode = "control"
+            self.ui.actionLayoutEdit.setText("Layout Edit")
     
     # Show console always calls show
     # If window already open then bring to front
