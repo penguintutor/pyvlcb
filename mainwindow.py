@@ -132,11 +132,6 @@ class MainWindowUI(QMainWindow):
         self.ui.locoFuncCombo.activated.connect(self.loco_function_selected)
         self.ui.locoFuncButton.clicked.connect(self.loco_function_pressed)
         
-        # Handle events - can be bidirectional - can also include some static items
-        # Device events passes events to devices and updates layout objects
-        #self.controlnodes = ControlDevices()
-        # GUI events is used for items in the GUI (eg. buttons, leds and labels)
-        #self.control_layout = ControlLayout()
         # Used to generate codes for loco etc.
         self.control_loco = ControlLoco()
         event_bus.app_event_signal.connect(self.app_event)
@@ -161,13 +156,26 @@ class MainWindowUI(QMainWindow):
         
     # App event is used to send events from other parts of the app
     def app_event (self, app_event):
+        # If there is a loco_index then only interested in loco 0 (gui controlled loco)
+        # If no loco_index then assume it's for us
+        # Otherwise event is most likely for automation
+        if 'loco_index' in app_event.data and app_event.data['loco_index'] != 0:
+            return
         if app_event.event_type == "uitext":
             if app_event.data['label'] == "locoStatusLabel":
                 self.ui.locoStatusLabel.setText (app_event.data['value'])
+        elif app_event.event_type == "lcd":
+            self.update_lcd()
         elif app_event.event_type == "keepalive":
             self.update_kalive_signal.emit()
-        elif app_event.event_type == "stealdialog":
+        # If locotaken then launch steal_dialog
+        elif app_event.event_type == "locotaken":
+            # Set status message - then launch dialog
+            self.ui.locoStatusLabel.setText ('Error - address taken')
             self.steal_dialog_signal.emit(app_event.data['loco_id'])
+        elif app_event.event_type == "resetloco":
+            # Only reset gui parts - already reset in controlloco
+            self.reset_loco_gui()
             
     
     # Show console always calls show
@@ -190,6 +198,10 @@ class MainWindowUI(QMainWindow):
     # Reset loco selection in GUI and remove references
     def reset_loco (self):
         self.control_loco.reset_loco ()
+        self.reset_loco_gui()
+        
+    # Extract GUI from reset_loco - so can be used from an app event
+    def reset_loco_gui (self):
         self.update_kalive()
         # Change combo after reset - that way the post change
         # will not send a release message

@@ -1,6 +1,7 @@
 from PySide6.QtCore import Qt, QTimer, QObject, QThreadPool, QRunnable
 from worker import Worker
 from eventbus import EventBus, event_bus
+from locoevent import LocoEvent
 from devicemodel import DeviceModel, device_model
 from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
@@ -261,7 +262,6 @@ class ApiHandler(QObject):
             # if we don't already have this device add it
             if not device_model.node_exists(data_entry['NN']):
                 device_model.add_node(VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags']))
-                #device_model.set_name(data_entry['NN'], self.mw.layout.node_name(data_entry['NN']))
                 # Add to Tree View
                 # todo review where / how node_model is updated
                 self.mw.node_model.appendRow(device_model.get_gui_node(data_entry['NN']))
@@ -307,30 +307,24 @@ class ApiHandler(QObject):
             #device_model.update_ev(data_entry['NN'], data_entry['EnIndex'], "name", self.mw.layout.ev_name(data_entry['NN'], data_entry['EnIndex'], data_entry['En3_0']))
         # Indicates allocation of loco - need to verify this is expected
         elif ret_opcode == 'PLOC':
-            # Must be in status 'rloc' or 'gloc' - otherwise ignore as we are not waiting on plooc
-            if self.mw.control_loco.is_aquiring() == False:
-                return
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3'
             loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
-            if self.mw.control_loco.get_id() != loco_id:
-                # If it doesn't match then perhaps this was for a different controller
-                # Or could be we haven't allocated yet
-                if self.debug:
-                    print (f"PLOC ID {loco_id} does not match current Loco ID {self.mw.control_loco.get_id()}")
-                return
-            # Update loco with session, speed and direction
-            self.mw.control_loco.set_session (data_entry['Session'])
-            self.mw.control_loco.set_speeddir (data_entry['SpeedDir'])
-            self.mw.control_loco.set_functions (data_entry['Fn1'], data_entry['Fn2'], data_entry['Fn3'])
-            #self.mw.ui.locoStatusLabel.setText ("Ready")
+            event_bus.publish(LocoEvent('PLOC', {
+                'Loco_id': loco_id,
+                'Session': data_entry['Session'],
+                'Speeddir': data_entry['SpeedDir'],
+                'Fn1': data_entry['Fn1'],
+                'Fn2': data_entry['Fn2'],
+                'Fn3': data_entry['Fn3'],
+                'Status': "on"
+                }))
+            
             event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Ready"}))
             # Set status to on last gives time to ensure all entries updated
-            self.mw.control_loco.set_status ("on")
             # Todo update controller with new values
-            self.mw.update_lcd ()
+            event_bus.publish(AppEvent("lcd", {}))
             # Start the keepalive timer
-            #self.mw.update_kalive_signal.emit()
             event_bus.publish(AppEvent("keepalive", {}))
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
@@ -341,59 +335,8 @@ class ApiHandler(QObject):
             # may be Byte1 = Session ID, Byte 2 = 0
             # So only check after looking at the ErrCode
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
-            #loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
-            # Check error code relates to the current loco
-            if data_entry['ErrCode'] == 1:
-                # Only valid during aquiring status
-                if self.mw.control_loco.is_aquiring() == False:
-                    if self.debug:
-                        print ("Not aquiring loco - ignoring error")
-                    return
-                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
-                if self.mw.control_loco.get_id() != loco_id:
-                    if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.mw.control_loco.loco.loco_id}")
-                    return
-                #self.mw.ui.locoStatusLabel.setText ("Error - no sessions available")
-                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available"}))
-
-            # Already taken - option to steal
-            elif data_entry['ErrCode'] == 2:
-                #Only for us if we haven't completed the session setup
-                if self.mw.control_loco.get_status() == "on":
-                    #print ("Not our session")
-                    return
-                elif self.mw.control_loco.is_aquiring() == False:
-                    #print ("Not aquiring session")
-                    return
-                loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
-                if self.debug:
-                    print ("Error code 2 - loco taken")
-                if self.mw.control_loco.get_id() != loco_id:
-                    if self.debug:
-                        print (f"ERR ID {loco_id} does not match current Loco ID {self.control_loco.get_id()}")
-                    return
-                
-                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - address taken"}))
-                #self.mw.ui.locoStatusLabel.setText ("Error - address taken")
-                event_bus.publish(AppEvent("stealdialog", {'loco_id': loco_id}))
-                #self.mw.steal_dialog_signal.emit(loco_id)
-            elif data_entry['ErrCode'] == 8:
-                # If we are trying to aquire a session then this could be us resetting other node
-                if self.mw.control_loco.is_aquiring():
-                    return
-                # byte 1 is now sessionid - byte2 is ignored - should be 00
-                session_id = int(data_entry['Byte1'])
-                # if not our current session_id then could be for a different controller so ignore
-                if session_id != 0 and session_id == self.control_loco.get_session():
-                    if self.debug:
-                        print (f"Session cancelled {session_id}")
-                    # This updates the loco and the GUI
-                    self.reset_loco()
-                else:
-                    if self.debug:
-                        print (f"Session not cancelled {session_id}, loco session {self.control_loco.get_session()}")
-
+            # After extracting data publish as an event then let receiving classes process
+            event_bus.publish(LocoEvent('ERR', data_entry))
 
     
     # Initial discovery of modules    
@@ -409,28 +352,4 @@ class ApiHandler(QObject):
     # 3rd phase of discover Read back all stored events in a node (NERD)
     def discover_nerd (self, node_id):
         self.start_request(self.vlcb.discover_nerd(node_id))
-        
-        # change value (if need to send multiple then set num_send to number of times
-    # Sent every 2 seconds (or change delay) - delay in seconds
-#     def loco_func_change (self, func_index, value, num_send = 1, delay = 2):
-#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, value)
-#         # If None then cancel
-#         if byte1_2 == None:
-#             return
-#         request = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-#         self.start_request_repeat (request, num_send, delay)
-    
-#     # Sends on followed by off (typically 4 seconds later)
-#     def loco_func_trigger (self, func_index, delay = 4):
-#         #print (f"Func trigger api {func_index}")
-#         # Turn on
-#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 1)
-#         if byte1_2 == None:
-#             return
-#         request_on = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-#         # Turn off (update value immediately - even though not sent yet, but delay request using single shot timer
-#         byte1_2 = self.mw.control_loco.set_function_dfun (func_index, 0)
-#         request_off = self.vlcb.loco_set_dfun(self.mw.control_loco.get_session(), *byte1_2)
-#         
-#         self.start_request_onoff (request_on, request_off, delay)
         

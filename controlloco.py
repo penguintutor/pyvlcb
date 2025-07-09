@@ -5,6 +5,8 @@ from layout import Layout
 from pyvlcb import VLCB
 from loco import Loco
 from apihandler import ApiHandler
+from eventbus import EventBus, event_bus
+from locoevent import LocoEvent
 from devicemodel import DeviceModel, device_model
 
 
@@ -19,8 +21,82 @@ class ControlLoco:
         # For interactive this is normally position 0
         self.loco_index = device_model.add_loco()
         # loco moved to devicemodel
-
+        event_bus.loco_event_signal.connect (self.event_trigger)
+        self.debug = False
         
+    def event_trigger (self, event):
+        if event.event_type == "PLOC":
+            data = event.data
+            self.set_session (data['Session'])
+            self.set_speeddir (data['Speeddir'])
+            self.set_functions (data['Fn1'], data['Fn2'], data['Fn3'])
+            self.set_status (data['Status'])
+        elif event.event_type == "Error":
+            self.handle_error (event.data)
+        
+        
+    def handle_error (self, error_data):
+        # Depending upon the error code the data may have different interpretations
+        # Stored as Byte1, Byte2, ErrCode - where Byte1,Byte2 may eqal AddrHigh_AddrLow, or
+        # may be Byte1 = Session ID, Byte 2 = 0
+        # So only check after looking at the ErrCode
+        #loco_id = data_entry['AddrHigh_AddrLow'] & 0x3FFF
+        # Check error code relates to the current loco
+        if data_entry['ErrCode'] == 1:
+            # Only valid during aquiring status
+            if self.is_aquiring() == False:
+                if self.debug:
+                    print ("Not aquiring loco - ignoring error")
+                    return
+            loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
+            # If doesn't match then it may be for a different control thread (eg. automation vs gui) or during reallocate
+            if self.get_id() != loco_id:
+                if self.debug:
+                    print (f"ERR ID {loco_id} does not match current Loco ID {self.get_id()}")
+                return
+            event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available", "loco_index": self.loco_index}))
+
+        # Already taken - option to steal
+        elif data_entry['ErrCode'] == 2:
+            if self.debug:
+                print ("Error code 2 - loco taken")
+            #Only for us if we haven't completed the session setup
+            if self.get_status() == "on":
+                return
+            elif self.is_aquiring() == False:
+                #print ("Not aquiring session")
+                return
+            loco_id = VLCB.bytes_to_addr(data_entry['Byte1'],data_entry['Byte2']) & 0x3FFF
+            # Not our loco
+            if self.get_id() != loco_id:
+                if self.debug:
+                    print (f"ERR ID {loco_id} does not match current Loco ID {self.get_id()}")
+                return
+            # It is our loco and we are trying to aquire - so allow aquire
+            # Let stealdialog request update gui
+            #event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - address taken"}))
+            # request steal dialog by signalling locotaken
+            event_bus.publish(AppEvent("locotaken", {'loco_id': loco_id, 'loco_index': self.loco_index}))
+
+        elif data_entry['ErrCode'] == 8:
+            # If we are trying to aquire a session then this could be us resetting other node
+            if self.is_aquiring():
+                return
+            # byte 1 is now sessionid - byte2 is ignored - should be 00
+            session_id = int(data_entry['Byte1'])
+            # if not our current session_id then could be for a different controller so ignore
+            if session_id != 0 and session_id == self.get_session():
+                if self.debug:
+                    print (f"Session cancelled {session_id}")
+                # This updates the loco and the GUI
+                self.reset_loco()
+                event_bus.publish(AppEvent("resetloco", {'loco_index': self.loco_index}))
+            else:
+                # probably not for us
+                if self.debug:
+                    print (f"Session not cancelled {session_id}, loco session {self.get_session()}")
+
+
     def is_active(self):
         return device_model.locos[self.loco_index].is_active()
     
@@ -133,7 +209,9 @@ class ControlLoco:
         return (f"Req sharing {loco_name}")
         
         
-    # Reset loco selection in GUI and remove references
+    # Reset remove references
+    # Does not update GUI / remove keepalives
+    # those should be handled by calling code
     def reset_loco (self):
         device_model.locos[self.loco_index].reset()
         # Send keepalive signal
