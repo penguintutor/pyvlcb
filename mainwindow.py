@@ -1,25 +1,17 @@
 import os
-from PySide6.QtCore import Qt, QTimer, QCoreApplication, Signal, Slot, QThreadPool, QRunnable, QSize
-from PySide6.QtWidgets import QMainWindow, QTextBrowser, QAbstractItemView, QTableWidgetItem, QPushButton
-from PySide6.QtGui import QStandardItemModel, QStandardItem, QPixmap
+from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool
+from PySide6.QtWidgets import QMainWindow, QAbstractItemView
+from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
-import queue
-import time
 from consolewindow import ConsoleWindowUI
 from layout import Layout
-from pyvlcb import VLCB
-from vlcbformat import VLCBopcode
-from vlcbnode import VLCBNode
-from vlcbclient import VLCBClient
 from layoutdisplay import LayoutDisplay
-from loco import Loco
 from stealdialog import StealDialog
 from controlloco import ControlLoco
 from apihandler import ApiHandler
-from worker import Worker
-from eventbus import EventBus, event_bus
+from eventbus import event_bus
 from appevent import AppEvent
-from devicemodel import DeviceModel, device_model
+from devicemodel import device_model
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -54,7 +46,7 @@ class MainWindowUI(QMainWindow):
         self.threadpool = QThreadPool()
         self.update_in_progress = False
         
-        self.api = ApiHandler(self, self.threadpool, url)
+        self.api = ApiHandler(self.threadpool, url)
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
@@ -72,13 +64,13 @@ class MainWindowUI(QMainWindow):
     
         # Layout is useful for giving real names to certain items
         # Also provides list of valid locos
-        self.layout = Layout(layout_file)
+        # Variable is named railway to avoid potential conflict if named layout
+        self.railway = Layout(layout_file)
         # pass the layout to the devicemodel
-        device_model.set_layout(self.layout)
+        device_model.set_layout(self.railway)
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
-        
         
         # Signals
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
@@ -97,9 +89,9 @@ class MainWindowUI(QMainWindow):
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         
         # Tree view
-        self.node_model = QStandardItemModel()
-        self.node_model.setHorizontalHeaderLabels(['Nodes'])
-        self.ui.nodeTreeView.setModel(self.node_model)
+        #self.node_model = device_model.node_model
+        #self.node_model.setHorizontalHeaderLabels(['Nodes'])
+        self.ui.nodeTreeView.setModel(device_model.node_model)
         self.ui.nodeTreeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
         self.ui.nodeTreeView.clicked.connect(self.tree_clicked)
@@ -193,7 +185,7 @@ class MainWindowUI(QMainWindow):
     def share_loco (self):
         self.api.start_request(self.api.vlcb.share_loco(self.control_loco.get_id()))
         response = self.control_loco.share_loco ()
-        self.mw.ui.locoStatusLabel.setText(response)
+        self.ui.locoStatusLabel.setText(response)
         
     # Reset loco selection in GUI and remove references
     def reset_loco (self):
@@ -206,7 +198,7 @@ class MainWindowUI(QMainWindow):
         # Change combo after reset - that way the post change
         # will not send a release message
         self.ui.locoComboBox.setCurrentIndex(0)
-        self.ui.locoStatusLabel.setText(f"None active")
+        self.ui.locoStatusLabel.setText("None active")
         
     # When loco change requested through combobox
     def loco_change (self, index):
@@ -225,14 +217,14 @@ class MainWindowUI(QMainWindow):
         # Get the loc_filename and load
         # index is -1 to skip None selected
         loco_index = self.control_loco.loco_index
-        filename = self.layout.get_loco_filename (index -1)
+        filename = self.railway.get_loco_filename (index -1)
         device_model.locos[loco_index].load_file (filename)
         loco_name = device_model.locos[loco_index].loco_name
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         device_model.locos[loco_index].status = 'rloc'
         # Add images and summary
         if "image" in device_model.locos[loco_index].loco_data:
-            loco_image = QPixmap(os.path.join(self.layout.loco_dir, device_model.locos[loco_index].loco_data['image']))
+            loco_image = QPixmap(os.path.join(self.railway.loco_dir, device_model.locos[loco_index].loco_data['image']))
             self.ui.locoImage.setPixmap(loco_image)
         else:
             self.ui.locoImage.setPixmap(QPixmap())
@@ -286,8 +278,6 @@ class MainWindowUI(QMainWindow):
             # perhaps separate functions to what is required
             self.loco_function_selected()
             
-    def loco_func_trigger (self, func_index):
-         self.api.loco_func_trigger(func_index)
 
     # change value (if need to send multiple then set num_send to number of times
     # Sent every 2 seconds (or change delay) - delay in seconds
@@ -365,12 +355,12 @@ class MainWindowUI(QMainWindow):
         # Readd the default - none selected
         self.ui.locoComboBox.addItem("Select Locomotive")
         # Returns the list of locos
-        for loco_name in self.layout.get_loco_names():
+        for loco_name in self.railway.get_loco_names():
             self.ui.locoComboBox.addItem(loco_name)
         
     def tree_clicked(self, item):
-        node_item = self.node_model.itemFromIndex(item)
-        for key, node in self.nodes.items():
+        node_item = device_model.node_model.itemFromIndex(item)
+        for key, node in device_model.nodes.items():
             new_item = node.check_item (node_item)
             if new_item != None:
                 # If this is a node then show that in table
@@ -390,12 +380,12 @@ class MainWindowUI(QMainWindow):
         # None selected (shouldn't normally be the case)
         if self.selected_ev == None:
             return
-        self.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
+        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
         
     def ev_clicked_on (self):
         if self.selected_ev == None:
             return
-        self.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
+        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
 
         
     # Have the node table show the node information
@@ -414,15 +404,15 @@ class MainWindowUI(QMainWindow):
         item.setText("Events / Space:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(f"{self.nodes[nn].name}")
+        item.setText(f"{device_model.nodes[nn].name}")
         item = self.ui.nodeTable.item(1,0)
-        item.setText(self.nodes[nn].node_string())
+        item.setText(device_model.nodes[nn].node_string())
         item = self.ui.nodeTable.item(2,0)
-        item.setText(f"{self.nodes[nn].mode}")
+        item.setText(f"{device_model.nodes[nn].mode}")
         item = self.ui.nodeTable.item(3,0)
-        item.setText(self.nodes[nn].manuf_string())
+        item.setText(device_model.nodes[nn].manuf_string())
         item = self.ui.nodeTable.item(4,0)
-        item.setText(self.nodes[nn].ev_num_string())
+        item.setText(device_model.nodes[nn].ev_num_string())
         
     # node_item = (nn, ev)
     def node_table_show_ev (self, node_item):
@@ -430,7 +420,7 @@ class MainWindowUI(QMainWindow):
         ev_id = node_item[1]
         self.selected_ev = node_item
         # Add the EvNum
-        self.selected_ev.append(self.nodes[nn].ev[ev_id].en)
+        self.selected_ev.append(device_model.nodes[nn].ev[ev_id].en)
         
         self.ui.tableLabel.setText("Event:")
         item = self.ui.nodeTable.verticalHeaderItem(1)
@@ -443,15 +433,15 @@ class MainWindowUI(QMainWindow):
         item.setText("Long / short:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(f"{self.nodes[nn].ev[ev_id].name}")
+        item.setText(f"{device_model.nodes[nn].ev[ev_id].name}")
         item = self.ui.nodeTable.item(1,0)
-        item.setText(f"{self.nodes[nn].node_id}")
+        item.setText(f"{device_model.nodes[nn].node_id}")
         item = self.ui.nodeTable.item(2,0)
         item.setText(f"{ev_id}")
         item = self.ui.nodeTable.item(3,0)
-        item.setText(f"{self.nodes[nn].ev[ev_id].en:#08x}")
+        item.setText(f"{device_model.nodes[nn].ev[ev_id].en:#08x}")
         item = self.ui.nodeTable.item(4,0)
-        item.setText(f"{self.nodes[nn].ev[ev_id].long_string()}")
+        item.setText(f"{device_model.nodes[nn].ev[ev_id].long_string()}")
         
     # Send exit to automate as well as closing app
     def quit_app(self):
@@ -495,8 +485,7 @@ class MainWindowUI(QMainWindow):
         if self.control_loco.is_active():
             self.api.start_request(self.api.vlcb.keep_alive(self.control_loco.get_session()))
             
-            
-    def steal_loco_check (self, num_loco):
+    def steal_loco_check (self):
         steal_dialog = QDialog(self)
         steal_dialog.exec_()
         
