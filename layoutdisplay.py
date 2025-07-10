@@ -102,8 +102,17 @@ class LayoutDisplay(QLabel):
 
 
     def mousePressEvent(self, event: QMouseEvent):
+        if self.mode == "edit":
+            self.editMousePress (event)
+        
+    def editMousePress  (self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             self.last_mouse_pos = event.position().toPoint()
+            click_pos = self.pixel_to_percent(self.last_mouse_pos)
+            # Test all buttons for click, if multiple hit then use one closest 
+            for button in self.buttons:
+                print (f"Button {button.is_hit(click_pos)}")
+                # Todo determine closest (ignore any < 0)
             self.dragging = True
             #print(f"Mouse Left Clicked at: {self.last_mouse_pos.x()}, {self.last_mouse_pos.y()}")
         elif event.button() == Qt.MouseButton.RightButton:
@@ -134,3 +143,20 @@ class LayoutDisplay(QLabel):
     def mouseDoubleClickEvent(self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             print(f"Mouse Left Double Clicked at: {event.position().x()}, {event.position().y()}")
+
+
+    def pixel_to_percent (self, position):
+        label_size = self.canvas_size
+        image_size = self.pixmap().size()
+        y_val = position.y()
+        x_val = position.x()
+        # subtract height1/2 height difference
+        height_diff = label_size.height() - image_size.height()
+        if height_diff > 0:
+            y_val -= int(height_diff/2)
+        # now have actual pos within the image pixmap
+        # calculate as a percentage of image_size
+        x_percent = (x_val / image_size.width()) * 100
+        y_percent = (y_val / image_size.height()) * 100
+        return [x_percent, y_percent]
+

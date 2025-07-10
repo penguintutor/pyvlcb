@@ -3,6 +3,7 @@
 
 
 import sys
+import math
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
@@ -26,13 +27,38 @@ class LayoutButton (LayoutObject):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
         super().__init__(parent, pos)
         self.button_type = button_type
-        # default size is 10% width and 1:1
+        self.min_size = 5 # min size for click area
+        # default size is 5% width and 1:1
         if ('size' in settings.keys()):
             self.size = settings['size']
         else:
-            self.size = (10, 10)
+            self.size = (5, 5)
             
-        
+            
+    # scalar size is an effective size which is clickable
+    # this is a circular area such as used in a touch screen
+    # may be strange if clicking with accurate mouse click, but
+    # not a particular concern
+    # must be at least min size
+    def scalar_size (self):
+        largest_size = 0
+        # in this case uses largest of width / height
+        if self.size[0] > self.size[1]:
+            largest_size = self.size[0]
+        else:
+            largest_size = self.size[1]
+        if largest_size < self.min_size:
+            largest_size = self.min_size
+        return largest_size
+    
+    # Calculate distance from click pos
+    # both pos are percentage - returns scalar
+    def distance (self, click_pos):
+        delta_x = click_pos[0] - self.pos[0]
+        delta_y = click_pos[1] - self.pos[1]
+
+        # Calculate the Euclidean distance
+        return (math.sqrt(delta_x**2 + delta_y**2))        
             
     # returns size as pixels rather than ratio
     def pixel_size (self):

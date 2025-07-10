@@ -13,31 +13,11 @@ from PySide6.QtCore import Qt, QPoint, QSize
 
 class LayoutObject:
     def __init__ (self, parent, pos):
-<<<<<<< HEAD
-        #print (f"Object {parent} {pos}")
-||||||| parent of b02ff6a (Start reorganising for event handling)
-        print (f"Object {parent} {pos}")
-=======
->>>>>>> b02ff6a (Start reorganising for event handling)
         self.parent = parent
-<<<<<<< HEAD
-        self.pos = pos	# Pos is % of position
-        
-    # Return position as percentage
-    # Note that for pos (unlike size) then needs to be percentage of both
-    # width and height
-    def pixel_pos (self):
-        parent_size = self.parent.canvas_size
-        width = parent_size.width() * self.pos[0] / 100
-        height = parent_size.height() * self.pos[1] / 100
-        return [width, height]
-||||||| parent of b02ff6a (Start reorganising for event handling)
-        self.pos = pos
-    
-=======
         self.pos = pos # Pos is % of position of image
         
-    # Return position as percentage
+        
+    # Return position as pixels
     # Needs to consider that pixmap is different to label size
     # Only apply percentage to pixmap, but add in any offset due to label
     # Note that for pos (unlike size) then needs to be percentage of both
@@ -53,4 +33,13 @@ class LayoutObject:
         if height_diff > 0:
             height += int(height_diff/2)
         return [width, height]
->>>>>>> b02ff6a (Start reorganising for event handling)
+    
+    # return -1 if not a hit, or distance if it is
+    def is_hit (self, click_pos):
+        distance = self.distance (click_pos)
+        #print (f"Click pos {click_pos}, obj pos {self.pos}, distance {distance}, size {self.scalar_size()}")
+        if distance <= self.scalar_size():
+            return distance
+        else:
+            return -1
+    
