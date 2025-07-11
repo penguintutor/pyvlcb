@@ -5,6 +5,7 @@
 # This is ui.layoutLabel
 
 import sys
+import json
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
@@ -54,6 +55,24 @@ class LayoutDisplay(QLabel):
         painter.end()
         self.update()
 
+
+    # Save the objects (when finished editing layout)
+    def save_layout_objects (self, filename):
+        data_list = []
+        # Gather all objects into a data_list
+        for button in self.buttons:
+            data_list.append(button.to_dict())
+        for label in self.labels:
+            data_list.append(label.to_dict())
+            
+        try:
+            with open(filename, 'w') as f:
+                json.dump(data_list, f, indent=4)
+                #print(f"Objects successfully saved to '{filename}'")
+                # Todo show this on the UI instead
+        except IOError as e:
+            print(f"Error saving file: {e}")
+        
 
     def load_image (self, mainwindow):
         self.mainwindow = mainwindow
@@ -116,7 +135,7 @@ class LayoutDisplay(QLabel):
             self.selected = self.nearestToClick(click_pos)
             if self.selected == None:
                 return
-            print (f"{self.selected}")
+            #print (f"{self.selected}")
             #print(f"Mouse Left Clicked at: {self.last_mouse_pos.x()}, {self.last_mouse_pos.y()}")
         elif event.button() == Qt.MouseButton.RightButton:
             #print(f"Mouse Right Clicked at: {event.position().x()}, {event.position().y()}")

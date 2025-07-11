@@ -182,6 +182,8 @@ class MainWindowUI(QMainWindow):
         else:
             self.ui.layoutLabel.mode = "control"
             self.ui.actionLayoutEdit.setText("Layout Edit")
+            # When switching back to control from edit then save config
+            self.ui.layoutLabel.save_layout_objects('layoutobjects.json')
     
     # Show console always calls show
     # If window already open then bring to front

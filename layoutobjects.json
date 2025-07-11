@@ -1,0 +1,19 @@
+[
+    {
+        "object": "button",
+        "pos": [
+            43.73983739837398,
+            41.843971631205676
+        ],
+        "button_type": "circle",
+        "settings": {
+            "size": [
+                2,
+                2
+            ],
+            "color_on": "#00FF00",
+            "color_off": "#FF0000",
+            "color_unknown": "#555555"
+        }
+    }
+]

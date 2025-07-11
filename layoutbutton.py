@@ -27,6 +27,7 @@ class LayoutButton (LayoutObject):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
         super().__init__(parent, pos)
         self.button_type = button_type
+        self.settings = settings
         self.min_size = 5 # min size for click area
         # default size is 5% width and 1:1
         if ('size' in settings.keys()):
@@ -36,7 +37,12 @@ class LayoutButton (LayoutObject):
     
     # Returns as a nested dictionary ready to save
     def to_dict (self):
-        pass
+        return {
+            'object': "button",
+            'pos': self.pos,
+            'button_type': self.button_type,
+            'settings': self.settings
+            }
             
     # scalar size is an effective size which is clickable
     # this is a circular area such as used in a touch screen
