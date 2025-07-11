@@ -33,7 +33,10 @@ class LayoutButton (LayoutObject):
             self.size = settings['size']
         else:
             self.size = (5, 5)
-            
+    
+    # Returns as a nested dictionary ready to save
+    def to_dict (self):
+        pass
             
     # scalar size is an effective size which is clickable
     # this is a circular area such as used in a touch screen

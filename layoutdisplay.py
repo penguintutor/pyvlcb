@@ -18,7 +18,10 @@ class LayoutDisplay(QLabel):
         self.mainwindow = None
         self.setMouseTracking(True)  # Enable mouse tracking even when no button is pressed
         self.last_mouse_pos = QPoint()
-        self.dragging = False
+        
+        # Is an object selected (for dragging etc.)
+        self.selected = None
+
         
         self.canvas = None
         
@@ -109,22 +112,49 @@ class LayoutDisplay(QLabel):
         if event.button() == Qt.MouseButton.LeftButton:
             self.last_mouse_pos = event.position().toPoint()
             click_pos = self.pixel_to_percent(self.last_mouse_pos)
-            # Test all buttons for click, if multiple hit then use one closest 
-            for button in self.buttons:
-                print (f"Button {button.is_hit(click_pos)}")
-                # Todo determine closest (ignore any < 0)
-            self.dragging = True
+            # Test all buttons for click, if multiple hit then use one closest
+            self.selected = self.nearestToClick(click_pos)
+            if self.selected == None:
+                return
+            print (f"{self.selected}")
             #print(f"Mouse Left Clicked at: {self.last_mouse_pos.x()}, {self.last_mouse_pos.y()}")
         elif event.button() == Qt.MouseButton.RightButton:
             #print(f"Mouse Right Clicked at: {event.position().x()}, {event.position().y()}")
             pass
-
+        
+    # Find nearest object to click that is touched
+    # separates two nearby objects
+    # types can be "buttons", "labels" or "all"
+    #click_pos is percentage
+    def nearestToClick(self, click_pos, types="all"):
+        nearest_object = None
+        # set distance to a value far beyond any reasonable range (1000)
+        nearest_distance = 1000
+        if types == "button" or types=="all":
+            for button in self.buttons:
+                hit_test = button.is_hit(click_pos)
+                #print (f"Button {hit_test}")
+                # Todo determine closest (ignore any < 0)
+                if hit_test >=0 and hit_test < nearest_distance:
+                    nearest_object = button
+                    nearest_distance = hit_test
+        if types == "label" or types=="all":
+            for label in self.labels:
+                hit_test = label.is_hit(click_pos)
+                print (f"Label {hit_test}")
+                # Todo determine closest (ignore any < 0)
+                if hit_test >=0 and hit_test < nearest_distance:
+                    nearest_object = label
+                    nearest_distance = hit_test
+        return nearest_object
+                    
     def mouseMoveEvent(self, event: QMouseEvent):
-        if self.dragging and event.buttons() & Qt.MouseButton.LeftButton:
+        if self.selected != None and event.buttons() & Qt.MouseButton.LeftButton:
             current_pos = event.position().toPoint()
             delta_x = current_pos.x() - self.last_mouse_pos.x()
             delta_y = current_pos.y() - self.last_mouse_pos.y()
             self.last_mouse_pos = current_pos
+            self.selected.pos = self.pixel_to_percent(current_pos)
             #print(f"Dragging: Delta X: {delta_x}, Delta Y: {delta_y} (Current: {current_pos.x()}, {current_pos.y()})")
             # Here you would typically update the image's position or a selection rectangle
             # For example, if you're implementing panning, you would move the image based on delta_x and delta_y.
@@ -136,13 +166,15 @@ class LayoutDisplay(QLabel):
             pass # Or do something if you want to track mouse position without dragging
 
     def mouseReleaseEvent(self, event: QMouseEvent):
+        # Set unselected (doesn't matter which mode we are in)
         if event.button() == Qt.MouseButton.LeftButton:
-            self.dragging = False
+            self.selected = None
             #print(f"Mouse Left Released at: {event.position().x()}, {event.position().y()}")
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
-        if event.button() == Qt.MouseButton.LeftButton:
-            print(f"Mouse Left Double Clicked at: {event.position().x()}, {event.position().y()}")
+        pass
+        #if event.button() == Qt.MouseButton.LeftButton:
+        #    print(f"Mouse Left Double Clicked at: {event.position().x()}, {event.position().y()}")
 
 
     def pixel_to_percent (self, position):

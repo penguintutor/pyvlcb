@@ -16,6 +16,8 @@ class LayoutObject:
         self.parent = parent
         self.pos = pos # Pos is % of position of image
         
+    def get_object (self):
+        pass
         
     # Return position as pixels
     # Needs to consider that pixmap is different to label size
