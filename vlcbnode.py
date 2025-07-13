@@ -25,13 +25,27 @@ class VLCBNode():
         self.manuf_id = manuf_id
         self.mod_id = mod_id
         self.flags = flags
-        self.events = []
+        #self.events = []
         self.time_updated = time()
+        # GUI node is used to provide entry for the model view
         self.gui_node = QStandardItem(f"{self.name}, {self.node_id}, {self.can_id}")
         self.numev = -1 # If number events unknown then set to -1
         self.evspc = -1 # event space
         # Events are stored as a dictionary with the ev_id as the index
         self.ev = {}
+        
+    def get_ev_names (self):
+        print (f"Getting Ev Names {self.name}")
+        print (f" EV {self.ev}")
+        list_names = []
+        for key in self.ev.keys():
+            print (f" This EV {self.ev[key]}")
+            list_names.append(self.ev[key].get_name())
+        print (f"EV names {list_names}")
+        return list_names
+        
+    def get_gui_node (self):
+        return self.gui_node
         
     # Sets name and updates the GUI string
     def set_name (self, name):

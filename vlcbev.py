@@ -20,6 +20,9 @@ class VLCBEv():
     def set_name (self, name):
         self.name = name
         self.update_gui_node_string()
+        
+    def get_name (self):
+        return self.name
 
     # Is it long format
     # basic check just look for <= ffff for short

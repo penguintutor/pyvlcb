@@ -1,6 +1,7 @@
 # Device Model or known as a Domain Model
 # manages the logical state of devices
 from PySide6.QtCore import Qt, QObject, Signal, Slot
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from pyvlcb import VLCB
 from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
@@ -28,6 +29,32 @@ class DeviceModel(QObject):
         #event_bus.gui_event_signal.connect(self._update_layout_status)
         # layout used for getting user name for devices
         self.layout = None
+        # Also add any node information to QStandardItemModel
+        # The GUI nodes are contained within the node class instances. This is specific to the node list in TreeView
+        self.node_model = QStandardItemModel()
+        self.node_model.setHorizontalHeaderLabels(['Nodes'])
+        
+    def get_nodes_names(self):
+        #print (f"Nodes {self.nodes}")
+        #print (f"Keys {self.nodes.keys()}")
+        node_list = []
+        for key in self.nodes.keys():
+            node_list.append(self.nodes[key].name)
+        return node_list
+    
+    def name_to_key(self, name):
+        for key in self.nodes.keys():
+            if self.nodes[key].name == name:
+                print (f"name match {name}, key {key}")
+                return key
+        return None
+    
+    # get events for specified node
+    def get_events(self, node):
+        if node in self.nodes.keys():
+            return self.nodes[node].get_ev_names()
+        else:
+            return ""
         
     # set layout from mainwindow
     def set_layout (self, layout):
@@ -46,9 +73,11 @@ class DeviceModel(QObject):
     def add_node (self, node):
         if not node in self.nodes.keys():
             self.nodes[node.node_id] = node
+            # Also set name
+            self.set_name (node.node_id, self.layout.node_name(node))
+            # Add the gui node to the node_model
+            self.node_model.appendRow(self.nodes[node.node_id].get_gui_node())
             return True
-        # Also set name
-        self.set_name (node.node_id, self.layout.node_name(node))
         return False
     
 
@@ -78,6 +107,7 @@ class DeviceModel(QObject):
         # Update the name based on layout
         name = self.layout.ev_name(node_id, ev_id, en)
         self.update_ev(node_id, ev_id, "name", name)
+        
         return True
 
     def update_node (self, node_id, upd_dict):
@@ -93,17 +123,6 @@ class DeviceModel(QObject):
     def get_gui_node (self, node_id):
         return self.nodes[node_id].gui_node
 
-#     def _update_device_status(self, event: DeviceEvent):
-#         if event.device_id in self._devices:
-#             self._devices[event.device_id]["status"] = event.status
-#             print(f"Model: {event.device_id} status updated to {event.status}")
-#             self.model_updated.emit(event.device_id) # Notify others of change
-# 
-#     def _update_layout_status(self, event: LayoutEvent):
-#         if event.device_id in self._devices:
-#             self._devices[event.device_id]["layout"] = event.layout_event
-#             print(f"Model: {event.device_id} updated to {event.layout_event}")
-#             self.model_updated.emit(event.device_id) # Notify others of change
 
     def get_device_info(self, device_id: str):
         return self._devices.get(device_id, {})

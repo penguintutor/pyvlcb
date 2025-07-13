@@ -12,6 +12,7 @@ from apihandler import ApiHandler
 from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
+from eventdialog import EventDialog
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -89,6 +90,13 @@ class MainWindowUI(QMainWindow):
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
         
+        # EditLayout Menu - only show when in edit layout mode
+        #self.ui.menuEditLayout.setVisible(False)
+        self.ui.menuEditLayoutAction = self.ui.menuEditLayout.menuAction()
+        self.ui.menuEditLayoutAction.setVisible(False)
+        self.ui.actionAddLabel.triggered.connect(self.add_label_dialog)
+        self.ui.actionAddButton.triggered.connect(self.add_button_dialog)
+        
         # Tree view
         #self.node_model = device_model.node_model
         #self.node_model.setHorizontalHeaderLabels(['Nodes'])
@@ -150,6 +158,19 @@ class MainWindowUI(QMainWindow):
         #print (f"LD {self.ui.layoutLabel}")
         #self.ui.layoutLabel.test ("new message")
         
+    def add_label_dialog (self):
+        dialog = EventDialog()
+        if dialog.exec():
+            node, event = dialog.get_selected_values()
+            print(f"Selected Node: {node}")
+            print(f"Selected Event: {event}")
+        else:
+            print("Dialog cancelled.")
+
+    
+    def add_button_dialog (self):
+        pass
+        
     # App event is used to send events from other parts of the app
     def app_event (self, app_event):
         # If there is a loco_index then only interested in loco 0 (gui controlled loco)
@@ -179,9 +200,13 @@ class MainWindowUI(QMainWindow):
         if self.ui.layoutLabel.mode == "control":
             self.ui.layoutLabel.mode = "edit"
             self.ui.actionLayoutEdit.setText("Layout Control")
+            #self.ui.menuEditLayout.setVisible(True)
+            self.ui.menuEditLayoutAction.setVisible(True)
         else:
             self.ui.layoutLabel.mode = "control"
             self.ui.actionLayoutEdit.setText("Layout Edit")
+            #self.ui.menuEditLayout.setVisible(False)
+            self.ui.menuEditLayoutAction.setVisible(False)
             # When switching back to control from edit then save config
             self.ui.layoutLabel.save_layout_objects('layoutobjects.json')
     
