@@ -127,12 +127,12 @@ class DeviceModel(QObject):
     def get_device_info(self, device_id: str):
         return self._devices.get(device_id, {})
 
-    def activate_device(self, device_id: str, status: bool):
-        # This method is called by the ViewModel, which then publishes a command
-        # This isn't strictly necessary as the ViewModel could publish directly,
-        # but the Model can act as a central place for business rules/validation.
-        print(f"Model: Activating device {device_id} to {status}")
-        event_bus.publish(SetDeviceCommand(device_id, status))
+#     def activate_device(self, device_id: str, status: bool):
+#         # This method is called by the ViewModel, which then publishes a command
+#         # This isn't strictly necessary as the ViewModel could publish directly,
+#         # but the Model can act as a central place for business rules/validation.
+#         print(f"Model: Activating device {device_id} to {status}")
+#         event_bus.publish(SetDeviceCommand(device_id, status))
 
 # Singleton for the Device Model
 device_model = DeviceModel()

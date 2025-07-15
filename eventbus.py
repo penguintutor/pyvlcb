@@ -4,18 +4,20 @@
 
 from PySide6.QtCore import Qt, QTimer, QObject, Signal, Slot
 from deviceevent import DeviceEvent
-from guievent import GuiEvent
 from appevent import AppEvent
-
-
+from guievent import GuiEvent
+from locoevent import LocoEvent
+from automateevent import AutomateEvent
 
 class EventBus(QObject):
     # Generic signals for different event types.
     # The payload of the signal is the event object
     # To register for the event notifications connect to these signals 
+    app_event_signal = Signal(AppEvent)
     device_event_signal = Signal(DeviceEvent)
     gui_event_signal = Signal(GuiEvent)
-    app_event_signal = Signal(AppEvent)
+    loco_event_signal = Signal(LocoEvent)
+    automate_event_signal = Signal(AutomateEvent)
 
     _instance = None
 
@@ -26,13 +28,16 @@ class EventBus(QObject):
 
     # To register an event publish with the appropriate event type
     def publish(self, event):
-        if isinstance(event, DeviceEvent):
-            self.device_event_signal.emit(event)
+        if isinstance(event, AppEvent):
+            self.app_event_signal.emit(event)
         elif isinstance(event, GuiEvent):
             self.gui_event_signal.emit(event)
-        elif isinstance(event, AppEvent):
-            self.app_event_signal.emit(event)
-        # Add more event types here
+        elif isinstance(event, DeviceEvent):
+            self.device_event_signal.emit(event)
+        elif isinstance(event, LocoEvent):
+            self.loco_event_signal.emit(event)
+        elif isinstance(event, AutomateEvent):
+            self.automate_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
 

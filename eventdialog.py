@@ -17,12 +17,6 @@ class EventDialog(QDialog):
         self.setWindowTitle("Event Selection")
         self.setGeometry(200, 200, 300, 150)
 
-#         self.data = {
-#             "Node A": ["Event 1A", "Event 2A", "Event 3A"],
-#             "Node B": ["Event 1B", "Event 2B"],
-#             "Node C": ["Event 1C", "Event 2C", "Event 3C", "Event 4C"],
-#         }
-
         self.init_ui()
 
     def init_ui(self):
@@ -65,7 +59,7 @@ class EventDialog(QDialog):
         # Updates the event_combo based on the selected node.
         selected_node = self.node_combo.currentText()
         if selected_node == "None":
-            events = "NA"
+            events = ["NA"]
         else:
             node_key = device_model.name_to_key(selected_node)
             events = device_model.get_events(node_key)

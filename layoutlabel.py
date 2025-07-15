@@ -8,9 +8,10 @@ from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
 from PySide6.QtCore import Qt, QPoint, QSize
 
 class LayoutLabel:
-    def __init__ (self, parent, pos, label_type, settings = {}):
+    def __init__ (self, parent, pos, label_type, label_name, settings = {}):
         super().__init__(parent, pos)
         self.label_type = label_type
+        self.name = label_name
         self.settings = settings
         self.min_size = 5 # min size for click area
         # default size is 5% width and 1:1
@@ -23,7 +24,9 @@ class LayoutLabel:
     def to_dict (self):
         return {
             'object': "label",
+            'name': self.name,
             'pos': self.pos,
             'layout_type': self.layout_type,
             'settings': self.settings
             }
+    

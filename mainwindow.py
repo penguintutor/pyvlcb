@@ -13,6 +13,7 @@ from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
 from eventdialog import EventDialog
+from addlabeldialog import AddLabelDialog
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -159,6 +160,14 @@ class MainWindowUI(QMainWindow):
         #self.ui.layoutLabel.test ("new message")
         
     def add_label_dialog (self):
+        dialog = AddLabelDialog()
+        if dialog.exec():
+            text = dialog.get_selected_values()
+            print(f"Selected value: {text}")
+        else:
+            print("Dialog cancelled.")
+        
+    def event_selection_dialog (self):
         dialog = EventDialog()
         if dialog.exec():
             node, event = dialog.get_selected_values()
