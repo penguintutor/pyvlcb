@@ -7,7 +7,7 @@
 import sys
 import json
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush, QCursor
 from PySide6.QtCore import Qt, QPoint, QSize
 from layout import Layout
 from layoutlabel import LayoutLabel
@@ -25,7 +25,9 @@ class LayoutDisplay(QLabel):
         self.selected = None
 
         self.canvas = None
-        
+
+        self.cursor = QCursor()
+
         # whenever changing canvas / pixmap size - do it through this
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
@@ -167,7 +169,7 @@ class LayoutDisplay(QLabel):
         if types == "label" or types=="all":
             for label in self.labels:
                 hit_test = label.is_hit(click_pos)
-                print (f"Label {hit_test}")
+                #print (f"Label {hit_test}")
                 # Todo determine closest (ignore any < 0)
                 if hit_test >=0 and hit_test < nearest_distance:
                     nearest_object = label
@@ -176,6 +178,9 @@ class LayoutDisplay(QLabel):
                     
     def mouseMoveEvent(self, event: QMouseEvent):
         if self.selected != None and event.buttons() & Qt.MouseButton.LeftButton:
+            # Set move cursor
+            self.cursor.setShape(Qt.DragMoveCursor)
+            self.setCursor(self.cursor)
             current_pos = event.position().toPoint()
             delta_x = current_pos.x() - self.last_mouse_pos.x()
             delta_y = current_pos.y() - self.last_mouse_pos.y()
@@ -195,6 +200,8 @@ class LayoutDisplay(QLabel):
         # Set unselected (doesn't matter which mode we are in)
         if event.button() == Qt.MouseButton.LeftButton:
             self.selected = None
+            self.cursor.setShape(Qt.ArrowCursor)
+            self.setCursor(self.cursor)
             #print(f"Mouse Left Released at: {event.position().x()}, {event.position().y()}")
 
     def mouseDoubleClickEvent(self, event: QMouseEvent):
