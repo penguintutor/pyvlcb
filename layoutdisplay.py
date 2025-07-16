@@ -10,6 +10,7 @@ from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainW
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 from layout import Layout
+from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
 
 class LayoutDisplay(QLabel):
@@ -23,7 +24,6 @@ class LayoutDisplay(QLabel):
         # Is an object selected (for dragging etc.)
         self.selected = None
 
-        
         self.canvas = None
         
         # whenever changing canvas / pixmap size - do it through this
@@ -35,6 +35,10 @@ class LayoutDisplay(QLabel):
         
         # Mode is control or edit
         self.mode = "control"
+        
+    # Here pos is optional so it's moved to the end
+    def add_label (self, label_id, label_type, settings, pos=(5,5)):
+        self.labels.append (LayoutLabel(self, pos, label_id, label_type, settings))
         
     def paintEvent (self, event):
         super().paintEvent(event)
@@ -48,7 +52,10 @@ class LayoutDisplay(QLabel):
         brush.setColor(QColor('darkblue'))
         brush.setStyle(Qt.SolidPattern)
         painter.setBrush(brush)
-         
+        
+        for label in self.labels:
+            label.draw(painter)
+        
         for button in self.buttons:
             button.draw(painter)
              
@@ -196,16 +203,27 @@ class LayoutDisplay(QLabel):
         #    print(f"Mouse Left Double Clicked at: {event.position().x()}, {event.position().y()}")
 
 
-    def pixel_to_percent (self, position):
+    # Convert pixels to percentage
+    # by default (rel=False) then calculates based on absolute position
+    # factoring in the difference betwen label and image size
+    # If rel=True then ignore that and calculate relative value
+    def pixel_to_percent (self, position, rel=False):
         label_size = self.canvas_size
         image_size = self.pixmap().size()
-        y_val = position.y()
-        x_val = position.x()
-        # subtract height1/2 height difference
-        height_diff = label_size.height() - image_size.height()
-        if height_diff > 0:
-            y_val -= int(height_diff/2)
-        # now have actual pos within the image pixmap
+        # allow position to be a a list/tuple or a QObject type
+        if isinstance(position, (list, tuple)):
+            x_val = position[0]
+            y_val = position[1]
+        else:
+            x_val = position.x()
+            y_val = position.y()
+        
+        # subtract height1/2 height difference if not relative 
+        if rel==False:
+            height_diff = label_size.height() - image_size.height()
+            if height_diff > 0:
+                y_val -= int(height_diff/2)
+        # now have actual pos within the image pixmap (if not relative)
         # calculate as a percentage of image_size
         x_percent = (x_val / image_size.width()) * 100
         y_percent = (y_val / image_size.height()) * 100

@@ -2,11 +2,11 @@
     {
         "object": "button",
         "pos": [
-            43.73983739837398,
-            41.843971631205676
+            25,
+            25
         ],
-        "button_type": "circle",
-        "settings": {
+        "id": "circle",
+        "button_type": {
             "size": [
                 2,
                 2
@@ -14,6 +14,19 @@
             "color_on": "#00FF00",
             "color_off": "#FF0000",
             "color_unknown": "#555555"
+        },
+        "settings": {}
+    },
+    {
+        "object": "label",
+        "id": "Point_1_label",
+        "pos": [
+            5,
+            5
+        ],
+        "label_type": "text",
+        "settings": {
+            "text": "Point 1"
         }
     }
 ]

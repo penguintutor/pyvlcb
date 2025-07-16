@@ -19,6 +19,9 @@ loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
 basedir = os.path.dirname(__file__)
 
+# Layout Display is from the loader to interact use
+# self.ui.layoutLabel
+
 layout_file = "layout.json"
 
 app_title = "VLCB App"
@@ -162,10 +165,12 @@ class MainWindowUI(QMainWindow):
     def add_label_dialog (self):
         dialog = AddLabelDialog()
         if dialog.exec():
-            text = dialog.get_selected_values()
-            print(f"Selected value: {text}")
-        else:
-            print("Dialog cancelled.")
+            # response = id, text
+            response = dialog.get_selected_values()
+            #print(f"Selected value: {text}")
+            self.ui.layoutLabel.add_label(response[0], "text", {"text":response[1]})
+        #else:
+        #    print("Dialog cancelled.")
         
     def event_selection_dialog (self):
         dialog = EventDialog()

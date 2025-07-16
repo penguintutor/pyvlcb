@@ -27,6 +27,7 @@ class DeviceModel(QObject):
         # Subscribe to events from the API layer
         #event_bus.device_event_signal.connect(self._update_device_status)
         #event_bus.gui_event_signal.connect(self._update_layout_status)
+        
         # layout used for getting user name for devices
         self.layout = None
         # Also add any node information to QStandardItemModel

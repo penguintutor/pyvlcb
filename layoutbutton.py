@@ -23,9 +23,9 @@ from layoutobject import LayoutObject
 
 
 class LayoutButton (LayoutObject):
-    def __init__ (self, parent, pos, button_type, settings = {}):
+    def __init__ (self, parent, pos, button_id, button_type, settings = {}):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
-        super().__init__(parent, pos)
+        super().__init__(parent, pos, button_id)
         self.button_type = button_type
         self.settings = settings
         self.min_size = 5 # min size for click area
@@ -40,9 +40,20 @@ class LayoutButton (LayoutObject):
         return {
             'object': "button",
             'pos': self.pos,
+            'id': self.id,
             'button_type': self.button_type,
             'settings': self.settings
             }
+    
+        
+    # return -1 if not a hit, or distance if it is
+    def is_hit (self, click_pos):
+        distance = self.distance (click_pos)
+        #print (f"Click pos {click_pos}, obj pos {self.pos}, distance {distance}, size {self.scalar_size()}")
+        if distance <= self.scalar_size():
+            return distance
+        else:
+            return -1
             
     # scalar size is an effective size which is clickable
     # this is a circular area such as used in a touch screen
@@ -59,15 +70,6 @@ class LayoutButton (LayoutObject):
         if largest_size < self.min_size:
             largest_size = self.min_size
         return largest_size
-    
-    # Calculate distance from click pos
-    # both pos are percentage - returns scalar
-    def distance (self, click_pos):
-        delta_x = click_pos[0] - self.pos[0]
-        delta_y = click_pos[1] - self.pos[1]
-
-        # Calculate the Euclidean distance
-        return (math.sqrt(delta_x**2 + delta_y**2))        
             
     # returns size as pixels rather than ratio
     def pixel_size (self):
@@ -81,7 +83,7 @@ class LayoutButton (LayoutObject):
 #         print (f"Resize")
 #         #print (f"Parent size {self.parent.canvas_size}")
 #         #print (f"Pixel size {self.pixel_size()}")
-#         # Size is recalculated dynaically - so not sure if needed
+#         # Size is recalculated dyna#mically - so not sure if needed
 #         # skip for now
 #         pass
         
