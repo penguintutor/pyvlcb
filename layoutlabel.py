@@ -53,7 +53,7 @@ class LayoutLabel (LayoutObject):
             # get a new y with offset (still percentage)
             draw_text_y = self.pos[1] + ascent
             # Draw using normal x pos (still left) but shifted y pos
-            painter.drawText(*self.pixel_pos([self.pos[0], draw_text_y]), self.settings['text'])
+            painter.drawText(*self.pixel_pos([self.pos[0], draw_text_y], rel=False), self.settings['text'])
             
         
     # For label need to check for width and height as typically width significantly larger than height
@@ -61,7 +61,7 @@ class LayoutLabel (LayoutObject):
     # note that distance is still scalar distance from center - even if more to one side (distance from center)
     # click_pos is a percentage - same as dimensions of label
     def is_hit (self, click_pos):
-        print (f"Click {click_pos}, Label {self.pos}, size {self.size}")
+        #print (f"Click {click_pos}, Label {self.pos}, size {self.size}")
         # check for hit first
         if (
             click_pos[0] >= self.pos[0] and
@@ -72,4 +72,6 @@ class LayoutLabel (LayoutObject):
             return self.distance (click_pos)
         else:
             return -1
+        
+
     

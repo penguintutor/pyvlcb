@@ -24,18 +24,27 @@ class LayoutObject:
     # width and height
     # Normally leave argument to default - but if argument provided use that instead
     # useful if want to apply offset etc.
-    def pixel_pos (self, pos=None):
+    # aka percent_to_pixel
+    # rel is whether factor in height diff or not
+    # If pos not defined then rel=None becomes False - as need to position within entire label
+    # if pos is defined and rel=None then becomes True - as likely calc offset
+    def pixel_pos (self, pos=None, rel=None):
         if pos == None:
             pos = self.pos
+            if rel==None:
+                rel = False
+        elif rel==None:	# pos is supplied and rel=None - so set to true
+            rel = True
         label_size = self.parent.canvas_size
         image_size = self.parent.pixmap().size()
         # First calculate just on image size
         width = image_size.width() * pos[0] / 100
         height = image_size.height() * pos[1] / 100
         # width is left aligned, but need to add 1/2 of height offset
-        height_diff = label_size.height() - image_size.height()
-        if height_diff > 0:
-            height += int(height_diff/2)
+        if rel == False:
+            height_diff = label_size.height() - image_size.height()
+            if height_diff > 0:
+                height += int(height_diff/2)
         return [width, height]
 
         
@@ -57,3 +66,7 @@ class LayoutObject:
         # Calculate the Euclidean distance
         return (math.sqrt(delta_x**2 + delta_y**2))
     
+    def get_offset (self, click_pos):
+        offset_x = click_pos[0] - self.pos[0]
+        offset_y = click_pos[1] - self.pos[1]
+        return [offset_x, offset_y]

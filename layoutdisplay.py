@@ -19,7 +19,7 @@ class LayoutDisplay(QLabel):
         # Main window is not known here (as parent is within .ui) - store when loading file
         self.mainwindow = None
         self.setMouseTracking(True)  # Enable mouse tracking even when no button is pressed
-        self.last_mouse_pos = QPoint()
+        #self.last_mouse_pos = QPoint()
         
         # Is an object selected (for dragging etc.)
         self.selected = None
@@ -138,8 +138,8 @@ class LayoutDisplay(QLabel):
         
     def editMousePress  (self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
-            self.last_mouse_pos = event.position().toPoint()
-            click_pos = self.pixel_to_percent(self.last_mouse_pos)
+            mouse_pos = event.position().toPoint()
+            click_pos = self.pixel_to_percent(mouse_pos)
             # Test all buttons for click, if multiple hit then use one closest
             self.selected = self.nearestToClick(click_pos)
             if self.selected == None:
@@ -174,6 +174,10 @@ class LayoutDisplay(QLabel):
                 if hit_test >=0 and hit_test < nearest_distance:
                     nearest_object = label
                     nearest_distance = hit_test
+        if nearest_object != None:
+            # get offset to the nearest object
+            offset_percentage = nearest_object.get_offset(click_pos)
+            self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
         return nearest_object
                     
     def mouseMoveEvent(self, event: QMouseEvent):
@@ -182,14 +186,15 @@ class LayoutDisplay(QLabel):
             self.cursor.setShape(Qt.DragMoveCursor)
             self.setCursor(self.cursor)
             current_pos = event.position().toPoint()
-            delta_x = current_pos.x() - self.last_mouse_pos.x()
-            delta_y = current_pos.y() - self.last_mouse_pos.y()
-            self.last_mouse_pos = current_pos
-            self.selected.pos = self.pixel_to_percent(current_pos)
-            #print(f"Dragging: Delta X: {delta_x}, Delta Y: {delta_y} (Current: {current_pos.x()}, {current_pos.y()})")
-            # Here you would typically update the image's position or a selection rectangle
-            # For example, if you're implementing panning, you would move the image based on delta_x and delta_y.
-
+#            self.last_mouse_pos = self.last_mouse_pos + self.click_offset
+            new_pos = self.pixel_to_percent(current_pos - self.click_offset)
+            # if out of bounds then cancel the drag
+            if new_pos[0] < 0 or new_pos[1] < 0 or new_pos[0] + self.selected.size[0] >= 100 or new_pos[1] + self.selected.size[1] >= 100:
+                # leave selected but don't move it until the cursor goes back into the area
+                pass
+            # otherwise update the object pos
+            else:
+                self.selected.pos = new_pos
         else:
             # You can also detect mouse movement without a button pressed (hovering)
             # if self.hasMouseTracking():
