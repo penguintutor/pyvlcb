@@ -5,11 +5,13 @@
 # position is relative to top left of the parent (QLabel)
 # is be a percentage of the layout image size
 
-
 import sys, math
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
+
+# factor for adjusting font size
+font_scaling_factor = 3
 
 class LayoutObject:
     def __init__ (self, parent, pos, id):
@@ -47,6 +49,22 @@ class LayoutObject:
                 height += int(height_diff/2)
         return [width, height]
 
+
+    # when font size uses scale appropriately
+    # 200 = font size (never go smaller than this)
+    # scale up to width of 2000 (ie. 10 x) - with a factor
+    # Start with a scale of 1
+    def get_font_scale (self):
+        # uses pixemap width for scaling only
+        image_size = self.parent.pixmap().size()
+        width_scale = image_size.x() / 200
+        # limit width_scale
+        if width_scale < 1:
+            width_scale = 1
+        elif width_scale > 10:
+            width_scale = 10
+        return width_scale / font_scaling_factor
+        
         
     # Get the mid-point of the object - useful for calc distance from click
     # All values as percentage

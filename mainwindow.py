@@ -23,6 +23,7 @@ basedir = os.path.dirname(__file__)
 # self.ui.layoutLabel
 
 layout_file = "layout.json"
+layout_objs_file = "layoutobjects.json"
 
 app_title = "VLCB App"
 
@@ -45,8 +46,6 @@ class MainWindowUI(QMainWindow):
     def __init__(self):
         super().__init__()
         self.debug = False
-        
-        #self.nodes = {} # dict of nodes indexed by NN
         
         self.threadpool = QThreadPool()
         self.update_in_progress = False
@@ -144,6 +143,8 @@ class MainWindowUI(QMainWindow):
                 
         # Load layout background image
         self.ui.layoutLabel.load_image(self)
+        # and UI objects
+        self.ui.layoutLabel.load_layout_objects(layout_objs_file)
         
         # Update LCD - used to set '-' at start
         self.update_lcd()
@@ -222,7 +223,7 @@ class MainWindowUI(QMainWindow):
             #self.ui.menuEditLayout.setVisible(False)
             self.ui.menuEditLayoutAction.setVisible(False)
             # When switching back to control from edit then save config
-            self.ui.layoutLabel.save_layout_objects('layoutobjects.json')
+            self.ui.layoutLabel.save_layout_objects(layout_objs_file)
     
     # Show console always calls show
     # If window already open then bring to front

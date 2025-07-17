@@ -25,7 +25,6 @@ class LayoutDisplay(QLabel):
         self.selected = None
 
         self.canvas = None
-
         self.cursor = QCursor()
 
         # whenever changing canvas / pixmap size - do it through this
@@ -74,6 +73,8 @@ class LayoutDisplay(QLabel):
         for label in self.labels:
             data_list.append(label.to_dict())
             
+        #print (f"Save list {data_list}")
+            
         try:
             with open(filename, 'w') as f:
                 json.dump(data_list, f, indent=4)
@@ -81,6 +82,22 @@ class LayoutDisplay(QLabel):
                 # Todo show this on the UI instead
         except IOError as e:
             print(f"Error saving file: {e}")
+            
+    def load_layout_objects (self, filename):
+        try:
+            with open(filename, 'r') as f:
+                objects = json.load(f)
+                #print (f"Objects {objects}")
+        except IOError as e:
+            print(f"Warning unable to loading file: {e}, possibly no assets defined")
+            return
+        # Create an object for each entry
+        for entry in objects:
+            if 'object' in entry.keys():
+                if entry['object'] == 'button':
+                    self.buttons.append(LayoutButton(self, entry['pos'], entry['id'], entry['button_type'], entry['settings']))
+                elif entry['object'] == 'label':
+                    self.labels.append(LayoutLabel(self, entry['pos'], entry['id'], entry['label_type'], entry['settings']))
         
 
     def load_image (self, mainwindow):
@@ -104,24 +121,9 @@ class LayoutDisplay(QLabel):
             'size': (2,2),
             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
             }
-        self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
+        #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
 
         
-        
-#     def testObject (self):
-#         # Optional: Draw some content on the dummy pixmap
-#         print (f"Test {self}, {self.canvas}")
-#         painter = QPainter(self.canvas)
-#         painter.setPen(QColor("darkred"))
-#         #painter.drawRect(50, 50, 700, 500)
-#         #painter.setFont(painter.font().setPointSize(24))
-#         font = QFont()
-#         font.setFamily('Times')
-#         font.setBold(True)
-#         font.setPointSize(40)
-#         painter.setFont(font)
-#         painter.drawText(100, 100, "Click and Drag Me!")
-#         painter.end()
         
     def resizeEvent(self, event=None):
         #self.canvas_size = self.ui.layoutLabel.size()
