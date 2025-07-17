@@ -16,10 +16,22 @@ class LayoutLabel (LayoutObject):
         self.settings = settings
         self.min_size = 5 # min size for click area
         # default size is 5% width and 1:1
+        # just set iniitially replaced with actual size later
         if ('size' in settings.keys()):
             self.size = settings['size']
         else:
             self.size = (5, 5)
+        # set font size if not in settings
+        if ('min_font_size' in settings.keys()):
+            self.min_font_size = settings['min_font_size']
+        else:
+            self.min_font_size = 14
+        if ('max_font_size' in settings.keys()):
+            self.max_font_size = settings['max_font_size']
+        else:
+            # Default for max is 3 x min
+            self.max_font_size = self.min_font_size * 3
+
     
     # Returns as a nested dictionary ready to save
     def to_dict (self):
@@ -36,7 +48,7 @@ class LayoutLabel (LayoutObject):
             
             # In future could check for font override in settings
             # Liberation Sans Bold - common font on Raspberry Pi OS and other Linux
-            painter.setFont(QFont("LiberationSans-Bold", 16))
+            painter.setFont(QFont("LiberationSans-Bold", self.get_font_scale(self.min_font_size, self.max_font_size)))
             font_metrics = painter.fontMetrics()
             text_rect = font_metrics.boundingRect(self.settings['text'])
             # note that the standard drawText uses the baseline for y (ie. bottom of standar letters)

@@ -10,9 +10,6 @@ from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainW
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 
-# factor for adjusting font size
-font_scaling_factor = 3
-
 class LayoutObject:
     def __init__ (self, parent, pos, id):
         self.parent = parent
@@ -50,20 +47,30 @@ class LayoutObject:
         return [width, height]
 
 
-    # when font size uses scale appropriately
-    # 200 = font size (never go smaller than this)
-    # scale up to width of 2000 (ie. 10 x) - with a factor
-    # Start with a scale of 1
-    def get_font_scale (self):
+    # If window scales then change font size accordingly
+    # only approx - based on min and max font size
+    # image W 500 = font min size (never go smaller than this)
+    # image W 2000 = font max size (never go bigger than this)
+    def get_font_scale (self, min_size, max_size):
+        # First check max > min - otherwise just return min
+        if max_size < min_size:
+            return min_size
         # uses pixemap width for scaling only
         image_size = self.parent.pixmap().size()
-        width_scale = image_size.x() / 200
-        # limit width_scale
-        if width_scale < 1:
-            width_scale = 1
-        elif width_scale > 10:
-            width_scale = 10
-        return width_scale / font_scaling_factor
+        # font scale is between 0 and 1 - where 0 is min size and 1 = max size
+        # Max would only be reached on large screen (min HD) where the width of the image
+        # is primary length - in reality more likely to be between min and 1/2 way
+        # between min and max - eg. min 14, max 42 - typically 24 to 30
+        font_scale = (image_size.width() - 500) / 1500
+        if font_scale < 0:
+            font_scale = 0
+        if font_scale > 1:
+            font_scale = 1
+        # apply scaling factor to difference between min and max
+        scale_up = (max_size - min_size) * font_scale
+        #print (f"Min {min_size}, Max {max_size}, Scale {scale_up}")
+        # return as int - effectively round down
+        return int(min_size + scale_up)
         
         
     # Get the mid-point of the object - useful for calc distance from click
