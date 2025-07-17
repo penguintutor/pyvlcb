@@ -31,6 +31,10 @@ class LayoutLabel (LayoutObject):
         else:
             # Default for max is 3 x min
             self.max_font_size = self.min_font_size * 3
+        if ('font' in settings.keys()):
+            self.font = settings['font']
+        else:
+            self.font = "LiberationSans-Bold"
 
     
     # Returns as a nested dictionary ready to save
@@ -48,7 +52,7 @@ class LayoutLabel (LayoutObject):
             
             # In future could check for font override in settings
             # Liberation Sans Bold - common font on Raspberry Pi OS and other Linux
-            painter.setFont(QFont("LiberationSans-Bold", self.get_font_scale(self.min_font_size, self.max_font_size)))
+            painter.setFont(QFont(self.font, self.get_font_scale(self.min_font_size, self.max_font_size)))
             font_metrics = painter.fontMetrics()
             text_rect = font_metrics.boundingRect(self.settings['text'])
             # note that the standard drawText uses the baseline for y (ie. bottom of standar letters)
