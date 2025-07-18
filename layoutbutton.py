@@ -33,7 +33,7 @@ class LayoutButton (LayoutObject):
         if ('size' in settings.keys()):
             self.size = settings['size']
         else:
-            self.size = (4, 4)ab
+            self.size = (4, 4)
 
     # Returns as a nested dictionary ready to save
     def to_dict (self):
