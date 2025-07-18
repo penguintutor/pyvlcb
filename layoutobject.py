@@ -72,13 +72,12 @@ class LayoutObject:
         # return as int - effectively round down
         return int(min_size + scale_up)
         
-        
     # Get the mid-point of the object - useful for calc distance from click
     # All values as percentage
     def center_pos (self):
         return [
-            self.pos[0] - (self.size[0] / 2),
-            self.pos[1] - (self.size[1] / 2)
+            self.pos[0] + (self.size[0] / 2),
+            self.pos[1] + (self.size[1] / 2)
             ]
     
     # Calculate distance from click pos

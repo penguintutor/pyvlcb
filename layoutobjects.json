@@ -1,5 +1,15 @@
 [
     {
+        "object": "button",
+        "pos": [
+            35.28455284552845,
+            24.822695035460992
+        ],
+        "id": "",
+        "button_type": "circle",
+        "settings": {}
+    },
+    {
         "object": "label",
         "id": "point_1_label",
         "pos": [

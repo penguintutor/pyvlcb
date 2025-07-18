@@ -14,6 +14,7 @@ from appevent import AppEvent
 from devicemodel import device_model
 from eventdialog import EventDialog
 from addlabeldialog import AddLabelDialog
+from addbuttondialog import AddButtonDialog
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -169,9 +170,15 @@ class MainWindowUI(QMainWindow):
             # response = id, text
             response = dialog.get_selected_values()
             #print(f"Selected value: {text}")
+            # The first "text" is that it's a text style label (allows flexibility for future)
             self.ui.layoutLabel.add_label(response[0], "text", {"text":response[1]})
-        #else:
-        #    print("Dialog cancelled.")
+        
+    def add_button_dialog (self):
+        dialog = AddButtonDialog()
+        if dialog.exec():
+            # response = id, button_type
+            response = dialog.get_selected_values()
+            self.ui.layoutLabel.add_button(response[0], response[1], {})
         
     def event_selection_dialog (self):
         dialog = EventDialog()
@@ -179,12 +186,9 @@ class MainWindowUI(QMainWindow):
             node, event = dialog.get_selected_values()
             print(f"Selected Node: {node}")
             print(f"Selected Event: {event}")
-        else:
-            print("Dialog cancelled.")
+        #else:
+        #    print("Dialog cancelled.")
 
-    
-    def add_button_dialog (self):
-        pass
         
     # App event is used to send events from other parts of the app
     def app_event (self, app_event):

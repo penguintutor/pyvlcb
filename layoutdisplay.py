@@ -41,6 +41,9 @@ class LayoutDisplay(QLabel):
     def add_label (self, label_id, label_type, settings, pos=(5,5)):
         self.labels.append (LayoutLabel(self, pos, label_id, label_type, settings))
         
+    def add_button (self, button_id, button_type, settings, pos=(5,5)):
+        self.labels.append (LayoutButton(self, pos, button_id, button_type, settings))
+        
     def paintEvent (self, event):
         super().paintEvent(event)
         painter = QPainter(self)
@@ -122,8 +125,6 @@ class LayoutDisplay(QLabel):
             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
             }
         #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
-
-        
         
     def resizeEvent(self, event=None):
         #self.canvas_size = self.ui.layoutLabel.size()
@@ -215,7 +216,6 @@ class LayoutDisplay(QLabel):
         pass
         #if event.button() == Qt.MouseButton.LeftButton:
         #    print(f"Mouse Left Double Clicked at: {event.position().x()}, {event.position().y()}")
-
 
     # Convert pixels to percentage
     # by default (rel=False) then calculates based on absolute position

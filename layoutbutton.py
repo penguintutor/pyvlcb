@@ -28,13 +28,13 @@ class LayoutButton (LayoutObject):
         super().__init__(parent, pos, button_id)
         self.button_type = button_type
         self.settings = settings
-        self.min_size = 5 # min size for click area
+        self.min_size = 5 # min size for click area (actual size can be smaller - this is just for clicks)
         # default size is 5% width and 1:1
         if ('size' in settings.keys()):
             self.size = settings['size']
         else:
-            self.size = (5, 5)
-    
+            self.size = (4, 4)ab
+
     # Returns as a nested dictionary ready to save
     def to_dict (self):
         return {
@@ -78,15 +78,7 @@ class LayoutButton (LayoutObject):
         width = image_size.width() * self.size[0] / 100
         height = image_size.width() * self.size[1] / 100
         return [width, height]
-    
-#     def resize (self):
-#         print (f"Resize")
-#         #print (f"Parent size {self.parent.canvas_size}")
-#         #print (f"Pixel size {self.pixel_size()}")
-#         # Size is recalculated dyna#mically - so not sure if needed
-#         # skip for now
-#         pass
-        
+           
     def draw (self, painter):
         if self.button_type == "rect":
             painter.drawRect(*self.pixel_pos(), *self.pixel_size())
