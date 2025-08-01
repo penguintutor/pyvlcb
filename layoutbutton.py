@@ -44,8 +44,7 @@ class LayoutButton (LayoutObject):
             'button_type': self.button_type,
             'settings': self.settings
             }
-    
-        
+            
     # return -1 if not a hit, or distance if it is
     def is_hit (self, click_pos):
         distance = self.distance (click_pos)

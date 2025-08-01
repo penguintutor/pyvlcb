@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 import sys
 from PySide6.QtWidgets import QApplication
 from mainwindow import MainWindowUI

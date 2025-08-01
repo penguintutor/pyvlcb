@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
-
-# Main App class - handles connection to canusb and creates zmq
-# This is a very basic zmq server
-# Receives data from usb and sends to higher when requested
-# Receives request from zmq and sends to USB
-# higher level needs to interpret the data
-
-from multiprocessing import Lock, Process, Queue, current_process
-from canusb import CanUSB4
+from flask import Flask
+import threading
+from vlcbserver.canusb import CanUSB4
 from datetime import datetime
-import zmq
+import time
+import vlcbserver
+from vlcbserver import create_app
+import vlcbserver.requests
 
 
 port = '/dev/ttyACM0'
-context = zmq.Context()
-socket = context.socket(zmq.REP)
-socket.bind("tcp://*:5555")
 
 # maximum number of entries to cache in server
 # Will exceed this, but this is the trim level
@@ -23,158 +17,79 @@ socket.bind("tcp://*:5555")
 # on each event loop
 max_entries = 100
 
-# List containing data received
-data = []
-data_index = 0 # index number for first entry in array
-# eg. if 10 entries removed from start then this will be increased to 10 and
-# new entries will be relative to that
 
-print ("Starting server")
 
-while True:
-    # Entire thread is in a loop which allows us to keep trying connection etc.
-    debug = True
+
+def flaskThread():
+    app.run(host='0.0.0.0', port=5000)
     
-    # Connect to USB
-    usb = CanUSB4(port)
-    try:
-        usb.connect()
-    except:
-        if debug:
-            print (f"Error connecting to {port}")
-        # At the moment stop - perhaps update in future
-        break
-        #time.sleep(0.5)
-        #continue
-
+# Setup pixel strip and then start the updatePixels loop
+def mainThread():
     while True:
+        # Entire thread is in a loop which allows us to keep trying connection etc.
+        debug = False
         
-        #print (f"Len data pre {len(data)} index {data_index}")
-        # First part of loop - clear out any excessive entries
-        # do now rather than each time we add something
-        if (len(data) > max_entries):
-            num_pop = len(data) - max_entries
-            del data[0:num_pop]
-            data_index += num_pop
-        #print (f"Len data post {len(data)} index {data_index}")
-            
-        
-        # First check if any commands to the server 
+        # Connect to USB
+        usb = CanUSB4(port)
         try:
-            message = socket.recv(flags=zmq.NOBLOCK)
-            #print (f"Raw message {message}")
-            if (message != b''):
-                message = message.decode("utf-8")
-            else:
-                message = ""
-            
-        except zmq.Again as e:
-            #print ("Nothing received")
-            # Nothing received
-            pass
-        except Exception as e:
-            print (f"Unknown error {e}")
-        else:
-            #print (f"Request received {message}")
-            # If empty request
-            if message == "":
-                #print ("Sending emptyrequest")
-                socket.send(b'status,emptyrequest')
-            # Handle commands here
-            elif message[0:7] == "server,":
-                print ("Server message")
-                #if message[7:] == "quit"
-                #    socket.send(b"server,quit")
-                #    if debug:
-                #        print ("Exiting")
-                #    break
-                # Status responsds with status,firstdata,numdata
-                if message[7:] == "status":
-                    status_msg = f"status,{data_index},{len(data)}"
-                    #print (f"Status sending {status_msg}")
-                    socket.send(status_msg.encode("utf-8"))
-                else:
-                    print ("Unknown server request")
-                    socket.send(b'status,unknownserverreq')
-            # send,<data> - send to usb
-            elif message[0:5] == "send,":
-                send_data = message[5:].encode('utf-8')
-                print (f"send request is {message[5:]}") 
-                usb.send_data(send_data)
-                data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "," + send_data.decode('utf-8'))
-            #    print ("Returning : sent")
-                socket.send(b"sent")
-            # get,start_num (to end) (May be long)
-            # get,start_num,num_packets (fixed range)
-            # get,-num (last x packets)
-            elif message[0:4] == "get,":
-                #print (f"Get request {message[4:]}")
-                message_req = message[4:].split(',')
-                data_string = "data,"
-                num_entries_returned = 0    # Just used for testing, could be used for a checksum
-                ## todo - add handling of other types of entry
-                if len(message_req) >= 1:
-                    start_pos = int(message_req[0])
-                    # If forward
-                    if start_pos >= 0:
-                        # Subtract data_index from start_pos
-                        start_pos -= data_index
-                        # If start is before start of log (eg. request all, but already removed some entries)
-                        if start_pos < 0:
-                            start_pos = 0
-                        # Assuming forward we now now our start_pos
-                        # If only one value then go to end
-                        if len(message_req) < 2:
-                            end_pos = len(data)
-                        # otherwise set end to appropriate value
-                        # note that the num entries always starts at start_pos - so if start_pos is moved to higher value
-                        # then it's relative to that - most likely this is what is required (ie. num_entries is to limit
-                        # number of packets received) - if for other reason then client needs to check start and end of what is returned
-                        else:
-                            end_pos = int(message_req[1]) + start_pos + 1
-                            # check we aren't going beyond the end - if so limit to end
-                            if end_pos > len(data):
-                                end_pos = len(data)
-
-                    # if start negative (backwards)
-                    else:
-                        # Note add because start_pos is negative
-                        start_pos = len(data) + start_pos -1
-                        # Negative start - always goes to end
-                        
-                    #print (f"Start {start_pos}, end {end_pos}, index {data_index}, len {len(data)}")
-                    
-                    # Add start and end positions to the response so that the caller knows what these
-                    # refer to. Particularly important when requesting from before
-                    # typically the client will be more concerned about the second value
-                    # end does not need -1 as it's total packets received
-                    data_string += f"{start_pos+data_index},{end_pos+data_index},"
-                    for i in range (start_pos, end_pos):
-                        num_entries_returned += 1
-                        data_string += data[i]+"\n"
-                    # If no data added
-                    # replace with a nodata response
-                    if num_entries_returned < 1:
-                        socket.send(b"data,0,0")
-                        #print ("No data to return")
-                    else:
-                        #print (f"Sending {num_entries_returned} entries")
-                        #print (f"Sending {data_string.encode('utf-8')}")
-                        socket.send(data_string.encode('utf-8'))
-
-        
-        # Check to see if we have any responses
-        # Do this clear input queue before sending any new requests
-        in_data = usb.read_data()
-        
-        if in_data[0] == "Data":
-            data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "," + in_data[1].decode('utf-8'))
+            usb.connect()
+        except:
             if debug:
-                print (f"Received {in_data[1]}")
-            # If got data then keep on reading more
-            continue
-        # Todo Handle errors
-        
+                print (f"Error connecting to {port}")
+            # At the moment stop - perhaps update in future
+            break
 
+        while True:
+            # First part of loop - clear out any excessive entries
+            # do now rather than each time we add something
+            if (len(vlcbserver.data) > max_entries):
+                num_pop = len(vlcbserver.data) - max_entries
+                del vlcbserver.data[0:num_pop]
+                vlcbserver.data_index += num_pop
+            #print (f"Len data post {len(data)} index {data_index}")
+                
+            
+            ### Check to see if we have any outgoing messages
+            # prioritise sending
+            while (len(vlcbserver.messages) > 0):
+                this_message = vlcbserver.messages.pop(0)
+                usb.send_data(this_message)
+                # Add it to the data
+                vlcbserver.data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ",o," + this_message)
+                
+            # in_data is a list of data
+            # first entry [0] is the number entries - if negative then error
+            in_data = usb.read_data()
+            
+            # If no data then slight pause and try loop again
+            if in_data[0] == 0:
+                time.sleep(0.1)
+                #time.sleep (1)
+            elif in_data[0] < 1:
+                print (f"Error {in_data[1]}, {in_data[2]}")
+            # Also check that the number of bytes is same as returned entry
+            # Shouldn't get this, but additional check
+            # Just warn then use the actual length of the error
+            if (len(in_data) -1 != in_data[0]):
+                print (f"Warning incorrect data returned, expected {in_data[0]}, received {len(in_data) - 1}")
+            
+            # If reach then at least 1 packet received
+            for i in range(1, len(in_data)):
+                this_input = in_data[i]
+                #data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + "," + this_input.decode('utf-8'))
+                # date, i(incoming rather than o), data_string
+                vlcbserver.data.append(datetime.now().strftime('%Y-%m-%d %H:%M:%S') + ",i," + this_input)
+                if debug:
+                    print (f"Received {this_input}")
+            # Todo Handle errors
+            
 
-print ("Connection closed")
+app = create_app()
+#pixels = Pixels(default_config_filename, custom_config_filename, custom_light_config_filename)
+
+if __name__ == "__main__":
+    # run as two threads - main thread and flask thread
+    mt = threading.Thread(target=mainThread)
+    ft = threading.Thread(target=flaskThread)
+    mt.start()
+    ft.start()
