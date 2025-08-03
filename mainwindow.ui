@@ -586,6 +586,7 @@
     </property>
     <addaction name="actionLayoutEdit"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionEvents"/>
     <addaction name="actionShowConsole"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
@@ -646,6 +647,11 @@
   <action name="actionAddButton">
    <property name="text">
     <string>Add Button</string>
+   </property>
+  </action>
+  <action name="actionEvents">
+   <property name="text">
+    <string>Event Manager</string>
    </property>
   </action>
  </widget>

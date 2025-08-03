@@ -12,7 +12,7 @@ from apihandler import ApiHandler
 from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
-from eventdialog import EventDialog
+from eventwindow import EventWindow
 from addlabeldialog import AddLabelDialog
 from addbuttondialog import AddButtonDialog
 
@@ -76,6 +76,7 @@ class MainWindowUI(QMainWindow):
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
+        self.event_window = None
         
         # Signals
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
@@ -90,9 +91,11 @@ class MainWindowUI(QMainWindow):
         # Asset Menu
         self.ui.actionDiscover.triggered.connect(self.api.discover)
         
-        # Tools Menu
-        self.ui.actionShowConsole.triggered.connect(self.show_console)
+        # Tools Menu        
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
+        self.ui.actionSettings.triggered.connect(self.settings)
+        self.ui.actionEvents.triggered.connect(self.events_edit)
+        self.ui.actionShowConsole.triggered.connect(self.show_console)
         
         # EditLayout Menu - only show when in edit layout mode
         #self.ui.menuEditLayout.setVisible(False)
@@ -163,6 +166,19 @@ class MainWindowUI(QMainWindow):
         
         #print (f"LD {self.ui.layoutLabel}")
         #self.ui.layoutLabel.test ("new message")
+        
+    
+    # Edit events associations between different objects
+    def events_edit (self):
+        if self.event_window == None:
+            self.event_window = EventWindow(self)
+        self.event_window.update()
+        self.event_window.display()
+    
+    # Edit settings
+    def settings (self):
+        pass
+        
         
     def add_label_dialog (self):
         dialog = AddLabelDialog()
