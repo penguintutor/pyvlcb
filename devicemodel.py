@@ -46,7 +46,7 @@ class DeviceModel(QObject):
     def name_to_key(self, name):
         for key in self.nodes.keys():
             if self.nodes[key].name == name:
-                print (f"name match {name}, key {key}")
+                #print (f"name match {name}, key {key}")
                 return key
         return None
     

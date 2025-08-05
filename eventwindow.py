@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtUiTools import QUiLoader
 from devicemodel import device_model
+from editeventdialog import EditEventDialog
 # Load the GUI resources.
 # These first need to be compiled from the .qrd file
 # pyside6-rcc guiresources.qrc -o guiresources.py
@@ -65,13 +66,25 @@ class EventWindow(QMainWindow):
         #todo remove entry
         pass
 
-        
-    def new_event(self):
-        #if self.edit_window == None:
-        #    self.edit_window = EditInterlockingWindowUI(self, self.config, self.gconfig, self.builder)
+    
+    def new_event (self):
+        dialog = EditEventDialog()
+        if dialog.exec() == QDialog.Accepted:
+            #print("Dialog Accepted!")
+            selected_data = dialog.get_selected_values()
+            print("Selected Values:")
+            for key, value in selected_data.items():
+                print(f"  {key}: {value}")
         #else:
-        #    self.edit_window.new()
-        pass
+        #    print("Dialog Rejected!")
+        
+        
+        
+#         dialog = EditEventDialog()
+#         if dialog.exec():
+#             node, event = dialog.get_selected_values()
+#             print(f"Selected Node: {node}")
+#             print(f"Selected Event: {event}")
         
     def clear (self):
         for i in range (0, 10):

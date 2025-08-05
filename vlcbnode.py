@@ -35,13 +35,13 @@ class VLCBNode():
         self.ev = {}
         
     def get_ev_names (self):
-        print (f"Getting Ev Names {self.name}")
-        print (f" EV {self.ev}")
+        #print (f"Getting Ev Names {self.name}")
+        #print (f" EV {self.ev}")
         list_names = []
         for key in self.ev.keys():
-            print (f" This EV {self.ev[key]}")
+            #print (f" This EV {self.ev[key]}")
             list_names.append(self.ev[key].get_name())
-        print (f"EV names {list_names}")
+        #print (f"EV names {list_names}")
         return list_names
         
     def get_gui_node (self):
