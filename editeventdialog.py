@@ -5,6 +5,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from devicemodel import device_model
+from eventbus import event_bus
 
 class EditEventDialog(QDialog):
     """

@@ -72,20 +72,27 @@ class DeviceModel(QObject):
     
     # Add node if not exist - else returnFalse
     def add_node (self, node):
+        #print (f"Adding node {node.node_id}")
         if not node in self.nodes.keys():
             self.nodes[node.node_id] = node
             # Also set name
-            self.set_name (node.node_id, self.layout.node_name(node))
+            #self.set_name (node.node_id, self.layout.node_name(node))
+            self.set_name (node.node_id, self.layout.node_name(node.node_id))
             # Add the gui node to the node_model
+            #print (f"GUI Node {self.nodes[node.node_id].get_gui_node().text()}")
+            #print (f"Adding {node.node_id} - {self.nodes[node.node_id].get_gui_node()}")
             self.node_model.appendRow(self.nodes[node.node_id].get_gui_node())
             return True
         return False
     
 
     def set_name (self, node_id, name):
+        #print (f"Set name in devicemodel {node_id} = {name}")
         if not node_id in self.nodes.keys():
             return False
-        self.nodes[node_id].name = name
+        # This must be through method and not directly editing name
+        # so as to be updated in the QStandardItem
+        self.nodes[node_id].set_name(name)
         return True
 
     def set_numev (self, node_id, numev):

@@ -1,5 +1,6 @@
 # Event Driven architecture - EDA
 # Bus to handle events
+# Also handles event forwarding signals based on registered event associations
 
 
 from PySide6.QtCore import Qt, QTimer, QObject, Signal, Slot
@@ -18,6 +19,10 @@ class EventBus(QObject):
     gui_event_signal = Signal(GuiEvent)
     loco_event_signal = Signal(LocoEvent)
     automate_event_signal = Signal(AutomateEvent)
+    
+    # Store registered event forwarding rules
+    # Each entry contains a list consisting of [event, action]
+    event_rules = []
 
     _instance = None
 
@@ -40,6 +45,9 @@ class EventBus(QObject):
             self.automate_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
+
+    def add_rule (self, event, action):
+        self.event_rules.append (event, action)
 
 
 # Access the singleton EventBus

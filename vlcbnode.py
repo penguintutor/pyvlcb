@@ -12,13 +12,15 @@ from vlcbev import VLCBEv
 # Stores Nodes defined / discovered
 class VLCBNode():
     def __init__ (self, node_id, mode, can_id, manuf_id, mod_id, flags):
+        self.name = node_id            # Initially set to node id
+        # If layout has a real name then that will replace this later
         # Special case if node = 0xffff then it's a CAB controller
-        if node_id == 0xffff:
-            self.name = "CANCAB"
-        elif node_id == 0xfffe:
-            self.name = "CANCMD"
-        else:
-            self.name = f"Node: {node_id}"            # Initially set to node id
+#         if node_id == 0xffff:
+#             self.name = "CANCAB"
+#         elif node_id == 0xfffe:
+#             self.name = "CANCMD"
+#         else:
+#             self.name = node_id            # Initially set to node id
         self.node_id = node_id
         self.mode = mode   # Set to SLiM / FLiM if replies with own can_id
         self.can_id = can_id
@@ -29,6 +31,7 @@ class VLCBNode():
         self.time_updated = time()
         # GUI node is used to provide entry for the model view
         self.gui_node = QStandardItem(f"{self.name}, {self.node_id}, {self.can_id}")
+        #self.gui_node = QStandardItem(f"{self.name}")
         self.numev = -1 # If number events unknown then set to -1
         self.evspc = -1 # event space
         # Events are stored as a dictionary with the ev_id as the index
@@ -49,8 +52,10 @@ class VLCBNode():
         
     # Sets name and updates the GUI string
     def set_name (self, name):
+        #print (f"Setting name to {name}")
         self.name = name
         self.update_gui_node_string()
+
         
     def check_item (self, item):
         if self.gui_node == item:
@@ -114,11 +119,12 @@ class VLCBNode():
         return items_changed
     
     def __str__ (self):
+        #print (f"Str -name {self.name}")
         return f"{self.name}, {self.node_id}, {self.can_id}"
         
     def extended_string (self):
         node_string = self.__str__()
-        # If we have num eve add that to the string
+        # If we have num ev add that to the string
         if self.numev >= 0:
             node_string += f", NumEv: {self.numev}"
         if self.evspc >= 0:

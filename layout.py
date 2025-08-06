@@ -7,7 +7,7 @@ import os
 # Holds specific information about the layout
 # particularly useful for giving friendly names
 # to replace nodeIDs
-class Layout:
+class Layout():
     def __init__ (self, layout_file):
         self.layout_file = layout_file
         # Create directory names
@@ -20,7 +20,9 @@ class Layout:
         
         self.node_names = {
             300: "Solenoid1",
-            301: "Servo1"
+            301: "Servo1",
+            65535: "CANCAB",		# 0xffff
+            65534: "CANCMD"			# 0xfffe
             }
         # 2 dimension node, evid, name
         self.ev_names = {
@@ -54,9 +56,12 @@ class Layout:
         
         
     def node_name (self, node_id):
+        #print (f"Node id {node_id}")
         if (node_id in self.node_names.keys()):
+            #print (f" name {self.node_names[node_id]}")
             return self.node_names[node_id]
         else:
+            #print (f" name (from node) Node: {node_id}")
             return f"Node: {node_id}"
         
     # EV name normally use en, if not in lookup 
