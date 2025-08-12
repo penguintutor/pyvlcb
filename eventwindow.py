@@ -13,6 +13,14 @@ from PySide6.QtWidgets import (
 from PySide6.QtUiTools import QUiLoader
 from devicemodel import device_model
 from editeventdialog import EditEventDialog
+from deviceevent import DeviceEvent
+from locoevent import LocoEvent
+from appevent import AppEvent
+from guievent import GuiEvent
+from automateevent import AutomateEvent
+from eventbus import event_bus
+
+
 # Load the GUI resources.
 # These first need to be compiled from the .qrd file
 # pyside6-rcc guiresources.qrc -o guiresources.py
@@ -33,6 +41,18 @@ class EventWindow(QMainWindow):
         
         self.ui = loader.load(os.path.join(basedir, "eventwindow.ui"), None)
         self.ui.setWindowTitle(app_title)
+        
+        # Map to Classes
+        self.event_map = {
+            'Device': DeviceEvent,
+            'Loco': LocoEvent,
+            'App': AppEvent,
+            'Gui': GuiEvent,
+            'Automate': AutomateEvent
+            }
+        
+        # Current page number
+        self.page_number = 0
 
         # create list from UI elements to allow reference by index
         self.event_elements = {"event":[], "action":[], "options":[], "delete":[]}
@@ -58,8 +78,43 @@ class EventWindow(QMainWindow):
         self.ui.delButton_09.pressed.connect(lambda: self.del_entry(9))
         
         self.update()
+        
+        # Hide page buttons
+        self.show_hide_controls()
+        
         self.ui.show()
 
+
+    def update_list (self):
+        num_rules = event_bus.num_rules()
+        # Update all 10 entries - if we have enough entries on this page
+        for i in range (0, 10):
+            if i + (self.page_number * 10) >= num_rules:
+                break
+            this_entry = event_bus.event_rules[i + (self.page_number * 10)]
+            self.event_elements['event'][i].setText(str(this_entry[0]))
+            self.event_elements['action'][i].setText(str(this_entry[1]))
+            self.event_elements['options'][i].setText("")
+            self.event_elements['delete'][i].show()
+        
+    # Update entire display
+    def update (self):
+        
+        # Hide all existing
+        self.clear()
+        
+        # First check that we are on a valid page
+        num_entries = event_bus.num_rules()
+        if num_entries < 1:
+            self.page_number = 0
+        else:
+            # num_pages is rounded down and is actually 1 less (index at 0)
+            num_pages = int((num_entries - 1) / 10)
+            if self.page_number > num_pages:
+                self.page_number = num_pages
+        self.show_hide_controls()
+        # update the actual rules
+        self.update_list()
    
     def del_entry (self, entry_id):
         # Delete secondary, then primary
@@ -72,19 +127,34 @@ class EventWindow(QMainWindow):
         if dialog.exec() == QDialog.Accepted:
             #print("Dialog Accepted!")
             selected_data = dialog.get_selected_values()
-            print("Selected Values:")
-            for key, value in selected_data.items():
-                print(f"  {key}: {value}")
-        #else:
-        #    print("Dialog Rejected!")
-        
-        
-        
-#         dialog = EditEventDialog()
-#         if dialog.exec():
-#             node, event = dialog.get_selected_values()
-#             print(f"Selected Node: {node}")
-#             print(f"Selected Event: {event}")
+            event_details = selected_data['event']
+            event_type = device_model.get_type_node(event_details['node'])
+            action_details = selected_data['action']
+            action_type = device_model.get_type_node(action_details['node'])
+#             print("Selected Values:")
+#            for key, value in selected_data.items():
+#                print(f"  {key}: {value}")
+            # Convert response (dict in selected_data) into event objects
+            event_instance = device_model.event_map[event_type] (event_details['node'], {"node": event_details['node'], "event": event_details['event'], "value": event_details['value']})
+            action_instance = device_model.event_map[action_type] (action_details['node'], {"node": action_details['node'], "event": action_details['event'], "value": action_details['value']})
+            event_bus.add_rule(event_instance, action_instance)
+            
+            # Update the GUI
+            self.update()
+            
+            
+    # Show or hide controls based on whether more than 1 page
+    # call this with event_bus.num_events() 
+    def show_hide_controls (self):
+        num_rules = event_bus.num_rules() 
+        if num_rules > 10:
+            self.ui.prevPageButton.show()
+            self.ui.nextPageButton.show()
+            self.ui.pageNumButton.show()
+        else:
+            self.ui.prevPageButton.hide()
+            self.ui.nextPageButton.hide()
+            self.ui.pageNumButton.hide()
         
     def clear (self):
         for i in range (0, 10):
@@ -94,34 +164,6 @@ class EventWindow(QMainWindow):
             self.event_elements['options'][i].setText("")
             self.event_elements['delete'][i].hide()
         
-    # Update list of events
-    def update (self):
-        # Hide all existing
-        self.clear()
-        
-#         num_groups = 0
-#         for group in groups:
-#             wall1_wall = self.builder.walls[group.primary_wall].name
-#             #wall1_edge = self.builder.walls[group.primary_wall].il[group.primary_il].edge
-#             # + 1 more user friendly starting at 1 (consistant with edit)
-#             wall1_edge = group.primary_il.edge +1
-#             wall1_string = f"Primary: {wall1_wall}, edge {wall1_edge}"
-#             # Get type from primary
-#             il_type = f"{group.primary_il.il_type}, {group.primary_il.step}"
-#             
-#             self.il_elements['edge1'][num_groups].setText(wall1_string)
-#             wall2_wall = self.builder.walls[group.secondary_wall].name
-#             wall2_edge = group.secondary_il.edge +1
-#             wall2_string = f"Secondary: {wall2_wall}, edge {wall2_edge}"
-#             self.il_elements['edge2'][num_groups].setText(wall2_string)
-#             
-#             self.il_elements['type'][num_groups].setText(il_type)
-#             self.il_elements['delete'][num_groups].show()
-#             
-#             num_groups += 1
-#         if (parent):
-#             self.parent.update_all_views()
-            
 
     def display (self):
         self.ui.show()

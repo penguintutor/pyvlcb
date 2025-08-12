@@ -5,6 +5,9 @@ class AppEvent:
         self.event_type = event_type
         self.data = data_dict
         
+    def type (self):
+        return "App"
+        
     def get_response(self):
         if "response" in self.data.keys():
             return self.data['response']

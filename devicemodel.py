@@ -10,20 +10,47 @@ from eventbus import EventBus, event_bus
 #from deviceevent import DeviceEvent
 #from guievent import GuiEvent
 from loco import Loco
+#from editeventdialog import EditEventDialog
+from deviceevent import DeviceEvent
+from locoevent import LocoEvent
+from appevent import AppEvent
+from guievent import GuiEvent
+from automateevent import AutomateEvent
+
 
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
     # to react to state changes in the core data.
     model_updated = Signal(str) # Emits device_id when its state changes
     
+    # Map to Classes
+    event_map = {
+        'Device': DeviceEvent,
+        'Loco': LocoEvent,
+        'App': AppEvent,
+        'Gui': GuiEvent,
+        'Automate': AutomateEvent
+        }
 
     def __init__(self):
         super().__init__()
+        
         # dict of nodes indexed by NN
         self.nodes = {}
-        # typically the GUI will have one loco = [0]
+        # typically the GUI will have one active loco = [0]
         # allow more to allow automation
         self.locos = []
+        
+        # Other nodes are stored in here for lookup in menus or eventbus
+        # Every "node" must be added to the device model
+        self.other_nodes = {
+            'App': [],
+            'Gui': [],
+            # 'DeviceEvent': [], # Device are stored in self.nodes
+            # 'Loco': [], # Loco are in self.locos
+            'Automate': []
+        }
+        
         # Subscribe to events from the API layer
         #event_bus.device_event_signal.connect(self._update_device_status)
         #event_bus.gui_event_signal.connect(self._update_layout_status)
@@ -35,6 +62,22 @@ class DeviceModel(QObject):
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
         
+    # Given a node respond with Event type
+    # Eg. device, loco, app, gui, automate (in that order - if duplicate - although should not be duplicates) 
+    def get_type_node (self, node_name):
+        # First lookup own devices
+        for key, this_node in self.nodes.items():
+            if this_node.name == node_name:
+                return "Device"
+        for loco in self.locos:
+            if this_loco.name == node_name:
+                return "Loco"
+        # todo test this
+        for other_event in self.other_nodes:
+            for this_event in other_event:
+                if this_event == node_name:
+                    return this_event.type()
+                
     def get_nodes_names(self):
         #print (f"Nodes {self.nodes}")
         #print (f"Keys {self.nodes.keys()}")

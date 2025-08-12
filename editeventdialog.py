@@ -86,11 +86,22 @@ class EditEventDialog(QDialog):
     def get_selected_values(self):
         """
         Retrieves the currently selected values from all QComboBoxes in the grid.
-        Returns a dictionary where keys are 'rowX_colY' and values are the selected text.
+        Returns a 2D dict using 'event', 'action', 'options'
+        which is a dict of 'node', 'event', 'value'
         """
-        selected_values = {}
-        for key, combo_box in self.selection_comboboxes.items():
-            selected_values[key] = combo_box.currentText()
+        # created empty dictionaries of the 3 columns
+        selected_values = {'event':{}, 'action':{}, 'options': {}}
+        # Currently keys are 'rowX_colY' and values are the selected text.
+        #for key, combo_box in self.selection_comboboxes.items():
+        #    selected_values[key] = combo_box.currentText()
+        selected_values['event']['node'] = self.selection_comboboxes["row0_col0"].currentText()
+        selected_values['event']['event'] = self.selection_comboboxes["row1_col0"].currentText()
+        selected_values['event']['value'] = self.selection_comboboxes["row2_col0"].currentText()
+        selected_values['action']['node'] = self.selection_comboboxes["row0_col1"].currentText()
+        selected_values['action']['event'] = self.selection_comboboxes["row1_col1"].currentText()
+        selected_values['action']['value'] = self.selection_comboboxes["row2_col1"].currentText()
+        # todo
+        # options not yet implemented as it depends upon the action Event
         return selected_values
 
 

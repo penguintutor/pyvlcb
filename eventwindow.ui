@@ -32,7 +32,7 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralwidget">
-   <widget class="QLabel" name="label">
+   <widget class="QLabel" name="windowTitle">
     <property name="geometry">
      <rect>
       <x>30</x>
@@ -595,6 +595,45 @@
     </property>
     <property name="text">
      <string>Add Event</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="prevPageButton">
+    <property name="geometry">
+     <rect>
+      <x>350</x>
+      <y>540</y>
+      <width>31</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>&lt;&lt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="nextPageButton">
+    <property name="geometry">
+     <rect>
+      <x>490</x>
+      <y>540</y>
+      <width>31</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>&gt;&gt;</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pageNumButton">
+    <property name="geometry">
+     <rect>
+      <x>390</x>
+      <y>540</y>
+      <width>88</width>
+      <height>27</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Page 1</string>
     </property>
    </widget>
   </widget>

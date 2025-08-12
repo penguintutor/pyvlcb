@@ -24,6 +24,7 @@ class EventBus(QObject):
     # Each entry contains a list consisting of [event, action]
     event_rules = []
 
+
     _instance = None
 
     def __new__(cls):
@@ -47,7 +48,10 @@ class EventBus(QObject):
             print(f"Warning: Unhandled event type published: {type(event)}")
 
     def add_rule (self, event, action):
-        self.event_rules.append (event, action)
+        self.event_rules.append([event, action])
+        
+    def num_rules (self):
+        return len(self.event_rules)
 
 
 # Access the singleton EventBus
