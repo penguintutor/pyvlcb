@@ -543,6 +543,133 @@
           </item>
          </layout>
         </widget>
+        <widget class="QWidget" name="automateTab">
+         <attribute name="title">
+          <string>Automate</string>
+         </attribute>
+         <widget class="QLabel" name="automationStateLabel">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>10</y>
+            <width>211</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Automation Active</string>
+          </property>
+         </widget>
+         <widget class="QCheckBox" name="automationEnableCheckBox">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>80</y>
+            <width>221</width>
+            <height>23</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Enable / Disable Automation</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="automationSelectedLabel">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>50</y>
+            <width>151</width>
+            <height>17</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Default automation</string>
+          </property>
+         </widget>
+         <widget class="QLabel" name="automationStateLabel_2">
+          <property name="geometry">
+           <rect>
+            <x>20</x>
+            <y>140</y>
+            <width>271</width>
+            <height>31</height>
+           </rect>
+          </property>
+          <property name="font">
+           <font>
+            <pointsize>15</pointsize>
+            <weight>75</weight>
+            <bold>true</bold>
+           </font>
+          </property>
+          <property name="text">
+           <string>Change Automation</string>
+          </property>
+         </widget>
+         <widget class="QComboBox" name="selectAutomationCombo">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>200</y>
+            <width>141</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <item>
+           <property name="text">
+            <string>Default</string>
+           </property>
+          </item>
+          <item>
+           <property name="text">
+            <string>New ...</string>
+           </property>
+          </item>
+         </widget>
+         <widget class="QPushButton" name="automationApplyButton">
+          <property name="geometry">
+           <rect>
+            <x>180</x>
+            <y>200</y>
+            <width>88</width>
+            <height>25</height>
+           </rect>
+          </property>
+          <property name="text">
+           <string>Apply</string>
+          </property>
+         </widget>
+         <widget class="QScrollArea" name="automationLogScroll">
+          <property name="geometry">
+           <rect>
+            <x>10</x>
+            <y>250</y>
+            <width>281</width>
+            <height>441</height>
+           </rect>
+          </property>
+          <property name="widgetResizable">
+           <bool>true</bool>
+          </property>
+          <widget class="QWidget" name="scrollAreaWidgetContents">
+           <property name="geometry">
+            <rect>
+             <x>0</x>
+             <y>0</y>
+             <width>279</width>
+             <height>439</height>
+            </rect>
+           </property>
+          </widget>
+         </widget>
+        </widget>
        </widget>
       </item>
       <item>
@@ -565,7 +692,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">

@@ -135,12 +135,15 @@ class EventWindow(QMainWindow):
 #            for key, value in selected_data.items():
 #                print(f"  {key}: {value}")
             # Convert response (dict in selected_data) into event objects
-            event_instance = device_model.event_map[event_type] (event_details['node'], {"node": event_details['node'], "event": event_details['event'], "value": event_details['value']})
-            action_instance = device_model.event_map[action_type] (action_details['node'], {"node": action_details['node'], "event": action_details['event'], "value": action_details['value']})
-            event_bus.add_rule(event_instance, action_instance)
+            event_instance = device_model.event_map[event_type] ({"node": event_details['node'], "event": event_details['event'], "value": event_details['value']})
+            action_instance = device_model.event_map[action_type] ({"node": action_details['node'], "event": action_details['event'], "value": action_details['value']})
+            print (f"Adding {event_instance} : {action_instance}")
+            # temp is there a problem with action_instance?
+            event_bus.add_rule(event_instance, event_instance)
+            event_bus.save_rules()
             
             # Update the GUI
-            self.update()
+            self.update()            
             
             
     # Show or hide controls based on whether more than 1 page
