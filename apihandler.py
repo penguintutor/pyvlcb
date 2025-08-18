@@ -9,23 +9,20 @@ from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
 from guievent import GuiEvent
 from appevent import AppEvent
+from deviceevent import DeviceEvent
 
 
 # Todo mw is used for layout - can this be decoupled
 # same with mw.control_loco - should that be moved to device_model?
 
 class ApiHandler(QObject):
-    def __init__(self, mw, thread_pool: QThreadPool, url):
+    def __init__(self, thread_pool: QThreadPool, url):
         super().__init__()
         self.threadpool = thread_pool
-        self.mw = mw
         self.url = url
-        # Subscribe to commands from the GUI/App logic
-        #event_bus.set_device_power_command.connect(self._handle_set_power_command)
-        
+       
         # Keep alive timer must run on mainwindow and must be started / stopped using signals
-        
-        
+
         self.debug = False
         
         # Queue to hold commands as they are sent from the queue
@@ -222,6 +219,9 @@ class ApiHandler(QObject):
             
         # pass to console (unparsed)
         event_bus.publish(AppEvent("newdata", {"response":response}))
+        # temp send all as DeviceEvent (is that too much?)
+        # Not implemented here - instead just send relevant events
+        # event_bus.publish(DeviceEvent(response))
         
         # strip date off (don't need except for the log)
         id_date_data = response.split(',',3)
@@ -264,7 +264,7 @@ class ApiHandler(QObject):
                 device_model.add_node(VLCBNode(data_entry['NN'], mode, vlcb_entry.can_id, data_entry['ManufId'], data_entry['ModId'] ,data_entry['Flags']))
                 # Add to Tree View
                 # todo review where / how node_model is updated
-                self.mw.node_model.appendRow(device_model.get_gui_node(data_entry['NN']))
+                #self.mw.node_model.appendRow(device_model.get_gui_node(data_entry['NN']))
             else:
                 # Update existing entry
                 items_changed = device_model.update_node(data_entry['NN'], {'Mode': mode, 'ManfId': data_entry['ManufId'], 'ModId': data_entry['ModId'], 'Flags': data_entry['Flags']})
@@ -326,6 +326,27 @@ class ApiHandler(QObject):
             event_bus.publish(AppEvent("lcd", {}))
             # Start the keepalive timer
             event_bus.publish(AppEvent("keepalive", {}))
+        ## Update events - these need to notify other devices
+        # Accessory On (eg ACON = Acc / ASON = short)
+        # Works on both event codes (eg. ACON) and status codes (eg. ARON)
+        # Uses 'active' True / false
+        elif (ret_opcode in VLCBopcode.accessory_codes['on']):
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            # pass all data into event, but also add additional information
+            data_entry ['node_id'] = data_entry ['NN']
+            data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            data_entry ['active'] = True
+            data_entry ['value'] = "on"
+            #print (f"On code {data_entry}")
+            self.publish_device_event (data_entry)
+        # Accessory Off (eg ACOFF = Acc / ASOF = short)
+        elif (ret_opcode in VLCBopcode.accessory_codes['off']):
+            data_entry = VLCBopcode.parse_data(vlcb_entry.data)
+            data_entry ['node_id'] = data_entry ['NN']
+            data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            data_entry ['value'] = "off"
+            #print (f"Off code {data_entry}")
+            self.publish_device_event (data_entry)
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
             if self.debug:
@@ -333,7 +354,7 @@ class ApiHandler(QObject):
             # Depending upon the error code the data may have different interpretations
             # Stored as Byte1, Byte2, ErrCode - where Byte1,Byte2 may eqal AddrHigh_AddrLow, or
             # may be Byte1 = Session ID, Byte 2 = 0
-            # So only check after looking at the ErrCode
+            # So only check after looking at the ErrCodepublish_device_event 
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # After extracting data publish as an event then let receiving classes process
             event_bus.publish(LocoEvent('ERR', data_entry))
@@ -352,4 +373,9 @@ class ApiHandler(QObject):
     # 3rd phase of discover Read back all stored events in a node (NERD)
     def discover_nerd (self, node_id):
         self.start_request(self.vlcb.discover_nerd(node_id))
+        
+    # Separate method for notifying automation of device events
+    # Searching for this shows which responses send device notify events
+    def publish_device_event (self, data):
+        event_bus.publish(DeviceEvent(data))
         

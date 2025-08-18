@@ -78,6 +78,7 @@ class DeviceModel(QObject):
                 if this_event == node_name:
                     return this_event.type()
                 
+    # Get list of nodes by names
     def get_nodes_names(self):
         #print (f"Nodes {self.nodes}")
         #print (f"Keys {self.nodes.keys()}")
@@ -86,12 +87,32 @@ class DeviceModel(QObject):
             node_list.append(self.nodes[key].name)
         return node_list
     
+
+    
+    # From name to key for DeviceEvents
+    # Key is node_id so returning key will return node_id
     def name_to_key(self, name):
         for key in self.nodes.keys():
-            if self.nodes[key].name == name:
+            # match on either name or string
+            if self.nodes[key].name == name or str(self.nodes[key]) == name:
                 #print (f"name match {name}, key {key}")
                 return key
         return None
+
+    # Based on node_id and evnaame get event_id
+    def evname_to_evid (self, node_id, evname):
+        node = self.nodes[node_id]
+        for key in node.ev.keys():
+            # Allow either event name, or if used in dialog allow __str__ format
+            if node.ev[key].name == evname or str(node.ev[key]) == evname:
+                return key
+        return None
+        
+        
+
+    #def key_to_id (self, key):
+    #    print (f"Key to ID {key}, {self.nodes[key]}")
+    #    return self.nodes[key]
     
     # get events for specified node
     def get_events(self, node):

@@ -60,12 +60,13 @@ class EventWindow(QMainWindow):
             exec ("self.event_elements[\"event\"].append("+f"self.ui.event_{i:02}_Label"+")")
             exec ("self.event_elements[\"action\"].append("+f"self.ui.action_{i:02}_Label"+")")
             exec ("self.event_elements[\"options\"].append("+f"self.ui.options_{i:02}_Label"+")")
-            exec ("self.event_elements[\"delete\"].append("+f"self.ui.delButton_{i:02}"+")")
+            exec ("self.event_elements[\"delete\"].append("+f"self.ui.delButton_{i:02}"+")") 
             
         self.ui.buttonBox.accepted.connect(self.accept)
         
         self.ui.newEventButton.pressed.connect(self.new_event)
         
+        # Connect the del buttons to the del_entry method
         self.ui.delButton_00.pressed.connect(lambda: self.del_entry(0))
         self.ui.delButton_01.pressed.connect(lambda: self.del_entry(1))
         self.ui.delButton_02.pressed.connect(lambda: self.del_entry(2))
@@ -84,6 +85,9 @@ class EventWindow(QMainWindow):
         
         self.ui.show()
 
+    def del_entry(self, rule_id):
+        event_bus.del_entry (rule_id)
+        self.update()
 
     def update_list (self):
         num_rules = event_bus.num_rules()
@@ -116,30 +120,54 @@ class EventWindow(QMainWindow):
         # update the actual rules
         self.update_list()
    
-    def del_entry (self, entry_id):
-        # Delete secondary, then primary
-        #todo remove entry
-        pass
+    #def del_entry (self, entry_id):
+    #    # Delete secondary, then primary
+    #    #todo remove entry
+    #    pass
 
     
     def new_event (self):
         dialog = EditEventDialog()
+        # Create dict with the details 
+        event_dict = {}
+        action_dict = {}
         if dialog.exec() == QDialog.Accepted:
             #print("Dialog Accepted!")
             selected_data = dialog.get_selected_values()
             event_details = selected_data['event']
             event_type = device_model.get_type_node(event_details['node'])
+            # For Device the node name / event name may be user friendly name - so instead get node_id and event_id
+            if event_type == "Device":
+                event_dict['node_id'] = device_model.name_to_key(event_details['node'])
+#                 print (f"This {event_dict['node_id']}")
+#                 print (f"Event dict {event_dict}")
+#                 print (f"Event details {event_details}")
+                event_dict['event_id'] = device_model.evname_to_evid(event_dict['node_id'], event_details['event'])
+            # Add reset of details
+            event_dict["node"] = event_details['node']
+            event_dict["event"] = event_details['event']
+            event_dict["value"] = event_details['value']
+             
+            # Action Details
             action_details = selected_data['action']
             action_type = device_model.get_type_node(action_details['node'])
+            if action_type == "Device":
+                action_dict['node_id'] = device_model.name_to_key(action_details['node'])
+                action_dict['event_id'] = device_model.evname_to_evid(action_dict['node_id'], action_details['event'])
+            # Add reset of details
+            action_dict["node"] = action_details['node']
+            action_dict["event"] = action_details['event']
+            action_dict["value"] = action_details['value']
+            
 #             print("Selected Values:")
 #            for key, value in selected_data.items():
 #                print(f"  {key}: {value}")
             # Convert response (dict in selected_data) into event objects
-            event_instance = device_model.event_map[event_type] ({"node": event_details['node'], "event": event_details['event'], "value": event_details['value']})
-            action_instance = device_model.event_map[action_type] ({"node": action_details['node'], "event": action_details['event'], "value": action_details['value']})
-            print (f"Adding {event_instance} : {action_instance}")
+            event_instance = device_model.event_map[event_type] (event_dict)
+            action_instance = device_model.event_map[action_type] (action_dict)
+            #print (f"Adding {event_instance} : {action_instance}")
             # temp is there a problem with action_instance?
-            event_bus.add_rule(event_instance, event_instance)
+            event_bus.add_rule(event_instance, action_instance)
             event_bus.save_rules()
             
             # Update the GUI

@@ -36,6 +36,14 @@ class EventBus(QObject):
     loco_event_signal = Signal(LocoEvent)
     automate_event_signal = Signal(AutomateEvent)
     
+    # Is automation enabled. If not then don't apply rules.
+    # If excessive calls (eg. excessive recursion) then stop automatically
+    automation_enabled = True
+    
+    # Track number of automation events
+    automation_count = 0
+    max_automation_count = 100
+    
     # Store registered event forwarding rules
     # Each entry contains a list consisting of [event, action]
     event_rules = []
@@ -57,8 +65,19 @@ class EventBus(QObject):
             cls._instance = super(EventBus, cls).__new__(cls)
         return cls._instance
 
+    # Publish is used to send an event notification
+    # It can be called by other classes (eg. GUI notification)
+    # It is also called for all CBUS events
+    # It first calls apply_rules which will trigger an rule events
+    # then broadcsts to the appropriate signal
     # To register an event publish with the appropriate event type
     def publish(self, event):
+        # Apply automation rules
+        # (includes internal mapping - eg. from CBUS to gui)
+        if self.automation_enabled:
+            self.apply_rules (event)
+        
+        # Broadcast the event
         if isinstance(event, AppEvent):
             self.app_event_signal.emit(event)
         elif isinstance(event, GuiEvent):
@@ -71,6 +90,38 @@ class EventBus(QObject):
             self.automate_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
+
+    def del_entry (self, rule_id):
+        del self.event_rules[rule_id]
+
+    # Apply automation rules based on the event
+    def apply_rules (self, event):
+        # Add number of events
+        self.automation_count += 1
+        #print (f"Num automation {self.automation_count}")
+        # Have we reached maximum
+        if self.automation_count >= self.max_automation_count:
+            print ("*** Warning automation events exceeded ***")
+            # Todo call a gui event to notify userrr
+            self.automation_enabled = False
+            # Allowed to continue for this event, but then stop
+        
+        # Get the event type to save making multiple calls to type method
+        event_type = type(event)
+        #print (f"Applying rules for {event}")
+        # Apply across all rules
+        for rule in self.event_rules:
+            # rule[0] is the event we are monitoring for
+            if isinstance(rule[0], event_type):
+                #print (f"Rule matches type {event_type} - {rule[0]}")
+                # Matches same type pass to the event to see if this matches
+                # This allows each event type to look for certain features
+                if rule[0].matches(event):
+                    # Print number automation events in queue along with details of matching event
+                    print (f"{self.automation_count} - Match {event}")
+                    self.publish (event)
+        # Decrement once rules applied
+        self.automation_count -= 1
 
     def add_rule (self, event, action):
         #print (f"Event {event.__class__.__name__} : Action {action.__class__.__name__}")

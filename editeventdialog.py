@@ -1,7 +1,7 @@
 import sys
 from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QGridLayout,
-    QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget
+    QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget, QMessageBox
 )
 from PySide6.QtCore import Qt
 from devicemodel import device_model
@@ -74,7 +74,7 @@ class EditEventDialog(QDialog):
         button_layout.addStretch(1) # Pushes buttons to the right
 
         ok_button = QPushButton("OK")
-        ok_button.clicked.connect(self.accept) # Connect OK button to accept dialog
+        ok_button.clicked.connect(self.validate) # Connect OK button to accept dialog
         button_layout.addWidget(ok_button)
 
         cancel_button = QPushButton("Cancel")
@@ -82,6 +82,34 @@ class EditEventDialog(QDialog):
         button_layout.addWidget(cancel_button)
 
         main_layout.addLayout(button_layout) # Add the button layout to the main layout
+
+    # Validate before accepting dialog
+    def validate(self):
+        # If node missing (event will default to first event so always filled in
+        # Todo still need to remove any nodes that don't have events
+        if (
+            self.selection_comboboxes["row0_col0"].currentText() == "Select Node" or
+            self.selection_comboboxes["row0_col1"].currentText() == "Select Node"
+            ):
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle ("Missing details")
+            msg_box.setText ("Two nodes must be selected")
+            msg_box.exec()
+            return
+        # Very basic check to avoid circular rules
+        # Only detects obvious ones - send yes in response to yes
+        # Still allows send no in response to yes (though not recommended except with a timer first)
+        elif (
+            self.selection_comboboxes["row0_col0"].currentText() == self.selection_comboboxes["row0_col1"].currentText() and
+            self.selection_comboboxes["row1_col0"].currentText() == self.selection_comboboxes["row1_col1"].currentText() and
+            self.selection_comboboxes["row2_col0"].currentText() == self.selection_comboboxes["row2_col1"].currentText()
+            ):
+            msg_box = QMessageBox()
+            msg_box.setWindowTitle ("Circular rule")
+            msg_box.setText ("Setting event and action to the same will result in a circular rule.")
+            msg_box.exec()
+            return
+        self.accept()
 
     def get_selected_values(self):
         """
@@ -128,8 +156,8 @@ class EditEventDialog(QDialog):
         if selected_event == "NA" or selected_event == "":
             self.selection_comboboxes["row2_col0"].addItem("NA")
         else:
-            self.selection_comboboxes["row2_col0"].addItem("On")
-            self.selection_comboboxes["row2_col0"].addItem("Off")
+            self.selection_comboboxes["row2_col0"].addItem("on")
+            self.selection_comboboxes["row2_col0"].addItem("off")
         
 
     def update_action_combo(self, index):
@@ -155,6 +183,6 @@ class EditEventDialog(QDialog):
         if selected_event == "NA" or selected_event == "":
             self.selection_comboboxes["row2_col1"].addItem("NA")
         else:
-            self.selection_comboboxes["row2_col1"].addItem("On")
-            self.selection_comboboxes["row2_col1"].addItem("Off")
+            self.selection_comboboxes["row2_col1"].addItem("on")
+            self.selection_comboboxes["row2_col1"].addItem("off")
         

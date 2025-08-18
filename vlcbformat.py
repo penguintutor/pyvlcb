@@ -105,7 +105,7 @@ class VLCBopcode:
         '84':  {'opc': 'QCVS', 'title': 'Read CV', 'format': 'Session,CVHigh_CVLow,Mode', 'minpri': 2, 'comment': 'This command is used exclusively with service mode.; Sent by the cab to the command station in order to read a CV value. The command station shall respond with a PCVS message containing the value read, or SSTAT if the CV cannot be read.'},
         '85':  {'opc': 'PCVS', 'title': 'Report CV', 'format': 'Session,CVHigh_CVLow,CVVal', 'minpri': 2, 'comment': '<Dat1> is the session number of the cab; <Dat2> is the MSB # of the CV read (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV read; <Dat4> is the read value; This command is used exclusively with service mode.; Sent by the command station to report a read CV.'},
         '90':  {'opc': 'ACON', 'title': 'Accessory ON', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?ON? event using the full event number of 4 bytes. (long event)'},
-        '91':  {'opc': 'ACOFF', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?OFF? event using the full event number of 4 bytes. (long event)'},
+        '91':  {'opc': 'ACOF', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?OFF? event using the full event number of 4 bytes. (long event)'},
         '92':  {'opc': 'AREQ', 'title': 'Accessory Request Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number (MS WORD of the full event #); <Dat2> is the low byte of the node number (MS WORD of the full event #); <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates a ?request? event using the full event number of 4 bytes. (long event); A request event is used to elicit a status response from a producer when it is required to know the state of the producer without producing an ON or OFF event and to trigger an event from a combi node'},
         '93':  {'opc': 'ARON', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': 'Indicates an ?ON? response event. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
         '94':  {'opc': 'AROF', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ‘OFF’ response event. A response event is a reply to a status request; (AREQ) without producing an ON or OFF event'},
@@ -243,6 +243,30 @@ class VLCBopcode:
             "Error": [4, "hex"]            # Error code
         }
     
+    # Accessory Codes - provided for convenient lookup
+    accessory_codes = {
+        'on': [
+            'ACON',
+            'ASON',
+            'ACON1',
+            'ACON2',
+            'ACON3',
+            'ASON1',
+            'ASON2',
+            'ASON3'
+            ],
+        'off': [
+            'ACOF',
+            'ASOF',
+            'ACOF1',
+            'ACOF2',
+            'ACOF3',
+            'ASOF1',
+            'ASOF2',
+            'ASOF3'
+            ]
+        }
+    
     # Shorten op-code (remove extra characters)
     # Used to allow methods to be used if mnemonic is included in op-code
     # Or you could pass the entire data section
@@ -285,12 +309,15 @@ class VLCBopcode:
         data = data[2:]
 
         #print (f"Data {data}")
-        data_parsed = {}
+        # Include opcode in data if required for future use
+        data_parsed = {'opid': opcode}
         # check valid opcode (if not then empty format)
         if not opcode in VLCBopcode.opcodes.keys():
             format = ""
+            data_parsed['opcode'] = "UNKNOWN"
         else:
             format = VLCBopcode.opcodes[opcode]['format']
+            data_parsed['opcode'] = VLCBopcode.opcodes[opcode]['opc']
         format_fields = format.split(',')
         # Remove data as added to dict so when reach 0 we are complete
         # parse each of the fields
