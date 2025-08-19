@@ -56,6 +56,7 @@ class ConsoleWindowUI(QMainWindow):
         self.command_changed()
         
     def app_update (self, app_event):
+        #print (f"App Event {app_event.data}")
         if app_event.event_type == "newdata":
             self.add_log(app_event.get_response())
             self.update_log()

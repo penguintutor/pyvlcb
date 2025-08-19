@@ -12,9 +12,6 @@ from appevent import AppEvent
 from deviceevent import DeviceEvent
 
 
-# Todo mw is used for layout - can this be decoupled
-# same with mw.control_loco - should that be moved to device_model?
-
 class ApiHandler(QObject):
     def __init__(self, thread_pool: QThreadPool, url):
         super().__init__()
@@ -47,10 +44,15 @@ class ApiHandler(QObject):
         
         # Get events from the event_bus
         #event_bus.gui_event_signal.connect(self.gui_event)
+        event_bus.device_event_signal.connect(self.send_event)
         
         # VLCB and node creation
         self.vlcb = VLCB(self.pc_can_id)
-
+        
+    # Receives event from event_bus and issues start_request
+    def send_event (self, event):
+        self.start_request(self.vlcb.accessory_command(event.get_node_id(), event.get_event_id(), event.get_value()))
+        
 #     def gui_event (self, gui_event):
 #         # Is the event a start request - if so handle the request
 #         if gui_event.event_type == "start_request":
@@ -75,7 +77,7 @@ class ApiHandler(QObject):
         # Otherwise pop the entry
         return self.send_queue.pop(0)
     
-    # Places request onwait list
+    # Places request on wait list
     # type is what kind of command to prepend with - eg. send (for cbus) or server etc.
     # comma is added automatically
     # set to "" if already formatted
@@ -123,6 +125,10 @@ class ApiHandler(QObject):
     def thread_getupdate(self):
         #Only allow one thread at a time
         self.update_in_progress = True
+        
+        # debug -
+        #if len(self.send_queue) > 0:
+        #    print (f"Queue {self.send_queue}")
                
         # see if there is a specific request
         request = self.get_request()
@@ -334,19 +340,32 @@ class ApiHandler(QObject):
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             # pass all data into event, but also add additional information
             data_entry ['node_id'] = data_entry ['NN']
-            data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            # Long codes (ACON) use Event Number, Short codes (ASON) use Device Number
+            if 'EnHigh_EnLow' in data_entry:
+                data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            elif 'DNHigh_DNLow' in data_entry:
+                data_entry ['event_id'] = data_entry ['DNHigh_DNLow']
+            # Catch unknown
+            else:
+                data_entry['event_id'] = 0
             data_entry ['active'] = True
             data_entry ['value'] = "on"
             #print (f"On code {data_entry}")
-            self.publish_device_event (data_entry)
+            self.consume_device_event (data_entry)
         # Accessory Off (eg ACOFF = Acc / ASOF = short)
         elif (ret_opcode in VLCBopcode.accessory_codes['off']):
             data_entry = VLCBopcode.parse_data(vlcb_entry.data)
             data_entry ['node_id'] = data_entry ['NN']
-            data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            if 'EnHigh_EnLow' in data_entry:
+                data_entry ['event_id'] = data_entry ['EnHigh_EnLow']
+            elif 'DNHigh_DNLow' in data_entry:
+                data_entry ['event_id'] = data_entry ['DNHigh_DNLow']
+            # Catch unknown
+            else:
+                data_entry['event_id'] = 0
             data_entry ['value'] = "off"
             #print (f"Off code {data_entry}")
-            self.publish_device_event (data_entry)
+            self.consume_device_event (data_entry)
         # ERR is error from DCC controller - eg. problem aquiring loco
         elif ret_opcode == 'ERR':
             if self.debug:
@@ -374,8 +393,8 @@ class ApiHandler(QObject):
     def discover_nerd (self, node_id):
         self.start_request(self.vlcb.discover_nerd(node_id))
         
-    # Separate method for notifying automation of device events
-    # Searching for this shows which responses send device notify events
-    def publish_device_event (self, data):
-        event_bus.publish(DeviceEvent(data))
+    # Separate method for notifying automation of incoming device events
+    # Searching for this shows which responses send device notify events to automation
+    def consume_device_event (self, data):
+        event_bus.consume(DeviceEvent(data))
         

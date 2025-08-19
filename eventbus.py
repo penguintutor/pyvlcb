@@ -65,18 +65,20 @@ class EventBus(QObject):
             cls._instance = super(EventBus, cls).__new__(cls)
         return cls._instance
 
-    # Publish is used to send an event notification
+    # Publish is used to send an event notification which originates in the application
     # It can be called by other classes (eg. GUI notification)
-    # It is also called for all CBUS events
     # It first calls apply_rules which will trigger an rule events
     # then broadcsts to the appropriate signal
     # To register an event publish with the appropriate event type
     def publish(self, event):
-        # Apply automation rules
-        # (includes internal mapping - eg. from CBUS to gui)
-        if self.automation_enabled:
-            self.apply_rules (event)
+        # Apply automation rules by consuming the input
+        self.consume(event)
+        # broadcast the signal
+        self.broadcast(event)
         
+    
+    # Broadcast signal
+    def broadcast(self, event):
         # Broadcast the event
         if isinstance(event, AppEvent):
             self.app_event_signal.emit(event)
@@ -90,6 +92,15 @@ class EventBus(QObject):
             self.automate_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
+        
+    # Consume is used to handle incoming events
+    # It does not publish a new event
+    # Called directly from CBUS events, or as part of publish to act as a consumer
+    def consume(self, event):
+        # Apply automation rules
+        # (includes internal mapping - eg. from CBUS to gui)
+        if self.automation_enabled:
+            self.apply_rules (event)
 
     def del_entry (self, rule_id):
         del self.event_rules[rule_id]
@@ -110,7 +121,9 @@ class EventBus(QObject):
         event_type = type(event)
         #print (f"Applying rules for {event}")
         # Apply across all rules
+        #print (f"Event {event}")
         for rule in self.event_rules:
+            #print (f"Event rules {self.event_rules}")
             # rule[0] is the event we are monitoring for
             if isinstance(rule[0], event_type):
                 #print (f"Rule matches type {event_type} - {rule[0]}")
@@ -118,8 +131,11 @@ class EventBus(QObject):
                 # This allows each event type to look for certain features
                 if rule[0].matches(event):
                     # Print number automation events in queue along with details of matching event
-                    print (f"{self.automation_count} - Match {event}")
-                    self.publish (event)
+                    #print (f"{self.automation_count} - Match {event}")
+                    #self.publish (rule[1])
+                    # Broadcast rather than publish
+                    # Automation will be received from the incoming deviceevent
+                    self.broadcast (rule[1])
         # Decrement once rules applied
         self.automation_count -= 1
 

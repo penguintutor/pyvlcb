@@ -87,6 +87,7 @@ class EventWindow(QMainWindow):
 
     def del_entry(self, rule_id):
         event_bus.del_entry (rule_id)
+        event_bus.save_rules()
         self.update()
 
     def update_list (self):
@@ -120,12 +121,6 @@ class EventWindow(QMainWindow):
         # update the actual rules
         self.update_list()
    
-    #def del_entry (self, entry_id):
-    #    # Delete secondary, then primary
-    #    #todo remove entry
-    #    pass
-
-    
     def new_event (self):
         dialog = EditEventDialog()
         # Create dict with the details 

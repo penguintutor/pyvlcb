@@ -23,8 +23,10 @@ basedir = os.path.dirname(__file__)
 # Layout Display is from the loader to interact use
 # self.ui.layoutLabel
 
+# These are default files - ability to change in future
 layout_file = "layout.json"
 layout_objs_file = "layoutobjects.json"
+automation_file = "automation.json"
 
 app_title = "VLCB App"
 
@@ -144,7 +146,9 @@ class MainWindowUI(QMainWindow):
         self.control_loco = ControlLoco()
         event_bus.app_event_signal.connect(self.app_event)
         #event_bus.gui_event_signal.connect(self.gui_event)
-                
+        # automation_file 
+        event_bus.load_rules(os.path.join(basedir, automation_file))
+        
         # Load layout background image
         self.ui.layoutLabel.load_image(self)
         # and UI objects
@@ -453,14 +457,17 @@ class MainWindowUI(QMainWindow):
     
     def ev_clicked_off (self):
         # None selected (shouldn't normally be the case)
+        # selected_ev 0=node, 1=evid, 2=value
         if self.selected_ev == None:
             return
-        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], False))
+        #print (f"Selected {self.selected_ev}")
+        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[1], False))
         
     def ev_clicked_on (self):
         if self.selected_ev == None:
             return
-        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[2], True))
+        #print (f"Selected {self.selected_ev}")
+        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[1], True))
 
         
     # Have the node table show the node information
