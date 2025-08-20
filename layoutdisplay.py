@@ -31,6 +31,7 @@ class LayoutDisplay(QLabel):
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
 
+        self.guiobjects = []
         self.buttons = []
         self.labels = []
         
@@ -138,7 +139,26 @@ class LayoutDisplay(QLabel):
     def mousePressEvent(self, event: QMouseEvent):
         if self.mode == "edit":
             self.editMousePress (event)
-        
+        else:
+            self.controlMousePress (event)
+    
+    # Mouse press whilst in control mode - if click on object then typically create an AppEvent
+    def controlMousePress  (self, event: QMouseEvent):
+        if event.button() == Qt.MouseButton.LeftButton:
+            mouse_pos = event.position().toPoint()
+            click_pos = self.pixel_to_percent(mouse_pos)
+            # Test all buttons for click, if multiple hit then use one closest
+            self.selected = self.nearestToClick(click_pos)
+            if self.selected == None:
+                return
+            #print (f"{self.selected}")
+            self.selected.controlButtonClick()
+            #print(f"Mouse Left Clicked at: {self.last_mouse_pos.x()}, {self.last_mouse_pos.y()}")
+        elif event.button() == Qt.MouseButton.RightButton:
+            #print(f"Mouse Right Clicked at: {event.position().x()}, {event.position().y()}")
+            pass
+    
+    # Mouse press in edit mode
     def editMousePress  (self, event: QMouseEvent):
         if event.button() == Qt.MouseButton.LeftButton:
             mouse_pos = event.position().toPoint()
@@ -184,7 +204,8 @@ class LayoutDisplay(QLabel):
         return nearest_object
                     
     def mouseMoveEvent(self, event: QMouseEvent):
-        if self.selected != None and event.buttons() & Qt.MouseButton.LeftButton:
+        # Drag event
+        if self.selected != None and self.mode == "edit" and event.buttons() & Qt.MouseButton.LeftButton:
             # Set move cursor
             self.cursor.setShape(Qt.DragMoveCursor)
             self.setCursor(self.cursor)

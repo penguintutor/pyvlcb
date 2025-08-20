@@ -339,6 +339,9 @@ class MainWindowUI(QMainWindow):
         func_index = combo + (10 * tab)
         #self.control_loco.function_pressed(func_index)
         status = self.control_loco.get_function_status(func_index)
+        # If no status then ignore
+        if status == None:
+            return
         # If trigger then button should be activate:
         if status[1] == "trigger":
             self.loco_func_trigger (func_index)

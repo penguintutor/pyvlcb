@@ -37,6 +37,10 @@ class LayoutLabel (LayoutObject):
             self.font = "LiberationSans-Bold"
 
     
+    # Called when clicked and layout in control mode
+    def controlButtonClick(self):
+        pass
+    
     # Returns as a nested dictionary ready to save
     def to_dict (self):
         return {
@@ -77,14 +81,15 @@ class LayoutLabel (LayoutObject):
     # note that distance is still scalar distance from center - even if more to one side (distance from center)
     # click_pos is a percentage - same as dimensions of label
     def is_hit (self, click_pos):
-        #print (f"Click {click_pos}, Label {self.pos}, size {self.size}")
+        #print (f"Checking for click {click_pos}, Label {self.pos}, size {self.size}")
         # check for hit first
         if (
             click_pos[0] >= self.pos[0] and
             click_pos[0] <= self.pos[0] + self.size[0] and
             click_pos[1] >= self.pos[1] and
             click_pos[1] <= self.pos[1] + self.size[1]
-            ):        
+            ):
+            #print (f"Click {click_pos}, Label {self.pos}, size {self.size}")
             return self.distance (click_pos)
         else:
             return -1

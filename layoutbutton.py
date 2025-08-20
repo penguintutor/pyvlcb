@@ -35,6 +35,10 @@ class LayoutButton (LayoutObject):
         else:
             self.size = (4, 4)
 
+    # Called when clicked and layout in control mode
+    def controlButtonClick(self):
+        pass
+
     # Returns as a nested dictionary ready to save
     def to_dict (self):
         return {
