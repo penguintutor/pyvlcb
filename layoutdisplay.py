@@ -2,6 +2,8 @@
 # and then other buttons etc.
 # This is a sbuclass of a QLabel class (which is used to house the image)
 
+# The components that are placed on the layoutdisplay are based on guiobjects - which in turn are layoutobjects
+
 # This is ui.layoutLabel
 
 import sys
@@ -12,6 +14,7 @@ from PySide6.QtCore import Qt, QPoint, QSize
 from layout import Layout
 from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
+from guiobject import GuiObject
 
 class LayoutDisplay(QLabel):
     def __init__(self, parent):
@@ -32,11 +35,18 @@ class LayoutDisplay(QLabel):
         self.canvas_size = QSize(200, 200)
 
         self.guiobjects = []
+        # todo - move buttons and labels into guiobjects
         self.buttons = []
         self.labels = []
         
         # Mode is control or edit
         self.mode = "control"
+        
+        # Testing
+        self.guiobjects.append(GuiObject('point', 'Point 1', {}))
+        
+    def add_gui_device (self, device_type, device_name):
+        self.guiobjects.append(GuiObject(device_type, device_name, {}))
         
     # Here pos is optional so it's moved to the end
     def add_label (self, label_id, label_type, settings, pos=(5,5)):
@@ -44,6 +54,15 @@ class LayoutDisplay(QLabel):
         
     def add_button (self, button_id, button_type, settings, pos=(5,5)):
         self.labels.append (LayoutButton(self, pos, button_id, button_type, settings))
+        
+    def gui_object_names (self):
+        #print (f"GUI objects {self.guiobjects}")
+        return_list = []
+        for object in self.guiobjects:
+            return_list.append(object.name)
+        #print (f"List {return_list}")
+        return return_list
+    
         
     def paintEvent (self, event):
         super().paintEvent(event)

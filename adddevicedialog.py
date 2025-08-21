@@ -12,11 +12,10 @@ from PySide6.QtWidgets import (
 )
 from devicemodel import device_model
 
-class AddLabelDialog(QDialog):
-    def __init__(self, object_names, parent=None):
+class AddDeviceDialog(QDialog):
+    def __init__(self, parent=None):
         super().__init__(parent)
-        self.object_names = object_names
-        self.setWindowTitle("New Label")
+        self.setWindowTitle("New Device")
         self.setGeometry(200, 200, 300, 150)
         
         # ID field is usually updated based on label text, but if user changes then no longer track
@@ -31,29 +30,20 @@ class AddLabelDialog(QDialog):
         
         # Parent (GuiDevice)
         device_layout = QHBoxLayout()
-        device_label = QLabel("Device:")
+        device_label = QLabel("Type:")
         self.device_combo = QComboBox()
-        self.device_combo.addItem("Select device")
-        self.device_combo.addItems(self.object_names)
+        self.device_combo.addItems(["point","toggle"])
         device_layout.addWidget(device_label)
         device_layout.addWidget(self.device_combo)
         main_layout.addLayout(device_layout)
         
         # Label Text
-        node_layout = QHBoxLayout()
-        node_label = QLabel("Label Text:")
-        self.node_label_textedit = QLineEdit()
-        node_layout.addWidget(node_label)
-        node_layout.addWidget(self.node_label_textedit)
-        main_layout.addLayout(node_layout)
-
-        # Name layout
-        id_layout = QHBoxLayout()
-        id_label = QLabel("Label ID:")
-        self.node_id_textedit = QLineEdit()
-        id_layout.addWidget(id_label)
-        id_layout.addWidget(self.node_id_textedit)
-        main_layout.addLayout(id_layout)
+        name_layout = QHBoxLayout()
+        name_label = QLabel("Label Text:")
+        self.name_label_textedit = QLineEdit()
+        name_layout.addWidget(name_label)
+        name_layout.addWidget(self.name_label_textedit)
+        main_layout.addLayout(name_layout)
 
         # Dialog buttons (OK, Cancel)
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -63,10 +53,6 @@ class AddLabelDialog(QDialog):
 
         self.setLayout(main_layout)
         
-        # Connect signals (to autocreate node_id)
-        self.node_label_textedit.textChanged.connect(self.on_label_text_changed)
-        # Connect textEdited for node_id_textedit to detect user modification
-        self.node_id_textedit.textEdited.connect(self.on_id_text_edited)
         
     def on_label_text_changed(self, text):
         # Slot to handle text changes in self.node_label_textedit.
@@ -85,6 +71,5 @@ class AddLabelDialog(QDialog):
     def get_selected_values(self):
         # Returns the selected node and event.
         gui_device = self.device_combo.currentText()
-        node_text = self.node_label_textedit.text()
-        id_text = self.node_id_textedit.text()
-        return [gui_device, id_text, node_text]
+        name_text = self.name_label_textedit.text()
+        return [gui_device, name_text]

@@ -13,6 +13,7 @@ from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
 from eventwindow import EventWindow
+from adddevicedialog import AddDeviceDialog
 from addlabeldialog import AddLabelDialog
 from addbuttondialog import AddButtonDialog
 
@@ -103,6 +104,7 @@ class MainWindowUI(QMainWindow):
         #self.ui.menuEditLayout.setVisible(False)
         self.ui.menuEditLayoutAction = self.ui.menuEditLayout.menuAction()
         self.ui.menuEditLayoutAction.setVisible(False)
+        self.ui.actionAddDevice.triggered.connect(self.add_device_dialog)
         self.ui.actionAddLabel.triggered.connect(self.add_label_dialog)
         self.ui.actionAddButton.triggered.connect(self.add_button_dialog)
         
@@ -171,7 +173,6 @@ class MainWindowUI(QMainWindow):
         #print (f"LD {self.ui.layoutLabel}")
         #self.ui.layoutLabel.test ("new message")
         
-    
     # Edit events associations between different objects
     def events_edit (self):
         if self.event_window == None:
@@ -182,10 +183,18 @@ class MainWindowUI(QMainWindow):
     # Edit settings
     def settings (self):
         pass
-        
+    
+    def add_device_dialog (self):
+        dialog = AddDeviceDialog()
+        if dialog.exec():
+            # response = id, text
+            response = dialog.get_selected_values()
+            #print(f"Selected value: {text}")
+            # The first "text" is that it's a text style label (allows flexibility for future)
+            self.ui.layoutLabel.add_gui_device(response[0], response[1])
         
     def add_label_dialog (self):
-        dialog = AddLabelDialog()
+        dialog = AddLabelDialog(self.ui.layoutLabel.gui_object_names())
         if dialog.exec():
             # response = id, text
             response = dialog.get_selected_values()
@@ -194,7 +203,9 @@ class MainWindowUI(QMainWindow):
             self.ui.layoutLabel.add_label(response[0], "text", {"text":response[1]})
         
     def add_button_dialog (self):
-        dialog = AddButtonDialog()
+        #print (f"Label {self.ui.layoutLabel}")
+        #print (f"Obj names {self.ui.layoutLabel.gui_object_names()}")
+        dialog = AddButtonDialog(self.ui.layoutLabel.gui_object_names())
         if dialog.exec():
             # response = id, button_type
             response = dialog.get_selected_values()

@@ -13,16 +13,29 @@ from PySide6.QtWidgets import (
 from devicemodel import device_model
 
 class AddButtonDialog(QDialog):
-    def __init__(self, parent=None):
+    def __init__(self, object_names, parent=None):
         super().__init__(parent)
         self.setWindowTitle("New Button")
         self.setGeometry(200, 200, 300, 150)
+        self.object_names = object_names
+        
+        #print (f"Parent {parent}")
 
         self.init_ui()
 
     def init_ui(self):
         # Main layout
         main_layout = QVBoxLayout()
+        
+        # Parent (GuiDevice)
+        device_layout = QHBoxLayout()
+        device_label = QLabel("Device:")
+        self.device_combo = QComboBox()
+        self.device_combo.addItem("Select device")
+        self.device_combo.addItems(self.object_names)
+        device_layout.addWidget(device_label)
+        device_layout.addWidget(self.device_combo)
+        main_layout.addLayout(device_layout)
         
         # Button type
         type_layout = QHBoxLayout()
@@ -52,6 +65,7 @@ class AddButtonDialog(QDialog):
 
     def get_selected_values(self):
         # Returns the selected node and event.
+        gui_device = self.device_combo.currentText()
         selected_type = self.type_combo.currentText()
         id_text = self.node_id_textedit.text()
-        return [id_text, selected_type]
+        return [gui_device, id_text, selected_type]

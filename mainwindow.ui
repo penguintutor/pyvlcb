@@ -692,7 +692,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -726,6 +726,7 @@
     <property name="title">
      <string>Edit Layout</string>
     </property>
+    <addaction name="actionAddDevice"/>
     <addaction name="actionAddLabel"/>
     <addaction name="actionAddButton"/>
    </widget>
@@ -779,6 +780,11 @@
   <action name="actionEvents">
    <property name="text">
     <string>Event Manager</string>
+   </property>
+  </action>
+  <action name="actionAddDevice">
+   <property name="text">
+    <string>Add Device</string>
    </property>
   </action>
  </widget>

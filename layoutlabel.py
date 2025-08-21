@@ -1,5 +1,6 @@
 # LayoutLabel
 # displays a text label or similar
+# Change does not depend on state - but clicking will often result in a toggle
 
 
 import sys
