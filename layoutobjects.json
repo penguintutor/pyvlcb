@@ -1,34 +1,40 @@
 [
     {
-        "object": "button",
-        "pos": [
-            33.170731707317074,
-            32.15130023640662
-        ],
-        "id": "",
-        "button_type": "circle",
-        "settings": {}
-    },
-    {
-        "object": "button",
-        "pos": [
-            33.4959349593496,
-            39.00709219858156
-        ],
-        "id": "2",
-        "button_type": "circle",
+        "object": "gui",
+        "type": "point",
+        "name": "Point 1",
         "settings": {}
     },
     {
         "object": "label",
-        "id": "point_1_label",
+        "guiobject": "Point 1",
         "pos": [
-            34.63414634146341,
-            24.822695035460992
+            35.77235772357724,
+            26.24113475177305
         ],
         "label_type": "text",
         "settings": {
-            "text": "point 1"
+            "text": "Point 1"
         }
+    },
+    {
+        "object": "button",
+        "guiobject": "Point 1",
+        "pos": [
+            32.84552845528455,
+            31.914893617021278
+        ],
+        "button_type": "circle",
+        "settings": {}
+    },
+    {
+        "object": "button",
+        "guiobject": "Point 1",
+        "pos": [
+            33.82113821138211,
+            38.297872340425535
+        ],
+        "button_type": "circle",
+        "settings": {}
     }
 ]

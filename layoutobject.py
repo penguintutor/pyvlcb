@@ -10,11 +10,13 @@ from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainW
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
 
+# Note the parent is the parent of the gui where it's displayed
+# So not guiobjects which typically owns these, but typically LayoutDisplay
 class LayoutObject:
-    def __init__ (self, parent, pos, id):
+    def __init__ (self, parent, pos):
         self.parent = parent
         self.pos = pos # Pos is % of position of image
-        self.id = id
+        #self.id = id
         
     # Return position as pixels
     # Needs to consider that pixmap is different to label size

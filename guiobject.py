@@ -2,9 +2,16 @@
 # For example a point which has two buttons and a label
 # Also maintains state of device (as received by events) and updates
 # layout objects
+
+from layoutlabel import LayoutLabel
+from layoutbutton import LayoutButton
+
 class GuiObject:
     # object_type - eg. "point" (two buttons to select between), "toggle" (toggle can be used for lights etc. all buttons toggle)
-    def __init__(self, object_type, name, data_dict):
+    def __init__(self, parent, object_type, name, data_dict):
+        # parent is the gui object (Layout Display)
+        # which is passed to LayoutObjects
+        self.parent = parent
         self.object_type = object_type
         self.name = name
         self.data = data_dict
@@ -25,11 +32,62 @@ class GuiObject:
         
     def type (self):
         return object_type
+    
+    def get_save_objects(self):
+        data_list = [
+                {
+                    'object': "gui",
+                    'type': self.object_type,
+                    'name': self.name,
+                    'settings': self.data
+                }
+            ]
+        # Gather all objects into a data_list
+        for button in self.buttons:
+            data_list.append(button.to_dict(self.name))
+        for label in self.labels:
+            data_list.append(label.to_dict(self.name))
+        return data_list
+    
+    def nearestToClick(self, click_pos, types="all"):
+        nearest_object = None
+        # set distance to a value far beyond any reasonable range (1000)
+        # saves needing to test for a null value
+        nearest_distance = 1000
+        if types == "button" or types=="all":
+            for button in self.buttons:
+                hit_test = button.is_hit(click_pos)
+                #print (f"Button {hit_test}")
+                # Todo determine closest (ignore any < 0)
+                if hit_test >=0 and hit_test < nearest_distance:
+                    nearest_object = button
+                    nearest_distance = hit_test
+        if types == "label" or types=="all":
+            for label in self.labels:
+                hit_test = label.is_hit(click_pos)
+                #print (f"Label {hit_test}")
+                # Todo determine closest (ignore any < 0)
+                if hit_test >=0 and hit_test < nearest_distance:
+                    nearest_object = label
+                    nearest_distance = hit_test
+        if nearest_object == None:
+            return None
+        # get offset to the nearest object
+        #offset_percentage = nearest_object.get_offset(click_pos)
+        #self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
+        return nearest_object, nearest_distance
         
     # Here pos is optional so it's moved to the end
-    def add_label (self, label_id, label_type, settings, pos=(5,5)):
-        self.labels.append (LayoutLabel(self, pos, label_id, label_type, settings))
+    def add_label (self, label_type, settings, pos=(5,5)):
+        self.labels.append (LayoutLabel(self.parent, pos, label_type, settings))
         
-    def add_button (self, button_id, button_type, settings, pos=(5,5)):
-        self.labels.append (LayoutButton(self, pos, button_id, button_type, settings))
+    def add_button (self, button_type, settings, pos=(5,5)):
+        self.labels.append (LayoutButton(self.parent, pos, button_type, settings))
         
+    # Paint (Draw) all objects on painter within layoutdisplay
+    def paint (self, painter):
+        for label in self.labels:
+            label.draw(painter)
+        
+        for button in self.buttons:
+            button.draw(painter)

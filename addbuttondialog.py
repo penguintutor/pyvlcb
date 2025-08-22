@@ -47,13 +47,13 @@ class AddButtonDialog(QDialog):
         type_layout.addWidget(self.type_combo)
         main_layout.addLayout(type_layout)
 
-        # Name layout
-        id_layout = QHBoxLayout()
-        id_label = QLabel("Label ID:")
-        self.node_id_textedit = QLineEdit()
-        id_layout.addWidget(id_label)
-        id_layout.addWidget(self.node_id_textedit)
-        main_layout.addLayout(id_layout)
+#         # Name layout
+#         id_layout = QHBoxLayout()
+#         id_label = QLabel("Label ID:")
+#         self.node_id_textedit = QLineEdit()
+#         id_layout.addWidget(id_label)
+#         id_layout.addWidget(self.node_id_textedit)
+#         main_layout.addLayout(id_layout)
 
         # Dialog buttons (OK, Cancel)
         self.button_box = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
@@ -67,5 +67,5 @@ class AddButtonDialog(QDialog):
         # Returns the selected node and event.
         gui_device = self.device_combo.currentText()
         selected_type = self.type_combo.currentText()
-        id_text = self.node_id_textedit.text()
-        return [gui_device, id_text, selected_type]
+        #id_text = self.node_id_textedit.text()
+        return [gui_device, selected_type]

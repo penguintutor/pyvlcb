@@ -23,9 +23,9 @@ from layoutobject import LayoutObject
 
 
 class LayoutButton (LayoutObject):
-    def __init__ (self, parent, pos, button_id, button_type, settings = {}):
+    def __init__ (self, parent, pos, button_type, settings = {}):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
-        super().__init__(parent, pos, button_id)
+        super().__init__(parent, pos)
         self.button_type = button_type
         self.settings = settings
         self.min_size = 5 # min size for click area (actual size can be smaller - this is just for clicks)
@@ -40,11 +40,11 @@ class LayoutButton (LayoutObject):
         pass
 
     # Returns as a nested dictionary ready to save
-    def to_dict (self):
+    def to_dict (self, guiobj):
         return {
             'object': "button",
+            'guiobject': guiobj,
             'pos': self.pos,
-            'id': self.id,
             'button_type': self.button_type,
             'settings': self.settings
             }

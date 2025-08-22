@@ -36,24 +36,33 @@ class LayoutDisplay(QLabel):
 
         self.guiobjects = []
         # todo - move buttons and labels into guiobjects
-        self.buttons = []
-        self.labels = []
+        #self.buttons = []
+        #self.labels = []
         
         # Mode is control or edit
         self.mode = "control"
         
         # Testing
-        self.guiobjects.append(GuiObject('point', 'Point 1', {}))
+        #self.guiobjects.append(GuiObject('point', 'Point 1', {}))
         
     def add_gui_device (self, device_type, device_name):
-        self.guiobjects.append(GuiObject(device_type, device_name, {}))
+        self.guiobjects.append(GuiObject(self, device_type, device_name, {}))
         
+    # Labels and buttons are added to guiobjects - so pass through to guiobects
     # Here pos is optional so it's moved to the end
-    def add_label (self, label_id, label_type, settings, pos=(5,5)):
-        self.labels.append (LayoutLabel(self, pos, label_id, label_type, settings))
+    def add_label (self, gui_node_name, label_type, settings, pos=(5,5)):
+        gui_node_id = self.gui_name_toid(gui_node_name)
+        # check gui node is valid (no reason it shouldn't be)
+        if gui_node_id < 0:
+            print (f"Invalid gui name {gui_node_name}")
+        self.guiobjects[gui_node_id].add_label (label_type, settings, pos)
         
-    def add_button (self, button_id, button_type, settings, pos=(5,5)):
-        self.labels.append (LayoutButton(self, pos, button_id, button_type, settings))
+    def add_button (self, gui_node_name, button_type, settings, pos=(5,5)):
+        gui_node_id = self.gui_name_toid(gui_node_name)
+        # check gui node is valid (no reason it shouldn't be)
+        if gui_node_id < 0:
+            print (f"Invalid gui name {gui_node_name}")
+        self.guiobjects[gui_node_id].add_button (button_type, settings, pos)
         
     def gui_object_names (self):
         #print (f"GUI objects {self.guiobjects}")
@@ -63,6 +72,14 @@ class LayoutDisplay(QLabel):
         #print (f"List {return_list}")
         return return_list
     
+    # From name get pos in list
+    # used when adding buttons / labels etc.
+    def gui_name_toid (self, gui_name):
+        for i in range (0, len(self.guiobjects)):
+            if self.guiobjects[i].name == gui_name:
+                return i
+        # Shouldn't return -1 as gui wouldn't show name that doesn't exist
+        return -1
         
     def paintEvent (self, event):
         super().paintEvent(event)
@@ -77,11 +94,8 @@ class LayoutDisplay(QLabel):
         brush.setStyle(Qt.SolidPattern)
         painter.setBrush(brush)
         
-        for label in self.labels:
-            label.draw(painter)
-        
-        for button in self.buttons:
-            button.draw(painter)
+        for object in self.guiobjects:
+            object.paint(painter)
              
         painter.end()
         self.update()
@@ -90,12 +104,10 @@ class LayoutDisplay(QLabel):
     # Save the objects (when finished editing layout)
     def save_layout_objects (self, filename):
         data_list = []
-        # Gather all objects into a data_list
-        for button in self.buttons:
-            data_list.append(button.to_dict())
-        for label in self.labels:
-            data_list.append(label.to_dict())
-            
+        
+        for object in self.guiobjects:
+            data_list.extend(object.get_save_objects())
+        
         #print (f"Save list {data_list}")
             
         try:
@@ -117,11 +129,14 @@ class LayoutDisplay(QLabel):
         # Create an object for each entry
         for entry in objects:
             if 'object' in entry.keys():
-                if entry['object'] == 'button':
-                    self.buttons.append(LayoutButton(self, entry['pos'], entry['id'], entry['button_type'], entry['settings']))
+                if entry['object'] == 'gui':
+                    self.guiobjects.append(GuiObject(self, entry['type'], entry['name'], {}))
+                elif entry['object'] == 'button':
+                    gui_node_id = self.gui_name_toid(entry['guiobject'])
+                    self.guiobjects[gui_node_id].add_button(entry['button_type'], entry['settings'], entry['pos'])
                 elif entry['object'] == 'label':
-                    self.labels.append(LayoutLabel(self, entry['pos'], entry['id'], entry['label_type'], entry['settings']))
-        
+                    gui_node_id = self.gui_name_toid(entry['guiobject'])
+                    self.guiobjects[gui_node_id].add_label(entry['label_type'], entry['settings'], entry['pos'])
 
     def load_image (self, mainwindow):
         self.mainwindow = mainwindow
@@ -199,28 +214,49 @@ class LayoutDisplay(QLabel):
     def nearestToClick(self, click_pos, types="all"):
         nearest_object = None
         # set distance to a value far beyond any reasonable range (1000)
+        # saves needing to test for a null value
         nearest_distance = 1000
-        if types == "button" or types=="all":
-            for button in self.buttons:
-                hit_test = button.is_hit(click_pos)
-                #print (f"Button {hit_test}")
-                # Todo determine closest (ignore any < 0)
-                if hit_test >=0 and hit_test < nearest_distance:
-                    nearest_object = button
-                    nearest_distance = hit_test
-        if types == "label" or types=="all":
-            for label in self.labels:
-                hit_test = label.is_hit(click_pos)
-                #print (f"Label {hit_test}")
-                # Todo determine closest (ignore any < 0)
-                if hit_test >=0 and hit_test < nearest_distance:
-                    nearest_object = label
-                    nearest_distance = hit_test
-        if nearest_object != None:
-            # get offset to the nearest object
-            offset_percentage = nearest_object.get_offset(click_pos)
-            self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
+        for guiobject in self.guiobjects:
+            # result is None if no matches or (object, distance)
+            result = guiobject.nearestToClick(click_pos, types)
+            if result == None:
+                continue
+            if result[1] < nearest_distance:
+                nearest_object = result[0]
+                nearest_distance = result[1]
+        if nearest_object == None:
+            return None
+        # get offset to the nearest object
+        offset_percentage = nearest_object.get_offset(click_pos)
+        self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
         return nearest_object
+                
+#         nearest_object = None
+#         # set distance to a value far beyond any reasonable range (1000)
+#         # saves needing to test for a null value
+#         nearest_distance = 1000
+#         if types == "button" or types=="all":
+#             for button in self.buttons:
+#                 hit_test = button.is_hit(click_pos)
+#                 #print (f"Button {hit_test}")
+#                 # Todo determine closest (ignore any < 0)
+#                 if hit_test >=0 and hit_test < nearest_distance:
+#                     nearest_object = button
+#                     nearest_distance = hit_test
+#         if types == "label" or types=="all":
+#             for label in self.labels:
+#                 hit_test = label.is_hit(click_pos)
+#                 #print (f"Label {hit_test}")
+#                 # Todo determine closest (ignore any < 0)
+#                 if hit_test >=0 and hit_test < nearest_distance:
+#                     nearest_object = label
+#                     nearest_distance = hit_test
+#         if nearest_object != None:
+#             # get offset to the nearest object
+#             offset_percentage = nearest_object.get_offset(click_pos)
+#             self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
+#         return nearest_object
+    
                     
     def mouseMoveEvent(self, event: QMouseEvent):
         # Drag event

@@ -11,8 +11,8 @@ from layoutobject import LayoutObject
 
 # for type="text" then settings must include "text":"Text to display"
 class LayoutLabel (LayoutObject):
-    def __init__ (self, parent, pos, label_id, label_type, settings = {}):
-        super().__init__(parent, pos, label_id)
+    def __init__ (self, parent, pos, label_type, settings = {}):
+        super().__init__(parent, pos)
         self.label_type = label_type
         self.settings = settings
         self.min_size = 5 # min size for click area
@@ -43,10 +43,10 @@ class LayoutLabel (LayoutObject):
         pass
     
     # Returns as a nested dictionary ready to save
-    def to_dict (self):
+    def to_dict (self, guiobj):
         return {
             'object': "label",
-            'id': self.id,
+            'guiobject': guiobj,
             'pos': self.pos,
             'label_type': self.label_type,
             'settings': self.settings
