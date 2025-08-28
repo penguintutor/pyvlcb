@@ -15,6 +15,8 @@ from layout import Layout
 from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
 from guiobject import GuiObject
+from devicemodel import device_model
+
 
 class LayoutDisplay(QLabel):
     def __init__(self, parent):
@@ -42,11 +44,12 @@ class LayoutDisplay(QLabel):
         # Mode is control or edit
         self.mode = "control"
         
-        # Testing
-        #self.guiobjects.append(GuiObject('point', 'Point 1', {}))
         
     def add_gui_device (self, device_type, device_name):
         self.guiobjects.append(GuiObject(self, device_type, device_name, {}))
+        # Add to node tree
+        #print (f"Adding to node tree {self.guiobjects[-1].name}")
+        device_model.add_gui_node(self.guiobjects[-1])
         
     # Labels and buttons are added to guiobjects - so pass through to guiobects
     # Here pos is optional so it's moved to the end
@@ -130,7 +133,8 @@ class LayoutDisplay(QLabel):
         for entry in objects:
             if 'object' in entry.keys():
                 if entry['object'] == 'gui':
-                    self.guiobjects.append(GuiObject(self, entry['type'], entry['name'], {}))
+                    #self.guiobjects.append(GuiObject(self, entry['type'], entry['name'], {}))
+                    self.add_gui_device(entry['type'], entry['name'])
                 elif entry['object'] == 'button':
                     gui_node_id = self.gui_name_toid(entry['guiobject'])
                     self.guiobjects[gui_node_id].add_button(entry['button_type'], entry['settings'], entry['pos'])

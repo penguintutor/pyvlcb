@@ -3,6 +3,7 @@
 # Also maintains state of device (as received by events) and updates
 # layout objects
 
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
 
@@ -27,8 +28,24 @@ class GuiObject:
         if 'num_states' in self.data:
             self.num_states = self.data['num_states']
             
+        # Create a gui_node for displaying in QStandardItemModel
+        # Read by device_model for inclusion in device tree
+        self.gui_node = QStandardItem(f"GUI {self.object_type} : {self.name}")
+            
         self.buttons = []
         self.labels = []
+        
+    def get_gui_node (self):
+        return self.gui_node
+    
+    def check_item (self, item):
+        if self.gui_node == item:
+            print (f"This node {self.name}")
+            return ([self.name, 0])
+        #for key, ev in self.ev.items():
+        #    if ev.gui_node == item:
+        #        return ([self.node_id, ev.ev_id])
+        return None
         
     def type (self):
         return object_type
@@ -79,10 +96,12 @@ class GuiObject:
         
     # Here pos is optional so it's moved to the end
     def add_label (self, label_type, settings, pos=(5,5)):
-        self.labels.append (LayoutLabel(self.parent, pos, label_type, settings))
+        self.labels.append (LayoutLabel(self, pos, label_type, settings))
+        self.gui_node.appendRow(self.labels[-1].get_gui_node())
         
     def add_button (self, button_type, settings, pos=(5,5)):
-        self.labels.append (LayoutButton(self.parent, pos, button_type, settings))
+        self.buttons.append (LayoutButton(self, pos, button_type, settings))
+        self.gui_node.appendRow(self.buttons[-1].get_gui_node ())
         
     # Paint (Draw) all objects on painter within layoutdisplay
     def paint (self, painter):

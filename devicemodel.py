@@ -108,11 +108,6 @@ class DeviceModel(QObject):
                 return key
         return None
         
-        
-
-    #def key_to_id (self, key):
-    #    print (f"Key to ID {key}, {self.nodes[key]}")
-    #    return self.nodes[key]
     
     # get events for specified node
     def get_events(self, node):
@@ -145,10 +140,19 @@ class DeviceModel(QObject):
             # Add the gui node to the node_model
             #print (f"GUI Node {self.nodes[node.node_id].get_gui_node().text()}")
             #print (f"Adding {node.node_id} - {self.nodes[node.node_id].get_gui_node()}")
+            
+            # Add the node to the top level of the qtreeview
+            # child nodes are added through the node as child on gui_node
             self.node_model.appendRow(self.nodes[node.node_id].get_gui_node())
             return True
         return False
     
+    # Add GUI node - initially just add to tree view
+    def add_gui_node (self, gui_object):
+        # Adds this to the top level of the tree view
+        # child nodes are added through the gui_object as child on gui_node
+        self.node_model.appendRow(gui_object.get_gui_node())
+        #print (f"Gui node_model {self.node_model}")
 
     def set_name (self, node_id, name):
         #print (f"Set name in devicemodel {node_id} = {name}")

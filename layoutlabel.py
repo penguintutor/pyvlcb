@@ -4,6 +4,7 @@
 
 
 import sys
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
 from PySide6.QtCore import Qt, QPoint, QSize
@@ -36,7 +37,15 @@ class LayoutLabel (LayoutObject):
             self.font = settings['font']
         else:
             self.font = "LiberationSans-Bold"
+        self.gui_node = None
 
+    # Create GUI node outside of constructor (consistant with layoutbutton)
+    # Must be called after creating the object
+    # Creates if not exist - either way returns gui_node
+    def get_gui_node (self):
+        if self.gui_node == None:
+            self.gui_node = QStandardItem(f"Label {self.label_type} : {self.get_name()}")
+        return self.gui_node
     
     # Called when clicked and layout in control mode
     def controlButtonClick(self):
@@ -52,7 +61,15 @@ class LayoutLabel (LayoutObject):
             'settings': self.settings
             }
     
+    def get_name (self):
+        if self.label_type == "text":
+            return self.settings['text']
+        else:
+            return "Unknown"
+            
+    
     def draw (self, painter):
+        #print (f"Parent {self.parent} PP {self.layout_disp}")
         if self.label_type == "text":
             
             # In future could check for font override in settings
@@ -64,11 +81,11 @@ class LayoutLabel (LayoutObject):
             # but to be consistant with the buttons need it to be top right - so translate
             #print (f"Text size {text_rect.width()} x {text_rect.height()}")
             # first get size as a percentage - rel=True needed for size or relative values
-            self.size = self.parent.pixel_to_percent([text_rect.width(), text_rect.height()], rel=True)
+            self.size = self.layout_disp.pixel_to_percent([text_rect.width(), text_rect.height()], rel=True)
             # Ascent is like height but doesn't include below the baseline - eg g / q etc.)
             # convert it to percent, but only interested in the y value
             #print (f"Ascent actual {font_metrics.ascent()}")
-            percent_null_ascent = self.parent.pixel_to_percent([0, font_metrics.ascent()], rel=True)
+            percent_null_ascent = self.layout_disp.pixel_to_percent([0, font_metrics.ascent()], rel=True)
             ascent = percent_null_ascent[1]
             #print (f"Pos y {self.pos[1]}, ascent {ascent}")
             # get a new y with offset (still percentage)

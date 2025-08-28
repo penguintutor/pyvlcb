@@ -4,6 +4,7 @@
 
 import sys
 import math
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
@@ -34,10 +35,32 @@ class LayoutButton (LayoutObject):
             self.size = settings['size']
         else:
             self.size = (4, 4)
+        # Create gui_node through get_gui_node
+        # Initially set to None so know it doesn't exist
+        self.gui_node = None
+        
+    # Create GUI node outside of constructor as it needs to find it's index
+    # Must be called after creating the object
+    # Creates if not exist - either way returns gui_node
+    def get_gui_node (self):
+        if self.gui_node == None:
+            self.gui_node = QStandardItem(f"Button {self.button_type} : {self.get_name()}")
+        return self.gui_node
 
     # Called when clicked and layout in control mode
     def controlButtonClick(self):
         pass
+    
+    # Get name based on index number of button (starts at 1)
+    # Is 1 higher than the list position which starts at 0
+    def get_name (self):
+        return (self.get_index()+1)
+    
+    # Get index position of the button
+    # Normally add 1 if need user friendly name
+    # See get_name
+    def get_index (self):
+        return self.parent.buttons.index(self)
 
     # Returns as a nested dictionary ready to save
     def to_dict (self, guiobj):
@@ -77,7 +100,7 @@ class LayoutButton (LayoutObject):
     # returns size as pixels rather than ratio
     def pixel_size (self):
         #label_size = self.parent.canvas_size
-        image_size = self.parent.pixmap().size()
+        image_size = self.layout_disp.pixmap().size()
         width = image_size.width() * self.size[0] / 100
         height = image_size.width() * self.size[1] / 100
         return [width, height]

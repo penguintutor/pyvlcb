@@ -453,6 +453,7 @@ class MainWindowUI(QMainWindow):
         
     def tree_clicked(self, item):
         node_item = device_model.node_model.itemFromIndex(item)
+        # Check device_model for the node
         for key, node in device_model.nodes.items():
             new_item = node.check_item (node_item)
             if new_item != None:

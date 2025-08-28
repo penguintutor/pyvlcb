@@ -6,6 +6,7 @@
 # is be a percentage of the layout image size
 
 import sys, math
+from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
 from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QBrush
 from PySide6.QtCore import Qt, QPoint, QSize
@@ -15,8 +16,11 @@ from PySide6.QtCore import Qt, QPoint, QSize
 class LayoutObject:
     def __init__ (self, parent, pos):
         self.parent = parent
+        # Layout display is the parent of the gui object
+        # use this to make code cleaner and to be able
+        # to get scaling details etc.
+        self.layout_disp = parent.parent
         self.pos = pos # Pos is % of position of image
-        #self.id = id
         
     # Return position as pixels
     # Needs to consider that pixmap is different to label size
@@ -36,8 +40,8 @@ class LayoutObject:
                 rel = False
         elif rel==None:	# pos is supplied and rel=None - so set to true
             rel = True
-        label_size = self.parent.canvas_size
-        image_size = self.parent.pixmap().size()
+        label_size = self.layout_disp.canvas_size
+        image_size = self.layout_disp.pixmap().size()
         # First calculate just on image size
         width = image_size.width() * pos[0] / 100
         height = image_size.height() * pos[1] / 100
@@ -58,7 +62,7 @@ class LayoutObject:
         if max_size < min_size:
             return min_size
         # uses pixemap width for scaling only
-        image_size = self.parent.pixmap().size()
+        image_size = self.layout_disp.pixmap().size()
         # font scale is between 0 and 1 - where 0 is min size and 1 = max size
         # Max would only be reached on large screen (min HD) where the width of the image
         # is primary length - in reality more likely to be between min and 1/2 way
