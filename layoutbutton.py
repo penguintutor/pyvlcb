@@ -1,7 +1,6 @@
 # Layout Objects are anything on the layout that can display data and/or trigger events
 # This is a button, which is a image that can be clicked (press and release)
 
-
 import sys
 import math
 from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -22,7 +21,6 @@ from layoutobject import LayoutObject
 # so that if say 5,5 then it will be 1:1 - even for landscape image
 
 
-
 class LayoutButton (LayoutObject):
     def __init__ (self, parent, pos, button_type, settings = {}):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
@@ -38,6 +36,9 @@ class LayoutButton (LayoutObject):
         # Create gui_node through get_gui_node
         # Initially set to None so know it doesn't exist
         self.gui_node = None
+        
+    def get_type_str (self):
+        return self.button_type
         
     # Create GUI node outside of constructor as it needs to find it's index
     # Must be called after creating the object

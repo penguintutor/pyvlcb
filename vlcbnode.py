@@ -7,7 +7,6 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from time import time
 from vlcbev import VLCBEv
 
-
 #ManufId,ModId,Flags
 # Stores Nodes defined / discovered
 class VLCBNode():
@@ -56,7 +55,9 @@ class VLCBNode():
         self.name = name
         self.update_gui_node_string()
 
-        
+    # Check if item is this node (or a child of this node)
+    # Returns None (if not found)
+    # Or list with node_id, ev_id (or 0 if top level)
     def check_item (self, item):
         if self.gui_node == item:
             #print ("This node")

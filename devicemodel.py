@@ -130,6 +130,7 @@ class DeviceModel(QObject):
         return False
     
     # Add node if not exist - else returnFalse
+    # Only used for devices - also see add_gui_node
     def add_node (self, node):
         #print (f"Adding node {node.node_id}")
         if not node in self.nodes.keys():
@@ -152,6 +153,8 @@ class DeviceModel(QObject):
         # Adds this to the top level of the tree view
         # child nodes are added through the gui_object as child on gui_node
         self.node_model.appendRow(gui_object.get_gui_node())
+        # Add the entire gui_object to other_nodes
+        self.other_nodes['Gui'].append(gui_object)
         #print (f"Gui node_model {self.node_model}")
 
     def set_name (self, node_id, name):

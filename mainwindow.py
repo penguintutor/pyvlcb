@@ -453,15 +453,42 @@ class MainWindowUI(QMainWindow):
         
     def tree_clicked(self, item):
         node_item = device_model.node_model.itemFromIndex(item)
-        # Check device_model for the node
-        for key, node in device_model.nodes.items():
-            new_item = node.check_item (node_item)
-            if new_item != None:
-                # If this is a node then show that in table
-                if new_item[1] == 0:
-                    self.node_table_show_node(new_item)
+        # Need to identify what type of node has been clicked
+        # Create two values top_string (= parent for children / self text for top level)
+        # node_string = text of this node
+        # First check is this a top level (doesn't have a parent)
+        if (node_item.parent() == None):
+            #print (f"Parent node clicked {node_item.text()}")
+            node_string = node_item.text()
+            top_string = node_string	# For top level then same as name
+        # Otherwise use parent to determine type of node
+        else:
+            #print (f"Node clicked {node_item.text()} - parent {node_item.parent().text()}")
+            node_string = node_item.text()
+            top_string = node_item.parent().text()
+        # First check for structured devices (eg. Gui object always begins with GUI)
+        if top_string[0:3] == "GUI":
+            #print (f"GUI {node_string}")
+            for gui_node in device_model.other_nodes['Gui']:
+                new_item = gui_node.check_item(node_item)
+                #print (f"Result {new_item}")
+                if new_item[1] == None:
+                    self.node_table_show_gui_node(new_item)
                 else:
-                    self.node_table_show_ev(new_item)
+                    # new item for child is [parent, type, pos]
+                    self.node_table_show_gui_child(new_item)
+        # If not structure name then most likely a normal node which can have any name
+        else:
+            # Check device_model for the node
+            for key, node in device_model.nodes.items():
+                new_item = node.check_item (node_item)
+                if new_item != None:
+                    # If this is a node then show that in table
+                    if new_item[1] == 0:
+                        self.node_table_show_node(new_item)
+                    else:
+                        self.node_table_show_ev(new_item)
+
         
         
     def create_console(self, show=False):
@@ -484,6 +511,51 @@ class MainWindowUI(QMainWindow):
         #print (f"Selected {self.selected_ev}")
         self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[1], True))
 
+    # Update table for GUI node
+    def node_table_show_gui_node (self, node_item):
+        self.ui.tableLabel.setText("GUI Node:")
+        item = self.ui.nodeTable.verticalHeaderItem(0)
+        item.setText("Name:")
+        item = self.ui.nodeTable.verticalHeaderItem(1)
+        item.setText("Type:")
+        item = self.ui.nodeTable.verticalHeaderItem(2)
+        item.setText("Num states:")
+        item = self.ui.nodeTable.verticalHeaderItem(3)
+        item.setText("Current state:")
+        
+        item = self.ui.nodeTable.item(0,0)
+        item.setText(node_item[0].name)
+        item = self.ui.nodeTable.item(1,0)
+        item.setText(node_item[0].object_type)
+        item = self.ui.nodeTable.item(2,0)
+        item.setText(str(node_item[0].num_states))
+        item = self.ui.nodeTable.item(3,0)
+        item.setText(f"{node_item[0].state_value}")
+        item = self.ui.nodeTable.item(4,0)
+        item.setText("")
+    
+    # Update table for gui child
+    def node_table_show_gui_child (self, node_item):
+        self.ui.tableLabel.setText("GUI Node Object:")
+        item = self.ui.nodeTable.verticalHeaderItem(0)
+        item.setText("GUI Node:")
+        item = self.ui.nodeTable.verticalHeaderItem(1)
+        item.setText("Type:")
+        item = self.ui.nodeTable.verticalHeaderItem(2)
+        item.setText("ID:")
+        item = self.ui.nodeTable.verticalHeaderItem(3)
+        item.setText("Current state:")
+        
+        item = self.ui.nodeTable.item(0,0)
+        item.setText(node_item[0].name)
+        item = self.ui.nodeTable.item(1,0)
+        item.setText(node_item[1].get_type_str())
+        item = self.ui.nodeTable.item(2,0)
+        item.setText(str(node_item[1].get_index()))
+        item = self.ui.nodeTable.item(3,0)
+        item.setText(f"{node_item[0].state_value}")
+        item = self.ui.nodeTable.item(4,0)
+        item.setText("")
         
     # Have the node table show the node information
     # node_item = (nn, 0)

@@ -2,7 +2,6 @@
 # displays a text label or similar
 # Change does not depend on state - but clicking will often result in a toggle
 
-
 import sys
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
@@ -67,6 +66,8 @@ class LayoutLabel (LayoutObject):
         else:
             return "Unknown"
             
+    def get_type_str (self):
+        return self.label_type
     
     def draw (self, painter):
         #print (f"Parent {self.parent} PP {self.layout_disp}")
