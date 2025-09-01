@@ -1,6 +1,6 @@
 import os
-from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool
-from PySide6.QtWidgets import QMainWindow, QAbstractItemView
+from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
+from PySide6.QtWidgets import QMainWindow, QAbstractItemView, QMenu
 from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
@@ -87,6 +87,8 @@ class MainWindowUI(QMainWindow):
         self.steal_loco_signal.connect (self.steal_loco)
         self.share_loco_signal.connect (self.share_loco)
         self.update_kalive_signal.connect (self.update_kalive)
+        # Listen to device_model signal for treeview updates
+        device_model.add_node_signal.connect (self.add_to_tree)
         
         # File Menu
         self.ui.actionExit.triggered.connect(self.quit_app)
@@ -114,7 +116,12 @@ class MainWindowUI(QMainWindow):
         self.ui.nodeTreeView.setModel(device_model.node_model)
         self.ui.nodeTreeView.setEditTriggers(QAbstractItemView.NoEditTriggers)
         
+        # Left click
         self.ui.nodeTreeView.clicked.connect(self.tree_clicked)
+        # Right click - instead needs to use custom context policy
+        self.ui.nodeTreeView.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.ui.nodeTreeView.customContextMenuRequested.connect(self.tree_clicked_right)
+        
         
         # Event buttons
         self.ui.evButtonOff.clicked.connect(self.ev_clicked_off)
@@ -450,6 +457,22 @@ class MainWindowUI(QMainWindow):
         # Returns the list of locos
         for loco_name in self.railway.get_loco_names():
             self.ui.locoComboBox.addItem(loco_name)
+            
+    # Handle right click - need to get item from position
+    def tree_clicked_right(self, position: QPoint):
+        item = self.ui.nodeTreeView.indexAt(position)
+        # Ignore if no item clicked
+        if not item.isValid():
+            return
+        #print (f"Item {item} - Data {item.data()}")
+        # Create a context Menu
+        menu = QMenu()
+        # different menu depending upon node type
+        edit_action = menu.addAction("Edit")
+        
+        selected_action = menu.exec(self.ui.nodeTreeView.viewport().mapToGlobal(position))
+        if selected_action == edit_action:
+            print ("Edit")
         
     def tree_clicked(self, item):
         node_item = device_model.node_model.itemFromIndex(item)
@@ -466,7 +489,7 @@ class MainWindowUI(QMainWindow):
             #print (f"Node clicked {node_item.text()} - parent {node_item.parent().text()}")
             node_string = node_item.text()
             top_string = node_item.parent().text()
-        # First check for structured devices (eg. Gui object always begins with GUI)
+        # Check for structured devices (eg. Gui object always begins with GUI)
         if top_string[0:3] == "GUI":
             #print (f"GUI {node_string}")
             for gui_node in device_model.other_nodes['Gui']:
@@ -691,3 +714,10 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText ("Stop All!")
         self.update_lcd()
 
+
+    # Used to add a device to the TreeView
+    # Needed to ensure this is run on the GUI thread
+    # First create QStandardItem on the api thread, then send signal
+    # to GUI thread with the parent and the child details
+    def add_to_tree (self, parent, child):
+        parent.appendRow(child)

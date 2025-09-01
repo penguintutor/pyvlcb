@@ -67,14 +67,20 @@ class VLCBNode():
                 return ([self.node_id, ev.ev_id])
         return None
         
+    # Adds ev node
+    # Does not register to the treeview - that needs to be performed on the gui thread
+    # Instead returns the node created so that device_model can emit that to gui thread
     def add_ev(self, ev_id, en):
         # Only add if new - otherwise try update
         if ev_id in self.ev.keys():
             self.ev[ev_id].update_en (en)
             return
         self.ev[ev_id]=VLCBEv(self, ev_id, en)
-        # add as child to self.gui_node
-        self.gui_node.appendRow(self.ev[ev_id].gui_node)
+        return self.ev[ev_id]
+
+        # Add Row left to the caller as that can access gui thread
+        #self.gui_node.appendRow(self.ev[ev_id].gui_node)
+
         
     # field is to be updated - this needs to be coded manually
     # Features included = "name"

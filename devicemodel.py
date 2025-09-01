@@ -21,7 +21,7 @@ from automateevent import AutomateEvent
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
     # to react to state changes in the core data.
-    model_updated = Signal(str) # Emits device_id when its state changes
+    # model_updated = Signal(str) # Emits device_id when its state changes
     
     # Map to Classes
     event_map = {
@@ -31,6 +31,9 @@ class DeviceModel(QObject):
         'Gui': GuiEvent,
         'Automate': AutomateEvent
         }
+    
+    # Used to update treeview on gui thread
+    add_node_signal = Signal(QStandardItem, QStandardItem)
 
     def __init__(self):
         super().__init__()
@@ -179,13 +182,17 @@ class DeviceModel(QObject):
         return True
     
     def add_ev(self, node_id, ev_id, en):
+        #print (f"Adding EV {node_id}, {ev_id}, {en}")
         if not node_id in self.nodes.keys():
             return False
         # Add the EV
-        self.nodes[node_id].add_ev(ev_id, en)
+        ev_node = self.nodes[node_id].add_ev(ev_id, en)
+        # Send signal so that the gui thread can perform addRow
+        self.add_node_signal.emit (self.nodes[node_id].gui_node, ev_node.gui_node)
         # Update the name based on layout
         name = self.layout.ev_name(node_id, ev_id, en)
         self.update_ev(node_id, ev_id, "name", name)
+        
         
         return True
 
