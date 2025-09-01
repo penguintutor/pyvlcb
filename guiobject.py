@@ -14,16 +14,16 @@ class GuiObject:
         # which is passed to LayoutObjects
         self.parent = parent
         self.object_type = object_type
-        self.name = name
+        self.name = name 
         self.data = data_dict
         # state is used to track the state of the object
         # 0 is unknown
         # simple objects will typically have two states (+unknown)
         # eg. point will be 0 (unknown), 1 (pos 1), 2 (pos 2)
         # toggle will be 0 (unknown), 1 (on), 2 (off)
-        # complex objects can have higher numbers and toggle counts down
+        # complex objects can have higher numbers and toggle counts up
         self.state_value = 0
-        self.num_states = 2 # unknown plus 2 number states
+        self.num_states = 2 # unknown plus on and off number states (don't count unknown)
         # if num_states is in the data_dict then overrides
         if 'num_states' in self.data:
             self.num_states = self.data['num_states']

@@ -66,6 +66,11 @@ class LayoutLabel (LayoutObject):
         else:
             return "Unknown"
             
+    # What action does this have
+    # Button is normally Activate, label is Toggle
+    def get_action_type (self):
+        return "Toggle"
+            
     def get_type_str (self):
         return self.label_type
     

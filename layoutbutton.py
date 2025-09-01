@@ -37,6 +37,11 @@ class LayoutButton (LayoutObject):
         # Initially set to None so know it doesn't exist
         self.gui_node = None
         
+    # What action does this have
+    # Button is normally Activate, label is Toggle
+    def get_action_type (self):
+        return "Activate"
+        
     def get_type_str (self):
         return self.button_type
         

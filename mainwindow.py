@@ -465,6 +465,10 @@ class MainWindowUI(QMainWindow):
         if not item.isValid():
             return
         #print (f"Item {item} - Data {item.data()}")
+        # Update the node table view
+        node_item = device_model.node_model.itemFromIndex(item)
+        self.update_tree_selected (node_item)
+        
         # Create a context Menu
         menu = QMenu()
         # different menu depending upon node type
@@ -476,6 +480,10 @@ class MainWindowUI(QMainWindow):
         
     def tree_clicked(self, item):
         node_item = device_model.node_model.itemFromIndex(item)
+        self.update_tree_selected (node_item)
+        
+    # Update the node table (whether right or left click)
+    def update_tree_selected (self, node_item):
         # Need to identify what type of node has been clicked
         # Create two values top_string (= parent for children / self text for top level)
         # node_string = text of this node
@@ -492,16 +500,35 @@ class MainWindowUI(QMainWindow):
         # Check for structured devices (eg. Gui object always begins with GUI)
         if top_string[0:3] == "GUI":
             #print (f"GUI {node_string}")
+            # Temp call On / Off - need to set based on type of GUI object
+            self.update_node_buttons ("On?", "Off?")
             for gui_node in device_model.other_nodes['Gui']:
                 new_item = gui_node.check_item(node_item)
                 #print (f"Result {new_item}")
                 if new_item[1] == None:
                     self.node_table_show_gui_node(new_item)
+                    # If num states < 2 then no button
+                    if new_item[0].num_states < 2:
+                        self.update_node_buttons (None, None)
+                    # If exactly 2 then toggle button
+                    elif new_item[0].num_states == 2:
+                        self.update_node_buttons ("Toggle", None)
+                    # If more than 2 then up / down
+                    else:
+                        self.update_node_buttons ("Prev", "Next")
                 else:
                     # new item for child is [parent, type, pos]
                     self.node_table_show_gui_child(new_item)
+                    # Typically GUI children will say Toggle (for a label), or Activate for a button
+                    self.update_node_buttons (new_item[1].get_action_type(), None)
         # If not structure name then most likely a normal node which can have any name
         else:
+            # Special case - if CANCAM 65535 or CANCMD 65534 then hide buttons
+            if node_string[0:6] == "CANCAB" or node_string[0:6] == 'CANCMD':
+                self.update_node_buttons (None, None)
+            else:
+                # Set buttons to normal
+                self.update_node_buttons ("On", "Off")
             # Check device_model for the node
             for key, node in device_model.nodes.items():
                 new_item = node.check_item (node_item)
@@ -512,6 +539,22 @@ class MainWindowUI(QMainWindow):
                     else:
                         self.node_table_show_ev(new_item)
 
+    # Updates the two node buttons at the bottom of the table
+    # These are known as evButtonOff & evButtonOn, but may also be used by
+    # GUI elements, be hidden etc.
+    # Provide text for the On & Off buttons, or set to None to disable
+    def update_node_buttons (self, on_text, off_text):
+        # Check for None (in which case hide)
+        if on_text == None:
+            self.ui.evButtonOn.hide()
+        else :
+            self.ui.evButtonOn.setText(on_text)
+            self.ui.evButtonOn.show()
+        if off_text == None:
+            self.ui.evButtonOff.hide()
+        else :
+            self.ui.evButtonOff.setText(off_text)
+            self.ui.evButtonOff.show()
         
         
     def create_console(self, show=False):
