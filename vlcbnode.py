@@ -36,6 +36,7 @@ class VLCBNode():
         # Events are stored as a dictionary with the ev_id as the index
         self.ev = {}
         
+        
     def get_ev_names (self):
         #print (f"Getting Ev Names {self.name}")
         #print (f" EV {self.ev}")
@@ -57,14 +58,17 @@ class VLCBNode():
 
     # Check if item is this node (or a child of this node)
     # Returns None (if not found)
-    # Or list with node_id, ev_id (or 0 if top level)
+    #### Or list with node_id, ev_id (or 0 if top level)
+    # or item if is
     def check_item (self, item):
         if self.gui_node == item:
             #print ("This node")
-            return ([self.node_id, 0])
+            #return ([self.node_id, 0])
+            return self
         for key, ev in self.ev.items():
             if ev.gui_node == item:
-                return ([self.node_id, ev.ev_id])
+                #return ([self.node_id, ev.ev_id])
+                return ev
         return None
         
     # Adds ev node

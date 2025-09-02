@@ -40,20 +40,20 @@ class GuiObject:
     
     # Check if item is this node (or a child of this node)
     # Returns None (if not found)
-    # Or list with GUI obj, child_obj
+    # Or object
     def check_item (self, item):
         # Is it this gui obj
         if self.gui_node == item:
             #print (f"This node {self.name}")
-            return ([self, None])
+            return (self)
         # Is it a button
         for i in range (0, len(self.buttons)):
             if self.buttons[i].gui_node == item:
-                return ([self, self.buttons[i]])
+                return (self.buttons[i])
         # Is it a label
         for i in range (0, len(self.labels)):
             if self.labels[i].gui_node == item:
-                return ([self, self.buttons[i]])
+                return (self.labels[i])
         return None
         
     def type (self):

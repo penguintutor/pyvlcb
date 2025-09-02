@@ -16,6 +16,12 @@ from eventwindow import EventWindow
 from adddevicedialog import AddDeviceDialog
 from addlabeldialog import AddLabelDialog
 from addbuttondialog import AddButtonDialog
+from vlcbnode import VLCBNode
+from vlcbev import VLCBEv
+from guiobject import GuiObject
+from layoutobject import LayoutObject
+from layoutbutton import LayoutButton
+from layoutlabel import LayoutLabel
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -127,9 +133,8 @@ class MainWindowUI(QMainWindow):
         self.ui.evButtonOff.clicked.connect(self.ev_clicked_off)
         self.ui.evButtonOn.clicked.connect(self.ev_clicked_on)
         
-        # Last Event that was selected - use for On/Off buttons
-        # has (Node, EVid, EVNum) - num added to make it easier
-        self.selected_ev = None
+        # Last Node / Event that was selected - use for On/Off buttons
+        self.selected_node = None
         
         # Update other GUI components
         # Add locos to menu
@@ -177,8 +182,6 @@ class MainWindowUI(QMainWindow):
         # Initial discover request
         self.api.discover()
         
-        #print (f"LD {self.ui.layoutLabel}")
-        #self.ui.layoutLabel.test ("new message")
         
     # Edit events associations between different objects
     def events_edit (self):
@@ -196,7 +199,6 @@ class MainWindowUI(QMainWindow):
         if dialog.exec():
             # response = id, text
             response = dialog.get_selected_values()
-            #print(f"Selected value: {text}")
             # The first "text" is that it's a text style label (allows flexibility for future)
             self.ui.layoutLabel.add_gui_device(response[0], response[1])
         
@@ -484,6 +486,8 @@ class MainWindowUI(QMainWindow):
         
     # Update the node table (whether right or left click)
     def update_tree_selected (self, node_item):
+        # Reset selected_node to None - then update if selected node
+        self.selected_node = None
         # Need to identify what type of node has been clicked
         # Create two values top_string (= parent for children / self text for top level)
         # node_string = text of this node
@@ -501,26 +505,28 @@ class MainWindowUI(QMainWindow):
         if top_string[0:3] == "GUI":
             #print (f"GUI {node_string}")
             # Temp call On / Off - need to set based on type of GUI object
-            self.update_node_buttons ("On?", "Off?")
+            #self.update_node_buttons ("On?", "Off?")
             for gui_node in device_model.other_nodes['Gui']:
                 new_item = gui_node.check_item(node_item)
-                #print (f"Result {new_item}")
-                if new_item[1] == None:
+                self.selected_node = new_item
+                if type(new_item) == GuiObject:
+                    #self.selected_node = gui_node
                     self.node_table_show_gui_node(new_item)
                     # If num states < 2 then no button
-                    if new_item[0].num_states < 2:
+                    if new_item.num_states < 2:
                         self.update_node_buttons (None, None)
                     # If exactly 2 then toggle button
-                    elif new_item[0].num_states == 2:
+                    elif new_item.num_states == 2:
                         self.update_node_buttons ("Toggle", None)
                     # If more than 2 then up / down
                     else:
                         self.update_node_buttons ("Prev", "Next")
+                # Otherwise it's a layoutobject (button / label)
                 else:
                     # new item for child is [parent, type, pos]
                     self.node_table_show_gui_child(new_item)
                     # Typically GUI children will say Toggle (for a label), or Activate for a button
-                    self.update_node_buttons (new_item[1].get_action_type(), None)
+                    self.update_node_buttons (new_item.get_action_type(), None)
         # If not structure name then most likely a normal node which can have any name
         else:
             # Special case - if CANCAM 65535 or CANCMD 65534 then hide buttons
@@ -533,9 +539,12 @@ class MainWindowUI(QMainWindow):
             for key, node in device_model.nodes.items():
                 new_item = node.check_item (node_item)
                 if new_item != None:
+                    self.selected_node = new_item
                     # If this is a node then show that in table
-                    if new_item[1] == 0:
+                    #if new_item[1] == 0:
+                    if type(new_item) is VLCBNode:
                         self.node_table_show_node(new_item)
+                    # or if it's a ev
                     else:
                         self.node_table_show_ev(new_item)
 
@@ -564,18 +573,19 @@ class MainWindowUI(QMainWindow):
         
     
     def ev_clicked_off (self):
-        # None selected (shouldn't normally be the case)
-        # selected_ev 0=node, 1=evid, 2=value
-        if self.selected_ev == None:
+        # None selected (shouldn't normally be the case as buttons disabled)
+        if self.selected_node == None:
             return
-        #print (f"Selected {self.selected_ev}")
-        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[1], False))
+        #print (f"Selected {self.selected_node}")
+        if type(self.selected_node) is VLCBEv:
+            self.api.start_request(self.api.vlcb.accessory_command(self.selected_node.node.node_id, self.selected_node.ev_id, False))
         
     def ev_clicked_on (self):
-        if self.selected_ev == None:
+        if self.selected_node == None:
             return
-        #print (f"Selected {self.selected_ev}")
-        self.api.start_request(self.api.vlcb.accessory_command(self.selected_ev[0], self.selected_ev[1], True))
+        #print (f"Selected {self.selected_node}")
+        if type(self.selected_node) is VLCBEv:
+            self.api.start_request(self.api.vlcb.accessory_command(self.selected_node.node.node_id, self.selected_node.ev_id, True))
 
     # Update table for GUI node
     def node_table_show_gui_node (self, node_item):
@@ -590,13 +600,13 @@ class MainWindowUI(QMainWindow):
         item.setText("Current state:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(node_item[0].name)
+        item.setText(node_item.name)
         item = self.ui.nodeTable.item(1,0)
-        item.setText(node_item[0].object_type)
+        item.setText(node_item.object_type)
         item = self.ui.nodeTable.item(2,0)
-        item.setText(str(node_item[0].num_states))
+        item.setText(str(node_item.num_states))
         item = self.ui.nodeTable.item(3,0)
-        item.setText(f"{node_item[0].state_value}")
+        item.setText(f"{node_item.state_value}")
         item = self.ui.nodeTable.item(4,0)
         item.setText("")
     
@@ -613,21 +623,18 @@ class MainWindowUI(QMainWindow):
         item.setText("Current state:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(node_item[0].name)
+        item.setText(node_item.parent.name)
         item = self.ui.nodeTable.item(1,0)
-        item.setText(node_item[1].get_type_str())
+        item.setText(node_item.get_type_str())
         item = self.ui.nodeTable.item(2,0)
-        item.setText(str(node_item[1].get_index()))
+        item.setText(str(node_item.get_index()))
         item = self.ui.nodeTable.item(3,0)
-        item.setText(f"{node_item[0].state_value}")
+        item.setText(f"{node_item.parent.state_value}")
         item = self.ui.nodeTable.item(4,0)
         item.setText("")
         
     # Have the node table show the node information
-    # node_item = (nn, 0)
     def node_table_show_node (self, node_item):
-        nn = node_item[0]
-        
         self.ui.tableLabel.setText("Node:")
         item = self.ui.nodeTable.verticalHeaderItem(1)
         item.setText("Node ID / CAN ID:")
@@ -639,24 +646,18 @@ class MainWindowUI(QMainWindow):
         item.setText("Events / Space:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(f"{device_model.nodes[nn].name}")
+        item.setText(f"{node_item.name}")
         item = self.ui.nodeTable.item(1,0)
-        item.setText(device_model.nodes[nn].node_string())
+        item.setText(node_item.node_string())
         item = self.ui.nodeTable.item(2,0)
-        item.setText(f"{device_model.nodes[nn].mode}")
+        item.setText(f"{node_item.mode}")
         item = self.ui.nodeTable.item(3,0)
-        item.setText(device_model.nodes[nn].manuf_string())
+        item.setText(node_item.manuf_string())
         item = self.ui.nodeTable.item(4,0)
-        item.setText(device_model.nodes[nn].ev_num_string())
+        item.setText(node_item.ev_num_string())
         
-    # node_item = (nn, ev)
+    # node_item = (VLCBEv)
     def node_table_show_ev (self, node_item):
-        nn = node_item[0]
-        ev_id = node_item[1]
-        self.selected_ev = node_item
-        # Add the EvNum
-        self.selected_ev.append(device_model.nodes[nn].ev[ev_id].en)
-        
         self.ui.tableLabel.setText("Event:")
         item = self.ui.nodeTable.verticalHeaderItem(1)
         item.setText("Node ID:")
@@ -668,15 +669,15 @@ class MainWindowUI(QMainWindow):
         item.setText("Long / short:")
         
         item = self.ui.nodeTable.item(0,0)
-        item.setText(f"{device_model.nodes[nn].ev[ev_id].name}")
+        item.setText(f"{node_item.name}")
         item = self.ui.nodeTable.item(1,0)
-        item.setText(f"{device_model.nodes[nn].node_id}")
+        item.setText(f"{node_item.node.node_id}")
         item = self.ui.nodeTable.item(2,0)
-        item.setText(f"{ev_id}")
+        item.setText(f"{node_item.ev_id}")
         item = self.ui.nodeTable.item(3,0)
-        item.setText(f"{device_model.nodes[nn].ev[ev_id].en:#08x}")
+        item.setText(f"{node_item.en:#08x}")
         item = self.ui.nodeTable.item(4,0)
-        item.setText(f"{device_model.nodes[nn].ev[ev_id].long_string()}")
+        item.setText(f"{node_item.long_string()}")
         
     # Send exit to automate as well as closing app
     def quit_app(self):

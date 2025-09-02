@@ -74,6 +74,12 @@ class LayoutLabel (LayoutObject):
     def get_type_str (self):
         return self.label_type
     
+    # Get index position of the label
+    # Normally add 1 if need user friendly name
+    # See get_name
+    def get_index (self):
+        return self.parent.labels.index(self)
+    
     def draw (self, painter):
         #print (f"Parent {self.parent} PP {self.layout_disp}")
         if self.label_type == "text":
