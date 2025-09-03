@@ -36,7 +36,23 @@ class LayoutLabel (LayoutObject):
             self.font = settings['font']
         else:
             self.font = "LiberationSans-Bold"
+        # Click enabled - unless in settings and false
+        if ('click_enabled' in settings.keys() and (
+            settings['click_enabled'] == "false" or settings['click_enabled'] == False
+            )):
+            self.click_enabled = False
+        else:
+            self.click_enabled = True
+            
         self.gui_node = None
+
+    # Activate on a label is normally a toggle
+    def activate (self):
+        # If disabled then ignore
+        if self.click_enabled == False:
+            return
+        index = self.get_index()
+        self.parent.activate("LayoutLabel", index)
 
     # Create GUI node outside of constructor (consistant with layoutbutton)
     # Must be called after creating the object

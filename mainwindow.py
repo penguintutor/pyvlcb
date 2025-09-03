@@ -571,7 +571,7 @@ class MainWindowUI(QMainWindow):
         if show:
             self.console_window.show()    
         
-    
+    # Ev clicked off button - also used for "next" when guiobject has multiple
     def ev_clicked_off (self):
         # None selected (shouldn't normally be the case as buttons disabled)
         if self.selected_node == None:
@@ -579,13 +579,22 @@ class MainWindowUI(QMainWindow):
         #print (f"Selected {self.selected_node}")
         if type(self.selected_node) is VLCBEv:
             self.api.start_request(self.api.vlcb.accessory_command(self.selected_node.node.node_id, self.selected_node.ev_id, False))
+        elif type(self.selected_node) is GuiObject:
+            self.selected_node.activate("GuiObject", 1)
+        else:
+            self.selected_node.activate()
         
+    # Ev clicked on button - also used for "prev" / activate / toggle for other objects
     def ev_clicked_on (self):
         if self.selected_node == None:
             return
         #print (f"Selected {self.selected_node}")
         if type(self.selected_node) is VLCBEv:
             self.api.start_request(self.api.vlcb.accessory_command(self.selected_node.node.node_id, self.selected_node.ev_id, True))
+        elif type(self.selected_node) is GuiObject:
+            self.selected_node.activate("GuiObject", 0)
+        else:
+            self.selected_node.activate()
 
     # Update table for GUI node
     def node_table_show_gui_node (self, node_item):

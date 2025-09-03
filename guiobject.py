@@ -6,6 +6,8 @@
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
+from eventbus import event_bus
+from guievent import GuiEvent
 
 class GuiObject:
     # object_type - eg. "point" (two buttons to select between), "toggle" (toggle can be used for lights etc. all buttons toggle)
@@ -34,6 +36,42 @@ class GuiObject:
             
         self.buttons = []
         self.labels = []
+        
+    # Activate can be called from the GUI (eg node tree)
+    # or from a child object
+    # Update self and then send a GuiEvent
+    def activate (self, click_type = "GuiObject", index=0 ):
+        print (f"Activating object {click_type} {index}")
+        # If it's a gui and we have more than 2 states then 0 = prev, 1 = next
+        if click_type == "GuiObject":
+            if self.num_states > 2 and index == 0:
+                self.state_value -= 1
+                if self.state_value < 1:
+                    self.state_value = 1
+            elif self.num_states > 2 and index == 1:
+                self.state_value += 1
+                if self.state_value > self.num_states:
+                    self.state_value = self.num_states
+            # Otherwise it's a toggle
+            else:
+                # If state value unknown then set to 1
+                if self.state_value == 0:
+                    self.state_value = 1
+                else:
+                    # Toggle 1 to 2 and 2 to 1
+                    self.state_value = 3 - self.state_value
+        # Label (if enabled) is cyclic next button
+        if click_type == "LayoutLabel":
+            self.state_value += 1
+            if self.state_value > self.num_states:
+                self.state_value = 1
+        # Button - set value to button index + 1 (giving button1 / button2 etc.)
+        if click_type == "LayoutButton":
+            self.state_value = index
+ 
+        # Create and send GUI event
+        event_bus.publish(GuiEvent("Gui", {'name': self.name, 'value': self.state_value}))
+        
         
     def get_gui_node (self):
         return self.gui_node

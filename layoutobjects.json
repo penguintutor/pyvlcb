@@ -6,18 +6,6 @@
         "settings": {}
     },
     {
-        "object": "label",
-        "guiobject": "Point 1",
-        "pos": [
-            35.77235772357724,
-            26.24113475177305
-        ],
-        "label_type": "text",
-        "settings": {
-            "text": "Point 1"
-        }
-    },
-    {
         "object": "button",
         "guiobject": "Point 1",
         "pos": [
@@ -36,5 +24,17 @@
         ],
         "button_type": "circle",
         "settings": {}
+    },
+    {
+        "object": "label",
+        "guiobject": "Point 1",
+        "pos": [
+            41.46341463414634,
+            26.95035460992908
+        ],
+        "label_type": "text",
+        "settings": {
+            "text": "Point 1"
+        }
     }
 ]

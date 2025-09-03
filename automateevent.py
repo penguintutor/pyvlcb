@@ -4,5 +4,5 @@ class AutomateEvent:
         self.event_type = event_type
         self.data = data_dict
         
-    def type (self):
+    def event_type (self):
         return "Automate"
