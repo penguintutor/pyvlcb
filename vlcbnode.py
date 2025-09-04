@@ -12,6 +12,8 @@ from vlcbev import VLCBEv
 class VLCBNode():
     def __init__ (self, node_id, mode, can_id, manuf_id, mod_id, flags):
         self.name = node_id            # Initially set to node id
+        # device_type exists over all types - inc Gui / VLCB etc.
+        self.device_type = "VLCB"
         # If layout has a real name then that will replace this later
         # Special case if node = 0xffff then it's a CAB controller
 #         if node_id == 0xffff:

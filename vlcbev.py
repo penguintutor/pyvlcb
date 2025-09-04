@@ -11,6 +11,8 @@ from time import time
 class VLCBEv():
     def __init__ (self, node, ev_id, en):
         self.name = f"{en:#08x}"
+        # device_type exists over all types - inc Gui / VLCB etc.
+        self.device_type = "VLCB"
         self.node = node    # Link to parent
         self.ev_id = ev_id  # Index of event EN#
         self.en = en        # Stored value of the event (EN3 to EN0)

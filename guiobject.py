@@ -16,6 +16,8 @@ class GuiObject:
         # which is passed to LayoutObjects
         self.parent = parent
         self.object_type = object_type
+        # device_type exists over all types - inc Gui / VLCB etc.
+        self.device_type = "Gui"
         self.name = name 
         self.data = data_dict
         # state is used to track the state of the object
@@ -37,11 +39,30 @@ class GuiObject:
         self.buttons = []
         self.labels = []
         
+    # Set value from an event
+    # Includes own events or triggers from elsewhere
+    def set_value (self, value):
+        self.state_value = value
+        # Update elements
+        for i in range (0, len(self.buttons)):
+            # If unknown state then set to unknown
+            if self.state_value == 0:
+                self.buttons[i].value = 0
+            # If this value then set to 1
+            elif self.state_value == i + 1:
+                self.buttons[i].value = 1
+            # Otherwise set to off
+            else:
+                self.buttons[i].value = 2
+        # Table is updated in mainwindow - based on GuiEvent
+        # print (f"Value set to {self.state_value}")
+        
+        
     # Activate can be called from the GUI (eg node tree)
     # or from a child object
     # Update self and then send a GuiEvent
     def activate (self, click_type = "GuiObject", index=0 ):
-        print (f"Activating object {click_type} {index}")
+        #print (f"Current {self.state_value} - Activating object {click_type} {index}")
         # If it's a gui and we have more than 2 states then 0 = prev, 1 = next
         if click_type == "GuiObject":
             if self.num_states > 2 and index == 0:
@@ -61,13 +82,15 @@ class GuiObject:
                     # Toggle 1 to 2 and 2 to 1
                     self.state_value = 3 - self.state_value
         # Label (if enabled) is cyclic next button
-        if click_type == "LayoutLabel":
+        elif click_type == "LayoutLabel":
             self.state_value += 1
             if self.state_value > self.num_states:
                 self.state_value = 1
         # Button - set value to button index + 1 (giving button1 / button2 etc.)
-        if click_type == "LayoutButton":
-            self.state_value = index
+        elif click_type == "LayoutButton":
+            self.state_value = index + 1
+            
+        #print (f"Now {self.state_value}")
  
         # Create and send GUI event
         event_bus.publish(GuiEvent("Gui", {'name': self.name, 'value': self.state_value}))

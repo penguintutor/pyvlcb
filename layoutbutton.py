@@ -26,6 +26,8 @@ class LayoutButton (LayoutObject):
         #print (f"Button Parent {parent}, pos {pos}, type {button_type}, settings {settings}")
         super().__init__(parent, pos)
         self.button_type = button_type
+        # Colours unknown, on, off
+        self.button_colors = ["#444444", "#00FF00", "#FF4444"]
         self.settings = settings
         self.min_size = 5 # min size for click area (actual size can be smaller - this is just for clicks)
         # default size is 5% width and 1:1
@@ -36,6 +38,15 @@ class LayoutButton (LayoutObject):
         # Create gui_node through get_gui_node
         # Initially set to None so know it doesn't exist
         self.gui_node = None
+        # value is 0 (not known), 1 = on, 2 = off
+        if ('value' in settings.keys()):
+            self.value = settings['value']
+        else:
+            self.value = 0
+        
+    def activate (self):
+        index = self.get_index()
+        self.parent.activate("LayoutButton", index)
         
     # What action does this have
     # Button is normally Activate, label is Toggle
@@ -53,9 +64,6 @@ class LayoutButton (LayoutObject):
             self.gui_node = QStandardItem(f"Button {self.button_type} : {self.get_name()}")
         return self.gui_node
 
-    # Called when clicked and layout in control mode
-    def controlButtonClick(self):
-        pass
     
     # Get name based on index number of button (starts at 1)
     # Is 1 higher than the list position which starts at 0
@@ -112,6 +120,8 @@ class LayoutButton (LayoutObject):
         return [width, height]
            
     def draw (self, painter):
+        painter.setBrush(QColor(self.button_colors[self.value]))
+        
         if self.button_type == "rect":
             painter.drawRect(*self.pixel_pos(), *self.pixel_size())
         elif self.button_type == "circle":

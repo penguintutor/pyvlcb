@@ -21,6 +21,9 @@ class LayoutObject:
         # to get scaling details etc.
         self.layout_disp = parent.parent
         self.pos = pos # Pos is % of position of image
+        # device_type exists over all types - inc Gui / VLCB etc.
+        # all layout objects are device_type Gui
+        self.device_type = "Gui"
         
     # Return position as pixels
     # Needs to consider that pixmap is different to label size
@@ -52,6 +55,10 @@ class LayoutObject:
                 height += int(height_diff/2)
         return [width, height]
 
+
+    # Called when clicked and layout in control mode
+    def controlButtonClick(self):
+        self.activate()
 
     # If window scales then change font size accordingly
     # only approx - based on min and max font size

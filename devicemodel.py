@@ -65,6 +65,14 @@ class DeviceModel(QObject):
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
         
+    # Return Gui object matching name
+    # Or return None
+    def get_guiobject_name (self, name):
+        for node in self.other_nodes['Gui']:
+            if node.name == name:
+                return node
+        return None
+        
     # Given a node respond with Event type
     # Eg. device, loco, app, gui, automate (in that order - if duplicate - although should not be duplicates) 
     def get_type_node (self, node_name):

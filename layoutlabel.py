@@ -62,10 +62,6 @@ class LayoutLabel (LayoutObject):
             self.gui_node = QStandardItem(f"Label {self.label_type} : {self.get_name()}")
         return self.gui_node
     
-    # Called when clicked and layout in control mode
-    def controlButtonClick(self):
-        pass
-    
     # Returns as a nested dictionary ready to save
     def to_dict (self, guiobj):
         return {

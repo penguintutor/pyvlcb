@@ -161,6 +161,7 @@ class LayoutDisplay(QLabel):
         self.adjustSize()
         button_settings = {
             'size': (2,2),
+            # Todo these are not currently used - see layoutbutton values
             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
             }
         #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
