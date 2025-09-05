@@ -51,6 +51,7 @@ class EventBus(QObject):
 
     # Map to Classes
     event_map = {
+        'VLCB': DeviceEvent,
         'Device': DeviceEvent,
         'Loco': LocoEvent,
         'App': AppEvent,

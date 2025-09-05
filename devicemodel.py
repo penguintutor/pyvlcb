@@ -25,6 +25,7 @@ class DeviceModel(QObject):
     
     # Map to Classes
     event_map = {
+        'VLCB': DeviceEvent,		# This should be used in preference to Device
         'Device': DeviceEvent,
         'Loco': LocoEvent,
         'App': AppEvent,
@@ -79,7 +80,7 @@ class DeviceModel(QObject):
         # First lookup own devices
         for key, this_node in self.nodes.items():
             if this_node.name == node_name:
-                return "Device"
+                return "VLCB"
         for loco in self.locos:
             if this_loco.name == node_name:
                 return "Loco"
@@ -90,12 +91,20 @@ class DeviceModel(QObject):
                     return this_event.type()
                 
     # Get list of nodes by names
-    def get_nodes_names(self):
+    # Default return All types - including VLCB & Gui etc.
+    def get_nodes_names(self, type="all"):
+        #print (f"Getting node names {type}")
         #print (f"Nodes {self.nodes}")
         #print (f"Keys {self.nodes.keys()}")
         node_list = []
-        for key in self.nodes.keys():
-            node_list.append(self.nodes[key].name)
+        # VLCB devices
+        if type=="all" or type=="VLCB":
+            for key in self.nodes.keys():
+                node_list.append(self.nodes[key].name)
+        # Gui devices
+        if type=="all" or type=="Gui":
+            for node in self.other_nodes['Gui']:
+                node_list.append(node.name)
         return node_list
     
 

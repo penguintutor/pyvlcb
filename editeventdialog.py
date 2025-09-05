@@ -34,16 +34,16 @@ class EditEventDialog(QDialog):
             grid_layout.addWidget(label, 0, i + 1) # Row 0, columns 1, 2, 3
 
         # Row Headers (Left Column)
-        row_headers = ["Node", "Event", "Value"]
+        row_headers = ["Type", "Node", "Event", "Value"]
         for i, header_text in enumerate(row_headers):
             label = QLabel(header_text)
             label.setAlignment(Qt.AlignRight | Qt.AlignVCenter) # Right align, vertically center
-            grid_layout.addWidget(label, i + 1, 0) # Column 0, rows 1, 2, 3
+            grid_layout.addWidget(label, i + 1, 0) # Column 0, rows 1, 2, 3, 4
 
         # --- Grid Content (QComboBoxes) ---
         # Populate the 3x3 grid with QComboBoxes
         self.selection_comboboxes = {} # Dictionary to store references to comboboxes
-        for row in range(3):
+        for row in range(4):
             for col in range(3):
                 combo_box = QComboBox()
                 #combo_box.addItems([f"Select {row+1}-{col+1}", "Choice 1", "Choice 2", "Choice 3"])
@@ -52,20 +52,23 @@ class EditEventDialog(QDialog):
                 self.selection_comboboxes[f"row{row}_col{col}"] = combo_box
 
         # Populate Event combo boxes
-        self.selection_comboboxes["row0_col0"].addItem("Select Node")
-        self.selection_comboboxes["row0_col0"].addItems(device_model.get_nodes_names())
+        self.selection_comboboxes["row0_col0"].addItems(["Select Type", "VLCB", "User Interface"])
+        #self.selection_comboboxes["row1_col0"].addItem("Select Node")
+        self.selection_comboboxes["row0_col0"].currentIndexChanged.connect(self.update_event_node_combo)
+        #self.selection_comboboxes["row1_col0"].addItems(device_model.get_nodes_names())
         # Connect the event node combo box to update the event combo box
-        self.selection_comboboxes["row0_col0"].currentIndexChanged.connect(self.update_event_combo)
+        self.selection_comboboxes["row1_col0"].currentIndexChanged.connect(self.update_event_combo)
         # Connect the event event combo box to update the state combo box
-        self.selection_comboboxes["row1_col0"].currentIndexChanged.connect(self.update_event_state_combo)
+        self.selection_comboboxes["row2_col0"].currentIndexChanged.connect(self.update_event_state_combo)
         
         # Populate Action combo boxes
-        self.selection_comboboxes["row0_col1"].addItem("Select Node")
-        self.selection_comboboxes["row0_col1"].addItems(device_model.get_nodes_names())
+        self.selection_comboboxes["row0_col1"].addItems(["Select Type", "VLCB", "User Interface"])
+        self.selection_comboboxes["row0_col1"].currentIndexChanged.connect(self.update_action_node_combo)
+        #self.selection_comboboxes["row1_col1"].addItems(device_model.get_nodes_names())
         # Connect the event node combo box to update the event combo box
-        self.selection_comboboxes["row0_col1"].currentIndexChanged.connect(self.update_action_combo)
+        self.selection_comboboxes["row1_col1"].currentIndexChanged.connect(self.update_action_combo)
         # Connect the event event combo box to update the state combo box
-        self.selection_comboboxes["row1_col1"].currentIndexChanged.connect(self.update_action_state_combo)
+        self.selection_comboboxes["row2_col1"].currentIndexChanged.connect(self.update_action_state_combo)
 
         main_layout.addWidget(grid_widget) # Add the grid widget to the main layout
 
@@ -85,15 +88,19 @@ class EditEventDialog(QDialog):
 
     # Validate before accepting dialog
     def validate(self):
-        # If node missing (event will default to first event so always filled in
+        # If type / node / event have not been selected
         # Todo still need to remove any nodes that don't have events
         if (
-            self.selection_comboboxes["row0_col0"].currentText() == "Select Node" or
-            self.selection_comboboxes["row0_col1"].currentText() == "Select Node"
+            self.selection_comboboxes["row0_col0"].currentText() == "Select Type" or
+            self.selection_comboboxes["row0_col1"].currentText() == "Select Type" or
+            self.selection_comboboxes["row1_col0"].currentText() == "Select Node" or
+            self.selection_comboboxes["row1_col1"].currentText() == "Select Node" or
+            self.selection_comboboxes["row2_col0"].currentText() == "Select Event" or
+            self.selection_comboboxes["row2_col1"].currentText() == "Select Event"
             ):
             msg_box = QMessageBox()
             msg_box.setWindowTitle ("Missing details")
-            msg_box.setText ("Two nodes must be selected")
+            msg_box.setText ("Both event and action must be selected")
             msg_box.exec()
             return
         # Very basic check to avoid circular rules
@@ -102,7 +109,8 @@ class EditEventDialog(QDialog):
         elif (
             self.selection_comboboxes["row0_col0"].currentText() == self.selection_comboboxes["row0_col1"].currentText() and
             self.selection_comboboxes["row1_col0"].currentText() == self.selection_comboboxes["row1_col1"].currentText() and
-            self.selection_comboboxes["row2_col0"].currentText() == self.selection_comboboxes["row2_col1"].currentText()
+            self.selection_comboboxes["row2_col0"].currentText() == self.selection_comboboxes["row2_col1"].currentText() and
+            self.selection_comboboxes["row3_col0"].currentText() == self.selection_comboboxes["row3_col1"].currentText()
             ):
             msg_box = QMessageBox()
             msg_box.setWindowTitle ("Circular rule")
@@ -114,56 +122,109 @@ class EditEventDialog(QDialog):
     def get_selected_values(self):
         """
         Retrieves the currently selected values from all QComboBoxes in the grid.
-        Returns a 2D dict using 'event', 'action', 'options'
-        which is a dict of 'node', 'event', 'value'
+        Returns a 2D dict 
         """
         # created empty dictionaries of the 3 columns
         selected_values = {'event':{}, 'action':{}, 'options': {}}
         # Currently keys are 'rowX_colY' and values are the selected text.
         #for key, combo_box in self.selection_comboboxes.items():
         #    selected_values[key] = combo_box.currentText()
-        selected_values['event']['node'] = self.selection_comboboxes["row0_col0"].currentText()
-        selected_values['event']['event'] = self.selection_comboboxes["row1_col0"].currentText()
-        selected_values['event']['value'] = self.selection_comboboxes["row2_col0"].currentText()
-        selected_values['action']['node'] = self.selection_comboboxes["row0_col1"].currentText()
-        selected_values['action']['event'] = self.selection_comboboxes["row1_col1"].currentText()
-        selected_values['action']['value'] = self.selection_comboboxes["row2_col1"].currentText()
+        node_type = self.selection_comboboxes["row0_col0"].currentText()
+        # special case for node_type as if "User Interface" need to convert to Gui
+        if node_type == "User Interface":
+            node_type = "Gui"
+        selected_values['event']['type'] = node_type
+        selected_values['event']['node'] = self.selection_comboboxes["row1_col0"].currentText()
+        selected_values['event']['event'] = self.selection_comboboxes["row2_col0"].currentText()
+        selected_values['event']['value'] = self.selection_comboboxes["row3_col0"].currentText()
+        #selected_values['action']['type'] = self.selection_comboboxes["row1_col0"].currentText()
+        node_type = self.selection_comboboxes["row0_col1"].currentText()
+        # special case for node_type as if "User Interface" need to convert to Gui
+        if node_type == "User Interface":
+            node_type = "Gui"
+        selected_values['action']['type'] = node_type
+        selected_values['action']['node'] = self.selection_comboboxes["row1_col1"].currentText()
+        selected_values['action']['event'] = self.selection_comboboxes["row2_col1"].currentText()
+        selected_values['action']['value'] = self.selection_comboboxes["row3_col1"].currentText()
         # todo
         # options not yet implemented as it depends upon the action Event
         return selected_values
 
+    def update_action_node_combo(self, index):
+        self.selection_comboboxes["row1_col1"].clear()
+        # Updates the event_combo based on the selected type
+        selected_type = self.selection_comboboxes["row0_col1"].currentText()
+        if selected_type == "None" or selected_type == "Select Type":
+            nodes = ["NA"]
+        else:
+            #node_type = device_model.name_to_key(selected_type)
+            # If User Interface - convert to Gui
+            if selected_type == "User Interface":
+                selected_type = "Gui"
+            nodes = device_model.get_nodes_names(selected_type)
+            # If there are no devices of this type
+            if nodes == []:
+                nodes = ["NA"]
+        # Don't say select if there are none to select
+        if nodes != ["NA"]:
+            self.selection_comboboxes["row1_col1"].addItem("Select Node")
+        self.selection_comboboxes["row1_col1"].addItems(nodes)
+
+
+    def update_event_node_combo(self, index):
+        self.selection_comboboxes["row1_col0"].clear()
+        # Updates the event_combo based on the selected type
+        selected_type = self.selection_comboboxes["row0_col0"].currentText()
+        if selected_type == "None" or selected_type == "Select Type":
+            nodes = ["NA"]
+        else:
+            #node_type = device_model.name_to_key(selected_type)
+            # If User Interface - convert to Gui
+            if selected_type == "User Interface":
+                selected_type = "Gui"
+            nodes = device_model.get_nodes_names(selected_type)
+            # If there are no devices of this type
+            if nodes == []:
+                nodes = ["NA"]
+        # Don't say select if there are none to select
+        if nodes != ["NA"]:
+            self.selection_comboboxes["row1_col0"].addItem("Select Node")
+        self.selection_comboboxes["row1_col0"].addItems(nodes)
 
     def update_event_combo(self, index):
-        self.selection_comboboxes["row1_col0"].clear()
+        #print (f"Updating event combo {index}")
+        self.selection_comboboxes["row2_col0"].clear()
         # Updates the event_combo based on the selected node.
-        selected_node = self.selection_comboboxes["row0_col0"].currentText()
-        if selected_node == "None":
+        selected_node = self.selection_comboboxes["row1_col0"].currentText()
+        if selected_node == "None" or selected_node == "Select Node" or selected_node == "NA":
             events = ["NA"]
         else:
             node_key = device_model.name_to_key(selected_node)
             events = device_model.get_events(node_key)
             if events == []:
                 events = ["NA"]
-        self.selection_comboboxes["row1_col0"].addItems(events)
+        if events != ["NA"]:
+            self.selection_comboboxes["row2_col0"].addItem("Select Event")
+        self.selection_comboboxes["row2_col0"].addItems(events)
         
     
     def update_event_state_combo(self):
-        self.selection_comboboxes["row2_col0"].clear()
+        self.selection_comboboxes["row3_col0"].clear()
         # For this just check that there is an event
         # If it's not "" or "NA" then it should have an on or off status
         # Default to on events
-        selected_event = self.selection_comboboxes["row1_col0"].currentText()
+        selected_event = self.selection_comboboxes["row2_col0"].currentText()
         if selected_event == "NA" or selected_event == "":
-            self.selection_comboboxes["row2_col0"].addItem("NA")
+            self.selection_comboboxes["row3_col0"].addItem("NA")
         else:
-            self.selection_comboboxes["row2_col0"].addItem("on")
-            self.selection_comboboxes["row2_col0"].addItem("off")
+            self.selection_comboboxes["row3_col0"].addItem("on")
+            self.selection_comboboxes["row3_col0"].addItem("off")
         
 
     def update_action_combo(self, index):
-        self.selection_comboboxes["row1_col1"].clear()
+        self.selection_comboboxes["row2_col1"].clear()
         # Updates the event_combo based on the selected node.
-        selected_node = self.selection_comboboxes["row0_col1"].currentText()
+        selected_node = self.selection_comboboxes["row1_col1"].currentText()
         if selected_node == "None":
             events = ["NA"]
         else:
@@ -171,18 +232,18 @@ class EditEventDialog(QDialog):
             events = device_model.get_events(node_key)
             if events == []:
                 events = ["NA"]
-        self.selection_comboboxes["row1_col1"].addItems(events)
+        self.selection_comboboxes["row2_col1"].addItems(events)
         
     
     def update_action_state_combo(self):
-        self.selection_comboboxes["row2_col1"].clear()
+        self.selection_comboboxes["row3_col1"].clear()
         # For this just check that there is an event
         # If it's not "" or "NA" then it should have an on or off status
         # Default to on events
-        selected_event = self.selection_comboboxes["row1_col1"].currentText()
+        selected_event = self.selection_comboboxes["row2_col1"].currentText()
         if selected_event == "NA" or selected_event == "":
-            self.selection_comboboxes["row2_col1"].addItem("NA")
+            self.selection_comboboxes["row3_col1"].addItem("NA")
         else:
-            self.selection_comboboxes["row2_col1"].addItem("on")
-            self.selection_comboboxes["row2_col1"].addItem("off")
+            self.selection_comboboxes["row3_col1"].addItem("on")
+            self.selection_comboboxes["row3_col1"].addItem("off")
         

@@ -9,7 +9,7 @@ class DeviceEvent (Event):
         # Set type after parent constructor
         #self.event_type = "Device"
         self.data = event_data
-        self.data["event_type"] = "Device"
+        self.data["event_type"] = "VLCB"
         
     # Uses getters to allow different data (eg. node vs node_id)
     # Node may be friendly name
