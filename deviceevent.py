@@ -48,6 +48,5 @@ class DeviceEvent (Event):
                 return True
         return False
         
-        
     def __str__ (self):
         return (f"{self.get_type()} {self.get_node()} {self.get_event()} {self.get_value()}")

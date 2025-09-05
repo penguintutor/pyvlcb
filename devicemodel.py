@@ -111,12 +111,17 @@ class DeviceModel(QObject):
     
     # From name to key for DeviceEvents
     # Key is node_id so returning key will return node_id
-    def name_to_key(self, name):
-        for key in self.nodes.keys():
-            # match on either name or string
-            if self.nodes[key].name == name or str(self.nodes[key]) == name:
-                #print (f"name match {name}, key {key}")
-                return key
+    def name_to_key(self, name, type="VLCB"):
+        if type == "VLCB":
+            for key in self.nodes.keys():
+                # match on either name or string
+                if self.nodes[key].name == name or str(self.nodes[key]) == name:
+                    #print (f"name match {name}, key {key}")
+                    return key
+        elif type in self.other_nodes.keys():
+            for i in range(len(self.other_nodes[type])):
+                if self.other_nodes[type][i].name == name:
+                    return i
         return None
 
     # Based on node_id and evnaame get event_id
@@ -130,11 +135,16 @@ class DeviceModel(QObject):
         
     
     # get events for specified node
-    def get_events(self, node):
-        if node in self.nodes.keys():
-            return self.nodes[node].get_ev_names()
-        else:
-            return ""
+    def get_events(self, node, type="VLCB"):
+        #print (f"Get events {node}, {type}")
+        if type == "VLCB":
+            if node in self.nodes.keys():
+                return self.nodes[node].get_ev_names()
+        # Todo add Gui here
+        elif type in self.other_nodes.keys():
+            #print (f"Checking for EVs {self.other_nodes[type]}")
+            return self.other_nodes[type][node].get_ev_names()
+        return ""
         
     # set layout from mainwindow
     def set_layout (self, layout):

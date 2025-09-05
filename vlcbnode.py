@@ -40,7 +40,7 @@ class VLCBNode():
         
         
     def get_ev_names (self):
-        #print (f"Getting Ev Names {self.name}")
+        #print (f"Getting Ev Names from {self.name}")
         #print (f" EV {self.ev}")
         list_names = []
         for key in self.ev.keys():

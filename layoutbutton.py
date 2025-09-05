@@ -70,6 +70,9 @@ class LayoutButton (LayoutObject):
     def get_name (self):
         return (self.get_index()+1)
     
+    def get_long_name (self):
+        return f"Button: {self.get_name()}"
+    
     # Get index position of the button
     # Normally add 1 if need user friendly name
     # See get_name

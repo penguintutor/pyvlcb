@@ -3,10 +3,11 @@
 class Event:
     def __init__(self):
         # Set here but override in sub class
-        self.data = {"event_type":"unknown"}
+        if not hasattr(self, 'data'):
+            self.data = {"event_type":"unknown"}
         
-    # Allow type or get_type to allow consistancy
-    def type(self):
+    # Allow event_type or get_type to allow consistancy
+    def event_type(self):
         return self.data["event_type"]
     def get_type(self):
         return self.data["event_type"]

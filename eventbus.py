@@ -2,7 +2,6 @@
 # Bus to handle events
 # Also handles event forwarding signals based on registered event associations
 
-
 from PySide6.QtCore import Qt, QTimer, QObject, Signal, Slot
 import json
 from event import Event

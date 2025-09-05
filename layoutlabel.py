@@ -77,6 +77,9 @@ class LayoutLabel (LayoutObject):
             return self.settings['text']
         else:
             return "Unknown"
+        
+    def get_long_name (self):
+        return f"Label: {self.get_name()}"
             
     # What action does this have
     # Button is normally Activate, label is Toggle

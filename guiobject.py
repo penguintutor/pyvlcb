@@ -93,8 +93,17 @@ class GuiObject:
         #print (f"Now {self.state_value}")
  
         # Create and send GUI event
-        event_bus.publish(GuiEvent("Gui", {'name': self.name, 'value': self.state_value}))
+        event_bus.publish(GuiEvent({'name': self.name, 'value': self.state_value}))
         
+    def get_ev_names (self):
+        #print (f"Getting evs for {self.name}")
+        list_names = []
+        for label in self.labels:
+            list_names.append(label.get_long_name())
+        for button in self.buttons:
+            list_names.append(button.get_long_name())
+        #print (f"Returning {list_names}")
+        return list_names
         
     def get_gui_node (self):
         return self.gui_node
