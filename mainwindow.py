@@ -1,7 +1,7 @@
 import os
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
 from PySide6.QtWidgets import QMainWindow, QAbstractItemView, QMenu
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
 from layout import Layout
@@ -170,6 +170,9 @@ class MainWindowUI(QMainWindow):
         self.ui.layoutLabel.load_image(self)
         # and UI objects
         self.ui.layoutLabel.load_layout_objects(layout_objs_file)
+        # Load close icon image (switch back to control mode)
+        #close_image_file = os.path.join(basedir, "close-icon.png")
+        #self.close_image = QImage (close_image_file)
         
         # Update LCD - used to set '-' at start
         self.update_lcd()
@@ -264,15 +267,26 @@ class MainWindowUI(QMainWindow):
             self.reset_loco_gui()
             
     # Toggles between layout edit and control mode
-    def layout_edit (self):
-        # Change layoutdisplay mode
-        if self.ui.layoutLabel.mode == "control":
+    # or provide mode to switch to that mode (control / edit)
+    def layout_edit (self, mode="toggle"):
+        #print (f"Changing {mode} - {self.ui.layoutLabel.mode}")
+        # if set is not valid then defaults to control (not expected)
+        # If called from menu then mode will be False
+        if mode == "toggle" or mode == False:
+            if self.ui.layoutLabel.mode == "control":
+                self.ui.layoutLabel.mode = "edit"
+            else:
+                self.ui.layoutLabel.mode = "control"
+        elif mode == "edit":
             self.ui.layoutLabel.mode = "edit"
+        else:
+            self.ui.layoutLabel.mode = "control"
+        # Change layoutdisplay mode
+        if self.ui.layoutLabel.mode == "edit":
             self.ui.actionLayoutEdit.setText("Layout Control")
             #self.ui.menuEditLayout.setVisible(True)
             self.ui.menuEditLayoutAction.setVisible(True)
         else:
-            self.ui.layoutLabel.mode = "control"
             self.ui.actionLayoutEdit.setText("Layout Edit")
             #self.ui.menuEditLayout.setVisible(False)
             self.ui.menuEditLayoutAction.setVisible(False)

@@ -5,9 +5,9 @@
    viewBox="0 0 189.72000000000003 130.65348438712016"
    version="1.1"
    id="svg1"
-   sodipodi:docname="track-layout02.svg"
-   inkscape:version="1.4 (e7c3feb, 2024-10-09)"
-   inkscape:export-filename="track-layout02.png"
+   sodipodi:docname="track-layout01.svg"
+   inkscape:version="1.4.2 (2aeb623e1d, 2025-05-12)"
+   inkscape:export-filename="track-layout01.png"
    inkscape:export-xdpi="257.05249"
    inkscape:export-ydpi="257.05249"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
@@ -26,11 +26,11 @@
      inkscape:pagecheckerboard="0"
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
-     inkscape:zoom="0.65825075"
-     inkscape:cx="230.15545"
-     inkscape:cy="268.1349"
-     inkscape:window-width="1920"
-     inkscape:window-height="1043"
+     inkscape:zoom="1.3165015"
+     inkscape:cx="309.15271"
+     inkscape:cy="233.5736"
+     inkscape:window-width="1854"
+     inkscape:window-height="1011"
      inkscape:window-x="0"
      inkscape:window-y="0"
      inkscape:window-maximized="1"
@@ -75,17 +75,6 @@
      transform="matrix(0.8305942,0.55687815,-0.61184365,0.79097873,0,0)" />
   <text
      xml:space="preserve"
-     style="font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0.156587;font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal"
-     x="73.451057"
-     y="40.640762"
-     id="text3"><tspan
-       sodipodi:role="line"
-       id="tspan3"
-       x="73.451057"
-       y="40.640762"
-       style="stroke-width:0.156587;-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-family:'DejaVu Math TeX Gyre';font-weight:normal;font-style:normal;font-stretch:normal;font-variant:normal;font-size:8.35134041px;font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#1a1a1a;stroke:#1a1a1a">1</tspan></text>
-  <text
-     xml:space="preserve"
      style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0.156587"
      x="50.268101"
      y="25.062817"
@@ -95,37 +84,4 @@
        x="50.268101"
        y="25.062817"
        style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.156587;fill:#1a1a1a;stroke:#1a1a1a">Pico Point Controller</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0.156587"
-     x="44.816154"
-     y="65.864098"
-     id="text3-2"><tspan
-       sodipodi:role="line"
-       id="tspan3-6"
-       x="44.816154"
-       y="65.864098"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.156587;fill:#1a1a1a;stroke:#1a1a1a">2</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0.156587"
-     x="25.324387"
-     y="84.439201"
-     id="text3-0"><tspan
-       sodipodi:role="line"
-       id="tspan3-9"
-       x="25.324387"
-       y="84.439201"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.156587;fill:#1a1a1a;stroke:#1a1a1a">3</tspan></text>
-  <text
-     xml:space="preserve"
-     style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;text-align:start;writing-mode:lr-tb;direction:ltr;text-anchor:start;fill:#1a1a1a;stroke:#1a1a1a;stroke-width:0.156587"
-     x="121.15417"
-     y="86.242714"
-     id="text3-0-1"><tspan
-       sodipodi:role="line"
-       id="tspan3-9-1"
-       x="121.15417"
-       y="86.242714"
-       style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:8.35134px;font-family:'DejaVu Math TeX Gyre';-inkscape-font-specification:'DejaVu Math TeX Gyre, Normal';font-variant-ligatures:normal;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;stroke-width:0.156587;fill:#1a1a1a;stroke:#1a1a1a">4</tspan></text>
 </svg>

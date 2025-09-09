@@ -6,11 +6,11 @@
 
 # This is ui.layoutLabel
 
-import sys
+import sys, os
 import json
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush, QCursor
-from PySide6.QtCore import Qt, QPoint, QSize
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen, QBrush, QCursor, QImage
+from PySide6.QtCore import Qt, QPoint, QSize, QRect
 from layout import Layout
 from layoutlabel import LayoutLabel
 from layoutbutton import LayoutButton
@@ -36,13 +36,19 @@ class LayoutDisplay(QLabel):
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
 
+        # Contains all the objects to display
         self.guiobjects = []
-        # todo - move buttons and labels into guiobjects
-        #self.buttons = []
-        #self.labels = []
-        
+        # buttons and labels have been moved into guiobjects
+
         # Mode is control or edit
         self.mode = "control"
+        # Set default size of close button
+        # Move later to allow for scaling 
+        self.close_button_rect = QRect(50, 50, 30, 30)
+        
+        basedir = os.path.dirname(__file__)
+        close_image_file = os.path.join(basedir, "close-icon.png")
+        self.close_image = QImage (close_image_file)
         
         
     def add_gui_device (self, device_type, device_name):
@@ -99,7 +105,14 @@ class LayoutDisplay(QLabel):
         
         for object in self.guiobjects:
             object.paint(painter)
-             
+            
+        # If in edit mode then show the cross
+        if self.mode == "edit":
+            #close_point = QPoint (self.canvas_size.width() - 50, 50)
+            # Position rect at top right
+            self.close_button_rect.moveTo(self.canvas_size.width() - 50, self.close_button_rect.y())
+            painter.drawImage(self.close_button_rect, self.close_image)
+            
         painter.end()
         self.update()
 
@@ -202,6 +215,14 @@ class LayoutDisplay(QLabel):
         if event.button() == Qt.MouseButton.LeftButton:
             mouse_pos = event.position().toPoint()
             click_pos = self.pixel_to_percent(mouse_pos)
+            # Check for close button before any other objects
+            # There is a risk that an object is placed under and cannot be moved
+            # in that case the window will need to be resized so that the object can be seen
+            #print (f"Mouse {mouse_pos}, Click {click_pos}")
+            # Uses mouse_pos as that relates to rect 
+            if self.close_button_rect.contains (mouse_pos):
+                # Calls mainwindow - so as to reset menus etc
+                self.mainwindow.layout_edit("control")
             # Test all buttons for click, if multiple hit then use one closest
             self.selected = self.nearestToClick(click_pos)
             if self.selected == None:

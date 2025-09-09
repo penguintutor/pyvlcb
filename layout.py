@@ -18,6 +18,7 @@ class Layout():
         with open(os.path.join(self.data_dir, self.layout_file), 'r') as data_file:
             self.layout_data = json.load(data_file)
         
+        
         self.node_names = {
             300: "Solenoid1",
             301: "Servo1",
