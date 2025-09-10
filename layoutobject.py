@@ -55,6 +55,27 @@ class LayoutObject:
                 height += int(height_diff/2)
         return [width, height]
 
+    # Activates locally and sets value
+    # not to be confused with activate which calls parent class on this object
+    # perform required action (eg. set / toggle and return value)
+    def activate_value (self, current_value, num_states):
+        print (f"Value is {current_value, num_states}")
+        if self.click_type == "none":
+            return current_value
+        elif self.click_type == "toggle":
+            new_value = current_value + 1
+            if new_value > num_states:
+                new_value = 1
+            return new_value
+        elif self.click_type == "value":
+            # If click value not set then get it
+            if self.click_value == None:
+                self.click_value = self.get_index() + 1
+            return self.click_value
+            
+        # temp just return current - not yet handled
+        return current_value
+
 
     # Called when clicked and layout in control mode
     def controlButtonClick(self):

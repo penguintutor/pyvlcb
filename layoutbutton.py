@@ -10,6 +10,7 @@ from PySide6.QtCore import Qt, QPoint, QSize
 from layoutobject import LayoutObject
 
 # button_type - eg. circle / square / diamond / image
+
 # additional settings are passed as a dict (eg. color_on, color_off, color_unknown - image_file (if applicable))
 # size where provided should be a percentage fo the image size
 
@@ -20,6 +21,10 @@ from layoutobject import LayoutObject
 # all dimensions are in relation to width - not height
 # so that if say 5,5 then it will be 1:1 - even for landscape image
 
+# In settings
+# click_type - "value", "toggle", "none"	# For button default = "value"
+# click_value - only used if click_type = "value" - response to click (if not spplied set to index)
+
 
 class LayoutButton (LayoutObject):
     def __init__ (self, parent, pos, button_type, settings = {}):
@@ -28,8 +33,18 @@ class LayoutButton (LayoutObject):
         self.button_type = button_type
         # Colours unknown, on, off
         self.button_colors = ["#444444", "#00FF00", "#FF4444"]
-        self.settings = settings
         self.min_size = 5 # min size for click area (actual size can be smaller - this is just for clicks)
+        ## get values from settings or set defaults
+        self.settings = settings
+        if 'click_type' in settings:
+            self.click_type = settings['click_type']
+        else:
+            self.click_type = "value"
+        if 'click_value' in settings:
+            self.click_value = settings['click_value']
+        else:
+            # If click_value set to None then it will be looked up when first used by looking up index
+            self.click_value = None
         # default size is 5% width and 1:1
         if ('size' in settings.keys()):
             self.size = settings['size']
@@ -44,6 +59,9 @@ class LayoutButton (LayoutObject):
         else:
             self.value = 0
         
+    # activate sends to parent (guiobject)
+    # This allows parent to set other objects as required
+    # note that will call back to activate_value which get the value
     def activate (self):
         index = self.get_index()
         self.parent.activate("LayoutButton", index)

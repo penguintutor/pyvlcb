@@ -1,6 +1,9 @@
 # LayoutLabel
 # displays a text label or similar
 # Change does not depend on state - but clicking will often result in a toggle
+# In settings
+# click_type - "value", "toggle", "none"	# For button default = "value"
+# click_value - only used if click_type = "value" - response to click (if not spplied set to index)
 
 import sys
 from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -14,7 +17,17 @@ class LayoutLabel (LayoutObject):
     def __init__ (self, parent, pos, label_type, settings = {}):
         super().__init__(parent, pos)
         self.label_type = label_type
+        ## get values from settings or set defaults
         self.settings = settings
+        if 'click_type' in settings:
+            self.click_type = settings['click_type']
+        else:
+            self.click_type = "value"
+        if 'click_value' in settings:
+            self.click_value = settings['click_value']
+        else:
+            # If click_value set to None then it will be looked up when first used by looking up index
+            self.click_value = None
         self.min_size = 5 # min size for click area
         # default size is 5% width and 1:1
         # just set iniitially replaced with actual size later
@@ -36,21 +49,26 @@ class LayoutLabel (LayoutObject):
             self.font = settings['font']
         else:
             self.font = "LiberationSans-Bold"
+        # Click enabled removed - use click_type = "none" to disable
         # Click enabled - unless in settings and false
-        if ('click_enabled' in settings.keys() and (
-            settings['click_enabled'] == "false" or settings['click_enabled'] == False
-            )):
-            self.click_enabled = False
-        else:
-            self.click_enabled = True
+        #if ('click_enabled' in settings.keys() and (
+        #    settings['click_enabled'] == "false" or settings['click_enabled'] == False
+        #    )):
+        #    self.click_enabled = False
+        #else:
+        #    self.click_enabled = True
             
         self.gui_node = None
 
     # Activate on a label is normally a toggle
+    # activate sends to parent (guiobject)
+    # This allows parent to set other objects as required
+    # note that will call back to activate_value which get the value
     def activate (self):
         # If disabled then ignore
-        if self.click_enabled == False:
-            return
+        #if self.click_enabled == False:
+        #    return
+        # Sends activate regardless - but if click_type=="none" will be effectively ignored
         index = self.get_index()
         self.parent.activate("LayoutLabel", index)
 

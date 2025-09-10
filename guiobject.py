@@ -83,12 +83,14 @@ class GuiObject:
                     self.state_value = 3 - self.state_value
         # Label (if enabled) is cyclic next button
         elif click_type == "LayoutLabel":
-            self.state_value += 1
-            if self.state_value > self.num_states:
-                self.state_value = 1
+            self.state_value = self.labels[index].activate_value(self.state_value, self.num_states)
+            #self.state_value += 1
+            #if self.state_value > self.num_states:
+            #    self.state_value = 1
         # Button - set value to button index + 1 (giving button1 / button2 etc.)
         elif click_type == "LayoutButton":
-            self.state_value = index + 1
+            #self.state_value = index + 1
+            self.state_value = self.buttons[index].activate_value(self.state_value, self.num_states)
             
         #print (f"Now {self.state_value}")
  
