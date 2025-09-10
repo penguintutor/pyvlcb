@@ -25,6 +25,11 @@ class LayoutObject:
         # all layout objects are device_type Gui
         self.device_type = "Gui"
         
+    # What action does this have
+    # Button is normally Value, label is Toggle
+    def get_action_type (self):
+        return self.click_type
+        
     # Return position as pixels
     # Needs to consider that pixmap is different to label size
     # Only apply percentage to pixmap, but add in any offset due to label
@@ -76,6 +81,17 @@ class LayoutObject:
         # temp just return current - not yet handled
         return current_value
 
+    # Get a string representing action
+    # eg. "Value {}"
+    def get_action_str (self):
+        # capitalize first letter using the title method
+        return_string = self.click_type.title()
+        if self.click_type == "value":
+            if self.click_value == None:
+                self.click_value = self.get_index() + 1
+            return_string += f" {self.click_value}"
+        
+        return return_string
 
     # Called when clicked and layout in control mode
     def controlButtonClick(self):

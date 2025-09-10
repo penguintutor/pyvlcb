@@ -68,8 +68,8 @@ class LayoutButton (LayoutObject):
         
     # What action does this have
     # Button is normally Activate, label is Toggle
-    def get_action_type (self):
-        return "Activate"
+    #def get_action_type (self):
+    #    return "Activate"
         
     def get_type_str (self):
         return self.button_type

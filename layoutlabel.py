@@ -22,7 +22,7 @@ class LayoutLabel (LayoutObject):
         if 'click_type' in settings:
             self.click_type = settings['click_type']
         else:
-            self.click_type = "value"
+            self.click_type = "toggle"
         if 'click_value' in settings:
             self.click_value = settings['click_value']
         else:
@@ -101,8 +101,8 @@ class LayoutLabel (LayoutObject):
             
     # What action does this have
     # Button is normally Activate, label is Toggle
-    def get_action_type (self):
-        return "Toggle"
+    #def get_action_type (self):
+    #    return "Toggle"
             
     def get_type_str (self):
         return self.label_type

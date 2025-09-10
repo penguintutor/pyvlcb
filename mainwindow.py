@@ -531,18 +531,17 @@ class MainWindowUI(QMainWindow):
             else:
                 # new item for child is [parent, type, pos]
                 self.node_table_show_gui_child(self.selected_node)
-                # Typically GUI children will say Toggle (for a label), or Activate for a button
+                # Typically GUI children will say Toggle (for a label), or value for a button
                 self.update_node_buttons (self.selected_node.get_action_type(), None)
         elif self.selected_node.device_type == "VLCB":
             if type(self.selected_node) is VLCBNode:
                 self.node_table_show_node(self.selected_node)
+                self.update_node_buttons (None, None)
             # or if it's a ev
             else:
                 self.node_table_show_ev(self.selected_node)
+                self.update_node_buttons ("On", "Off")
 
-
-            
-        
         
     # Update the node table (whether right or left click)
     def update_tree_selected (self, node_item):
@@ -623,11 +622,16 @@ class MainWindowUI(QMainWindow):
         if on_text == None:
             self.ui.evButtonOn.hide()
         else :
+            # if "value" set text to "Activate"
+            if on_text == "value" or on_text == "Value":
+                on_text = "Activate"
             self.ui.evButtonOn.setText(on_text)
             self.ui.evButtonOn.show()
         if off_text == None:
             self.ui.evButtonOff.hide()
         else :
+            if off_text == "value" or off_text == "Value":
+                off_text = "Activate"
             self.ui.evButtonOff.setText(off_text)
             self.ui.evButtonOff.show()
         
@@ -673,6 +677,8 @@ class MainWindowUI(QMainWindow):
         item.setText("Num states:")
         item = self.ui.nodeTable.verticalHeaderItem(3)
         item.setText("Current state:")
+        item = self.ui.nodeTable.verticalHeaderItem(4)
+        item.setText("Comments:")
         
         item = self.ui.nodeTable.item(0,0)
         item.setText(node_item.name)
@@ -696,6 +702,8 @@ class MainWindowUI(QMainWindow):
         item.setText("ID:")
         item = self.ui.nodeTable.verticalHeaderItem(3)
         item.setText("Current state:")
+        item = self.ui.nodeTable.verticalHeaderItem(4)
+        item.setText("Click action:")
         
         item = self.ui.nodeTable.item(0,0)
         item.setText(node_item.parent.name)
@@ -706,7 +714,7 @@ class MainWindowUI(QMainWindow):
         item = self.ui.nodeTable.item(3,0)
         item.setText(f"{node_item.parent.state_value}")
         item = self.ui.nodeTable.item(4,0)
-        item.setText("")
+        item.setText(node_item.get_action_str())
         
     # Have the node table show the node information
     def node_table_show_node (self, node_item):
