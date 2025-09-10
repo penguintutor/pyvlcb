@@ -498,7 +498,12 @@ class MainWindowUI(QMainWindow):
         # Create a context Menu
         menu = QMenu()
         # different menu depending upon node type
-        edit_action = menu.addAction("Edit")
+        #print (f"Node {node_item.text()}")
+        #print (f"Selected {self.selected_node}")
+        if self.selected_node.device_type == "Gui":
+            edit_action = menu.addAction("Edit")
+        else:
+            edit_action = None
         
         selected_action = menu.exec(self.ui.nodeTreeView.viewport().mapToGlobal(position))
         if selected_action == edit_action:
