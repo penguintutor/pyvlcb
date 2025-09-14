@@ -1,6 +1,6 @@
 import os
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
-from PySide6.QtWidgets import QMainWindow, QAbstractItemView, QMenu
+from PySide6.QtWidgets import QMainWindow, QAbstractItemView, QMenu, QLineEdit
 from PySide6.QtGui import QPixmap, QImage
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
@@ -22,6 +22,7 @@ from guiobject import GuiObject
 from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
+from editguidialog import EditGuiDialog
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
@@ -507,7 +508,17 @@ class MainWindowUI(QMainWindow):
         
         selected_action = menu.exec(self.ui.nodeTreeView.viewport().mapToGlobal(position))
         if selected_action == edit_action:
-            print ("Edit")
+            #print ("Edit")
+            #edit_gui_dialog = EditGuiDialog()
+            #edit_gui_dialog.show()
+            #edit_gui_dialog.exec()
+            #edit_gui_dialog.open()
+            #edit_gui_dialog.exec_()
+            edit_gui_dialog = loader.load("editguidialog.ui", None)
+            print (f"Dialog {edit_gui_dialog} - {edit_gui_dialog.findChildren(QLineEdit)}")
+            edit_gui_dialog.lineEdit_3.setText ("Dev name")
+            edit_gui_dialog.numStatesEdit.setText ("Test")
+            edit_gui_dialog.exec()
         
     def tree_clicked(self, item):
         node_item = device_model.node_model.itemFromIndex(item)

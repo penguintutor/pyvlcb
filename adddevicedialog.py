@@ -32,7 +32,7 @@ class AddDeviceDialog(QDialog):
         device_layout = QHBoxLayout()
         device_label = QLabel("Type:")
         self.device_combo = QComboBox()
-        self.device_combo.addItems(["point","toggle"])
+        self.device_combo.addItems(["Point","Toggle"])
         device_layout.addWidget(device_label)
         device_layout.addWidget(self.device_combo)
         main_layout.addLayout(device_layout)
@@ -70,6 +70,6 @@ class AddDeviceDialog(QDialog):
 
     def get_selected_values(self):
         # Returns the selected node and event.
-        gui_device = self.device_combo.currentText()
+        gui_device = self.device_combo.currentText().lower()
         name_text = self.name_label_textedit.text()
         return [gui_device, name_text]
