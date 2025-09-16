@@ -32,6 +32,8 @@ class LayoutButton (LayoutObject):
         super().__init__(parent, pos)
         self.button_type = button_type
         # Colours unknown, on, off
+        # Button can have more values - but that would need these to be set using a config
+        # file as the GUI edit only has 3 colours
         self.button_colors = ["#444444", "#00FF00", "#FF4444"]
         self.min_size = 5 # min size for click area (actual size can be smaller - this is just for clicks)
         ## get values from settings or set defaults
@@ -59,6 +61,16 @@ class LayoutButton (LayoutObject):
         else:
             self.value = 0
         
+    # Sets the button_type
+    # If lowercase (default) then sets to lowercase, otherwise keep case
+    def set_type_str (self, new_type, lowercase=True):
+        if lowercase == True:
+            self.button_type = new_type.lower()
+        else:
+            self.button_type = new_type
+        # Also update the qstandarditem
+        #self.gui_node.setText(f"GUI {self.object_type} : {self.name}")
+        
     # activate sends to parent (guiobject)
     # This allows parent to set other objects as required
     # note that will call back to activate_value which get the value
@@ -71,7 +83,10 @@ class LayoutButton (LayoutObject):
     #def get_action_type (self):
     #    return "Activate"
         
-    def get_type_str (self):
+    # Capitalize set to True to capitalize first letter (used for user friendly)
+    def get_type_str (self, capitalize=False):
+        if capitalize == True:
+            return self.button_type.capitalize()
         return self.button_type
         
     # Create GUI node outside of constructor as it needs to find it's index
@@ -141,7 +156,12 @@ class LayoutButton (LayoutObject):
         return [width, height]
            
     def draw (self, painter):
-        painter.setBrush(QColor(self.button_colors[self.value]))
+        # There are only 3 colours by default, if value is larger than number of colours
+        # then use unknown colour
+        color_val = self.value
+        if self.value >= len(self.button_colors):
+            color_val = 0
+        painter.setBrush(QColor(self.button_colors[color_val]))
         
         if self.button_type == "rect":
             painter.drawRect(*self.pixel_pos(), *self.pixel_size())

@@ -53,50 +53,48 @@
      <x>60</x>
      <y>70</y>
      <width>411</width>
-     <height>311</height>
+     <height>101</height>
     </rect>
    </property>
    <layout class="QGridLayout" name="gridLayout">
-    <item row="3" column="0">
-     <widget class="QLabel" name="label_3">
-      <property name="text">
-       <string>Device Type</string>
-      </property>
-     </widget>
-    </item>
-    <item row="8" column="0">
-     <widget class="QLabel" name="label_6">
-      <property name="text">
-       <string>Colours</string>
-      </property>
-     </widget>
-    </item>
-    <item row="6" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout">
+    <item row="4" column="1">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
       <item>
-       <widget class="QLineEdit" name="lineEdit_3"/>
+       <widget class="QSpinBox" name="numStatesBox">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <property name="layoutDirection">
+         <enum>Qt::LeftToRight</enum>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+        <property name="minimum">
+         <number>2</number>
+        </property>
+       </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="spinBox_2"/>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
     <item row="2" column="1">
      <widget class="QLineEdit" name="devNameEdit"/>
-    </item>
-    <item row="3" column="1">
-     <widget class="QComboBox" name="comboBox">
-      <item>
-       <property name="text">
-        <string>Point</string>
-       </property>
-      </item>
-      <item>
-       <property name="text">
-        <string>Toggle</string>
-       </property>
-      </item>
-     </widget>
     </item>
     <item row="4" column="0">
      <widget class="QLabel" name="label_4">
@@ -112,31 +110,107 @@
       </property>
      </widget>
     </item>
-    <item row="6" column="0">
-     <widget class="QLabel" name="label_5">
+    <item row="3" column="0">
+     <widget class="QLabel" name="label_3">
       <property name="text">
-       <string>Size</string>
+       <string>Device Type</string>
       </property>
      </widget>
     </item>
-    <item row="4" column="1">
-     <layout class="QHBoxLayout" name="horizontalLayout_2">
+    <item row="3" column="1">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
       <item>
-       <widget class="QLineEdit" name="numStatesEdit"/>
+       <widget class="QComboBox" name="devTypeCombo">
+        <property name="minimumSize">
+         <size>
+          <width>120</width>
+          <height>0</height>
+         </size>
+        </property>
+        <item>
+         <property name="text">
+          <string>Point</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Toggle</string>
+         </property>
+        </item>
+       </widget>
       </item>
       <item>
-       <widget class="QSpinBox" name="spinBox">
-        <property name="minimum">
-         <number>2</number>
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
         </property>
-       </widget>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
       </item>
      </layout>
     </item>
-    <item row="8" column="1">
-     <widget class="QLineEdit" name="lineEdit_4"/>
-    </item>
    </layout>
+  </widget>
+  <widget class="QListWidget" name="labelsList">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>200</y>
+     <width>411</width>
+     <height>91</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QListWidget" name="buttonsList">
+   <property name="geometry">
+    <rect>
+     <x>60</x>
+     <y>320</y>
+     <width>411</width>
+     <height>101</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_5">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>180</y>
+     <width>66</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Labels:</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="label_6">
+   <property name="geometry">
+    <rect>
+     <x>20</x>
+     <y>300</y>
+     <width>81</width>
+     <height>17</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>14</pointsize>
+    </font>
+   </property>
+   <property name="text">
+    <string>Buttons:</string>
+   </property>
   </widget>
  </widget>
  <resources/>

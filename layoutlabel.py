@@ -8,7 +8,7 @@
 import sys
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QApplication, QLabel, QVBoxLayout, QWidget, QMainWindow
-from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont
+from PySide6.QtGui import QMouseEvent, QPixmap, QColor, QPainter, QFont, QPen
 from PySide6.QtCore import Qt, QPoint, QSize
 from layoutobject import LayoutObject
 
@@ -36,6 +36,7 @@ class LayoutLabel (LayoutObject):
         else:
             self.size = (5, 5)
         # set font size if not in settings
+        # Gui settings just sets min, then max is calculated as *3
         if ('min_font_size' in settings.keys()):
             self.min_font_size = settings['min_font_size']
         else:
@@ -49,16 +50,26 @@ class LayoutLabel (LayoutObject):
             self.font = settings['font']
         else:
             self.font = "LiberationSans-Bold"
+        # set color
+        if ('color' in settings.keys()):
+            self.font_color = settings['color']
+        else:
+            self.font_color = "#000000"
         # Click enabled removed - use click_type = "none" to disable
-        # Click enabled - unless in settings and false
-        #if ('click_enabled' in settings.keys() and (
-        #    settings['click_enabled'] == "false" or settings['click_enabled'] == False
-        #    )):
-        #    self.click_enabled = False
-        #else:
-        #    self.click_enabled = True
             
         self.gui_node = None
+
+    # Capitalize set to True to capitalize first letter (used for user friendly)
+    def get_type_str (self, capitalize=False):
+        if capitalize == True:
+            return self.label_type.capitalize()
+        return self.label_type
+
+    # Returns a valid number - if not set then return 0
+    def get_click_value (self):
+        if self.click_value == None:
+            return 0
+        return self.click_value
 
     # Activate on a label is normally a toggle
     # activate sends to parent (guiobject)
@@ -103,9 +114,6 @@ class LayoutLabel (LayoutObject):
     # Button is normally Activate, label is Toggle
     #def get_action_type (self):
     #    return "Toggle"
-            
-    def get_type_str (self):
-        return self.label_type
     
     # Get index position of the label
     # Normally add 1 if need user friendly name
@@ -135,6 +143,10 @@ class LayoutLabel (LayoutObject):
             #print (f"Pos y {self.pos[1]}, ascent {ascent}")
             # get a new y with offset (still percentage)
             draw_text_y = self.pos[1] + ascent
+            # Set color
+            pen = QPen (QColor(self.font_color))
+            # Set the painter pen
+            painter.setPen(pen)
             # Draw using normal x pos (still left) but shifted y pos
             painter.drawText(*self.pixel_pos([self.pos[0], draw_text_y], rel=False), self.settings['text'])
             
