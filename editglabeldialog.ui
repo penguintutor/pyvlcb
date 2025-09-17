@@ -52,7 +52,7 @@
     <rect>
      <x>60</x>
      <y>70</y>
-     <width>411</width>
+     <width>466</width>
      <height>311</height>
     </rect>
    </property>
@@ -191,13 +191,7 @@
       <item>
        <layout class="QHBoxLayout" name="horizontalLayout_5">
         <item>
-         <widget class="QComboBox" name="fontCombo">
-          <item>
-           <property name="text">
-            <string>Default</string>
-           </property>
-          </item>
-         </widget>
+         <widget class="QFontComboBox" name="fontCombo"/>
         </item>
         <item>
          <widget class="QSpinBox" name="fontSizeBox">

@@ -39,6 +39,31 @@ class GuiObject:
         self.buttons = []
         self.labels = []
         
+    # Default font saved on mainwindow - rather than needing to use singleton QApplication this can provide it
+    def get_default_font (self):
+        return self.parent.mainwindow.default_font
+        
+    # If changing name then must use this to update QStandardItem
+    def set_name (self, new_name):
+        self.name = new_name
+        self.gui_node.setText(f"GUI {self.object_type} : {self.name}")
+        
+    # Sets the device_type
+    # If lowercase (default) then sets to lowercase, otherwise keep case
+    def set_type_str (self, new_type, lowercase=True):
+        if lowercase == True:
+            self.object_type = new_type.lower()
+        else:
+            self.object_type = new_type
+        # Also update the qstandarditem
+        self.gui_node.setText(f"GUI {self.object_type} : {self.name}")
+        
+    # Gets object type as a string (option to capitalize first letter - as used in menus)
+    def get_type_str (self, capitalize=False):
+        if capitalize == True:
+            return self.object_type.capitalize()
+        return self.object_type
+        
     # Set value from an event
     # Includes own events or triggers from elsewhere
     def set_value (self, value):

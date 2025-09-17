@@ -46,10 +46,12 @@ class LayoutLabel (LayoutObject):
         else:
             # Default for max is 3 x min
             self.max_font_size = self.min_font_size * 3
+        # font in settings is font name (family)
         if ('font' in settings.keys()):
             self.font = settings['font']
         else:
-            self.font = "LiberationSans-Bold"
+            # Use app default
+            self.font = self.parent.get_default_font().family()
         # set color
         if ('color' in settings.keys()):
             self.font_color = settings['color']
@@ -58,6 +60,14 @@ class LayoutLabel (LayoutObject):
         # Click enabled removed - use click_type = "none" to disable
             
         self.gui_node = None
+
+    # Sets the button_type
+    # If lowercase (default) then sets to lowercase, otherwise keep case
+    def set_type_str (self, new_type, lowercase=True):
+        if lowercase == True:
+            self.click_type = new_type.lower()
+        else:
+            self.click_type = new_type
 
     # Capitalize set to True to capitalize first letter (used for user friendly)
     def get_type_str (self, capitalize=False):
@@ -149,7 +159,9 @@ class LayoutLabel (LayoutObject):
             painter.setPen(pen)
             # Draw using normal x pos (still left) but shifted y pos
             painter.drawText(*self.pixel_pos([self.pos[0], draw_text_y], rel=False), self.settings['text'])
-            
+            # Set pen back to black
+            pen = QPen (QColor("#000000"))
+            painter.setPen(pen)
         
     # For label need to check for width and height as typically width significantly larger than height
     # return -1 if not a hit, or distance if it is

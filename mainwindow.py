@@ -1,6 +1,6 @@
 import os
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
-from PySide6.QtWidgets import QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog
 from PySide6.QtGui import QPixmap, QImage, QPalette, QColor
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
@@ -61,6 +61,10 @@ class MainWindowUI(QMainWindow):
         self.update_in_progress = False
         
         self.api = ApiHandler(self.threadpool, url)
+        
+        # Get the QFont object for the default font
+        app = QApplication.instance()
+        self.default_font = app.font()
         
         # Create a timer to periodically check for updates
         self.timer = QTimer(self)
@@ -607,7 +611,30 @@ class MainWindowUI(QMainWindow):
         
     def color_picker_off (self):
         self.color_picker_dialog ("off")
-        
+    
+    # Only single colour for label so call directly
+    # Still use same generic set_button_color to  update the color
+    def color_picker_label (self):
+        button = self.edit_gui_dialog.colorButton
+        current_color = button.palette().color(QPalette.Button)
+        #print (f"Current color {current_color}")
+        # Open the color picker dialog and wait for user selection
+        # Pass the current button color as the initial color
+        #color = QColorDialog.getColor(current_color, self.edit_gui_dialog)
+        # Using enhanced color picker (possible bug with the above simplified method)
+        # possible bug in hsv val setting - so set manually to 255
+        # dont know why bug here but not in the other color pickers
+        hue, sat, val, alpha = current_color.getHsvF()
+        current_color.setHsvF(hue, sat, 1, alpha)
+        color_dialog = QColorDialog(current_color, self.edit_gui_dialog)
+        #color_dialog.setOptions(QColorDialog.ShowAlphaChannel)
+        if color_dialog.exec() == QDialog.Accepted:
+            color = color_dialog.selectedColor()
+            # Check if a valid color was selected (the user didn't cancel)
+            if color.isValid():
+                # Update the button's palette with the new color
+                self.set_button_color(button, color)
+    
     def color_picker_dialog(self, button_type):
         if button_type == "on":
             button = self.edit_gui_dialog.colorOnButton
@@ -668,47 +695,32 @@ class MainWindowUI(QMainWindow):
         self.edit_gui_dialog.colorButton.setAutoFillBackground(True)
 
         # Listener for the color picker
-        self.edit_gui_dialog.colorButton.clicked.connect(self.color_picker_unknown)
+        self.edit_gui_dialog.colorButton.clicked.connect(self.color_picker_label)
         
         result = self.edit_gui_dialog.exec()
         
-        if result == QDialog.Accepted and False:
-            object_type = self.edit_gui_dialog.buttonTypeCombo.currentText()
+        if result == QDialog.Accepted:
+            click_type = self.edit_gui_dialog.clickTypeCombo.currentText()
             # check for each value
-            button.set_type_str (object_type)
+            label.set_type_str (click_type)
             
-            size = [0,0]
-            size[0] = self.edit_gui_dialog.buttonSizeXBox.value()
-            if object_type == "Circle":
-                size[1] = size[0]
-            else:
-                size[1] = self.edit_gui_dialog.buttonSizeYBox.value()
+            label.click_value = self.edit_gui_dialog.labelClickValueBox.value()
             
-            value = self.edit_gui_dialog.valueBox.value()
-            # Num states must be a sensible number 2 to 100
-            # The dialog should only allow that anyway
-            if value >= 0 and value <= 100:
-                button.click_value = value
+            # If set through here then max is 3 x min_font_size
+            # Could set outside of this
+            label.min_font_size = self.edit_gui_dialog.fontSizeBox.value()
+            label.max_font_size = 3 * label.min_font_size
+            
+            # Do not use the Qfont object directly, instead get the font family name
+            label.font = self.edit_gui_dialog.fontCombo.currentFont().family()
                 
-            # Get the colours
-            # Get the button's current palette
-            current_palette = self.edit_gui_dialog.colorUnknownButton.palette()
+            # Get the colour
+            # Get the button current palette
+            current_palette = self.edit_gui_dialog.colorButton.palette()
             # Get the color for the button role
             button_color = current_palette.color(QPalette.Button)
             # Convert the QColor object to a hex string
-            button.button_colors[0] = button_color.name()
-            # On button
-            current_palette = self.edit_gui_dialog.colorOnButton.palette()
-            # Get the color for the button role
-            button_color = current_palette.color(QPalette.Button)
-            # Convert the QColor object to a hex string
-            button.button_colors[1] = button_color.name()
-            # Off button
-            current_palette = self.edit_gui_dialog.colorOffButton.palette()
-            # Get the color for the button role
-            button_color = current_palette.color(QPalette.Button)
-            # Convert the QColor object to a hex string
-            button.button_colors[2] = button_color.name()
+            label.font_color = button_color.name()
 
             
     # Handle right click - need to get item from position
