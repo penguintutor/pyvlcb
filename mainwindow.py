@@ -12,6 +12,7 @@ from apihandler import ApiHandler
 from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
+from locowindow import LocoWindow
 from eventwindow import EventWindow
 from adddevicedialog import AddDeviceDialog
 from addlabeldialog import AddLabelDialog
@@ -89,6 +90,7 @@ class MainWindowUI(QMainWindow):
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
+        self.loco_window = None
         self.event_window = None
         
         # Signals
@@ -112,6 +114,7 @@ class MainWindowUI(QMainWindow):
         # Tools Menu        
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
         self.ui.actionSettings.triggered.connect(self.settings)
+        self.ui.actionLocoManager.triggered.connect(self.loco_manager)
         self.ui.actionEvents.triggered.connect(self.events_edit)
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         
@@ -199,7 +202,14 @@ class MainWindowUI(QMainWindow):
         if gui_node != None:
             gui_node.set_value(gui_event.data['value'])
         self.update_table()
-    
+
+    # Edit events associations between different objects
+    def loco_manager (self):
+        if self.loco_window == None:
+            self.loco_window = LocoWindow(self)
+        self.loco_window.update()
+        self.loco_window.display()
+
     # Edit events associations between different objects
     def events_edit (self):
         if self.event_window == None:

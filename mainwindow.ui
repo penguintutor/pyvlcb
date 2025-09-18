@@ -50,7 +50,7 @@
          </size>
         </property>
         <property name="currentIndex">
-         <number>1</number>
+         <number>0</number>
         </property>
         <widget class="QWidget" name="locoTab">
          <attribute name="title">
@@ -726,6 +726,7 @@
     </property>
     <addaction name="actionLayoutEdit"/>
     <addaction name="actionSettings"/>
+    <addaction name="actionLocoManager"/>
     <addaction name="actionEvents"/>
     <addaction name="actionShowConsole"/>
    </widget>
@@ -798,6 +799,11 @@
   <action name="actionAddDevice">
    <property name="text">
     <string>Add Device</string>
+   </property>
+  </action>
+  <action name="actionLocoManager">
+   <property name="text">
+    <string>Loco Manager</string>
    </property>
   </action>
  </widget>
