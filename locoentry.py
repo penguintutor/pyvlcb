@@ -27,7 +27,7 @@ class LocoEntry(QWidget):
 
         # Loco Class
         self.class_label = QLabel(loco_class)
-        self.class_label.setFixedWidth(80)
+        self.class_label.setFixedWidth(120)
         row_layout.addWidget(self.class_label)
 
         # Loco Name
@@ -37,14 +37,10 @@ class LocoEntry(QWidget):
 
         # Loco Image
         self.image_label = QLabel()
-        pixmap = QPixmap(loco_image_path).scaled(100, 50, Qt.KeepAspectRatio, Qt.SmoothTransformation)
+        pixmap = QPixmap(loco_image_path).scaled(100, 40, Qt.KeepAspectRatio, Qt.SmoothTransformation)
         self.image_label.setPixmap(pixmap)
-        self.image_label.setFixedSize(100, 50)
+        self.image_label.setFixedSize(100, 40)
         row_layout.addWidget(self.image_label)
-
-        # Enable Checkbox
-        self.enable_checkbox = QCheckBox("Enabled")
-        row_layout.addWidget(self.enable_checkbox)
 
         # Spacer to push buttons to the right
         row_layout.addStretch(1)

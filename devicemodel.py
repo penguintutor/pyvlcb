@@ -41,8 +41,16 @@ class DeviceModel(QObject):
         
         # dict of nodes indexed by NN
         self.nodes = {}
+        
+        # Yards are used to load locos from
+        # Don't actually store the locos in here, but the yard is used to get the locos
+        # and append to self.locos
+        # The yards are saved into the yards_file
+        # Entries within each yard are then stored in seperate files
+        self.yards = []
         # typically the GUI will have one active loco = [0]
         # allow more to allow automation
+        # Don't add directly instead use add_loco method which avoids duplicates
         self.locos = []
         
         # Other nodes are stored in here for lookup in menus or eventbus
@@ -65,6 +73,25 @@ class DeviceModel(QObject):
         # The GUI nodes are contained within the node class instances. This is specific to the node list in TreeView
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
+        
+    def add_yard (self, title, filename):
+        pass
+        
+    def load_yard_file (self, filename):
+        try:
+            with open(filename, 'r') as data_file:
+                yard_data = json.load(data_file)
+            print("File loaded successfully!")
+            # process yard_data goes here
+        except FileNotFoundError:
+            print(f"Warning: Yard file '{filename}' was not found.")
+            # Create a yard called "Default"
+            self.add_yard ("Default", "default.json")
+        except json.JSONDecodeError:
+            print(f"Error: The file '{filename}' is not a valid JSON file.")
+            # Create a yard called "Default"
+            self.add_yard ("Default", "default.json")
+            return
         
     # Return Gui object matching name
     # Or return None

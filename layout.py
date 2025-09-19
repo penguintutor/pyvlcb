@@ -1,5 +1,6 @@
 # Class to hold details about the layout / locos etc
 # Reads data from layout.json file
+# Todo in future add multiple layout files
 import json
 import os
 

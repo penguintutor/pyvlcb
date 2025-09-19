@@ -1,10 +1,13 @@
 import sys
+import re
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QLabel, QPushButton, QScrollArea, QFrame, QCheckBox, QDialog,
-    QDialogButtonBox, QStyle) 
+    QDialogButtonBox, QStyle, QComboBox, QMessageBox) 
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt, QSize
 from locoentry import LocoEntry
+from addyarddialog import AddYardDialog
+from devicemodel import device_model 
 
 
 class LocoWindow(QMainWindow):
@@ -12,7 +15,11 @@ class LocoWindow(QMainWindow):
         super().__init__(parent)
 
         self.setWindowTitle("Loco Manager")
-        self.setFixedSize(600, 400)
+        self.setFixedSize(650, 400)
+        
+        # List containing filenames holding the loco info
+        # and whether it is enabled or not (filename, enabled
+        self.loco_files = []
 
         # Main widget and layout
         main_widget = QWidget()
@@ -29,6 +36,18 @@ class LocoWindow(QMainWindow):
 
         # Spacer to push add button to the right
         header_layout.addStretch(1)
+        
+        # Yard selection button
+        self.yard_selection_combo = QComboBox()
+        self.yard_selection_combo.addItems(["Default"])
+        header_layout.addWidget(self.yard_selection_combo, alignment=Qt.AlignTop | Qt.AlignLeft)
+        
+        header_layout.addSpacing (80)
+
+        # Add Yard button (top right)
+        self.add_yard_button = QPushButton("Add Yard")
+        self.add_yard_button.clicked.connect(self.open_add_yard_dialog)
+        header_layout.addWidget(self.add_yard_button, alignment=Qt.AlignTop | Qt.AlignRight)
 
         # Add Loco button (top right)
         self.add_loco_button = QPushButton("Add Loco")
@@ -57,11 +76,11 @@ class LocoWindow(QMainWindow):
 
         main_layout.addLayout(bottom_bar_layout)
 
-        # Examples
-        self.add_loco_entry("0001", "A3 Class", "Flying Scotsman", "loco_image.png")
-        self.add_loco_entry(2, "A4 Class", "Mallard", "loco_image.png")
-        self.add_loco_entry(3, "Coronation Class", "Duchess of Sutherland", "loco_image.png")
-        self.add_loco_entry(4, "A3 Class", "Flying Scotsman", "loco_image.png")
+#         # Examples
+#         self.add_loco_entry("0001", "A3 Class", "Flying Scotsman", "loco_image.png")
+#         self.add_loco_entry(2, "A4 Class", "Mallard", "loco_image.png")
+#         self.add_loco_entry(3, "Coronation Class", "Duchess of Sutherland", "loco_image.png")
+#         self.add_loco_entry(4, "A3 Class", "Flying Scotsman", "loco_image.png")
 
         
     def update (self):
@@ -81,6 +100,39 @@ class LocoWindow(QMainWindow):
     def add_loco_entry(self, loco_id, loco_class, loco_name, loco_image_path):
         loco_entry = LocoEntry(loco_id, loco_class, loco_name, loco_image_path)
         self.loco_list_layout.addWidget(loco_entry)
+    
+    # Converts a string of text into a valid filename.
+    # Replaces spaces with underscores and removes or replaces characters
+    # that are not allowed in most common file systems.
+    def title_to_filename(self, text):
+    # Replace spaces with underscores
+    filename = text.replace(' ', '_')
+
+    # Remove characters that are generally not allowed in filenames.
+    # The regex pattern [^\w\s\-] matches any character that is NOT a word
+    # character (alphanumeric and underscore), whitespace, or a hyphen.
+    # The underscore replacement in the first step is why we want to keep
+    # the underscore in the valid characters here.
+    filename = re.sub(r'[^\w\.\-]', '', filename)
+    return filename
+
+    def open_add_yard_dialog(self):
+        dialog = AddYardDialog(self)
+        # Show the dialog and wait for user input
+        if dialog.exec() == QDialog.Accepted:
+            # The OK button was pressed
+            if dialog.new_yard:
+                # New yard name is title
+                new_yard = dialog.new_yard
+                # create filename
+                filename = self.title_to_filename(new_yard)
+                # create the new yard
+                device_model.add_yard (new_yard, filename)
+            else:
+                QMessageBox.warning(self, "Invalid Input", "The yard name cannot be empty.")
+        else:
+            # The Cancel button was pressed or the dialog was closed
+            pass
 
     def open_add_loco_dialog(self):
         print("Add new loco")
