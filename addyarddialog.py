@@ -19,7 +19,7 @@ class AddYardDialog(QDialog):
         # Set the dialog to be modal right here in the initializer
         #self.setModal(True)
         # Set the window to be application-modal
-        #self.setWindowModality(Qt.ApplicationModal)
+        self.setWindowModality(Qt.ApplicationModal)
 
         # Variable to store the new yard name
         self.new_yard = None

@@ -39,8 +39,10 @@ class LocoWindow(QMainWindow):
         header_layout.addStretch(1)
         
         # Yard selection button
+        self.yard_label = QLabel("Yard: ")
+        header_layout.addWidget(self.yard_label, alignment=Qt.AlignVCenter | Qt.AlignRight)
         self.yard_selection_combo = QComboBox()
-        self.yard_selection_combo.addItems(["Default"])
+        self.yard_selection_combo.addItems(device_model.get_yard_list())
         header_layout.addWidget(self.yard_selection_combo, alignment=Qt.AlignTop | Qt.AlignLeft)
         
         header_layout.addSpacing (80)
@@ -120,11 +122,12 @@ class LocoWindow(QMainWindow):
         # The underscore replacement in the first step is why we want to keep
         # the underscore in the valid characters here.
         filename = re.sub(r'[^\w\.\-]', '', filename)
+        filename = filename.lower() + ".json"
         return filename
 
     def open_add_yard_dialog(self):
         self.dialog = AddYardDialog(self)
-        self.parent.windowActivated.connect(self.raise_dialog)
+        #self.parent.windowActivated.connect(self.raise_dialog)
         
         # Show the dialog and wait for user input
         if self.dialog.exec() == QDialog.Accepted:
@@ -141,12 +144,14 @@ class LocoWindow(QMainWindow):
             # Cancel button pressed or dialog closed
             return
         # Check yard doesn't exist
-        if (device_model.check_yard_exist()):
+        if (device_model.check_yard_exist(filename)):
             QMessageBox.warning(self, "Warning", "The yard already exists.")
             return
         else:
             # create the new yard
             device_model.add_yard (new_yard, filename)
+            # Add it to the combobox
+            self.yard_selection_combo.addItem(new_yard)
 
 
 
@@ -157,11 +162,11 @@ class LocoWindow(QMainWindow):
         #          add_dialog.exec()
         
     
-    # If the dialog (add yard or add loco) loses focus then raise
-    def raise_dialog(self):
-        print ("Raise")
-        # Check if the dialog exists and is visible before raising it
-        if self.dialog and self.dialog.isVisible():
-            print (f"Raising dialog {self.dialog}")
-            self.dialog.raise_()
-            self.dialog.activateWindow()
+#     # If the dialog (add yard or add loco) loses focus then raise
+#     def raise_dialog(self):
+#         print ("Raise")
+#         # Check if the dialog exists and is visible before raising it
+#         if self.dialog and self.dialog.isVisible():
+#             print (f"Raising dialog {self.dialog}")
+#             self.dialog.raise_()
+#             self.dialog.activateWindow()

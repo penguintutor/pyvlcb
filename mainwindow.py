@@ -27,6 +27,8 @@ from layoutlabel import LayoutLabel
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
 basedir = os.path.dirname(__file__)
+datadir = os.path.join(basedir, "data")
+
 
 # Layout Display is from the loader to interact use
 # self.ui.layoutLabel
@@ -197,7 +199,7 @@ class MainWindowUI(QMainWindow):
         self.status = "Not connected"
         
         # Load locos
-        device_model.load_yard_file (os.path.join(basedir, yard_file))
+        device_model.load_yard_file (os.path.join(datadir, yard_file))
     
         # Initial discover request
         self.api.discover()

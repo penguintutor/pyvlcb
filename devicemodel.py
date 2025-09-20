@@ -83,6 +83,10 @@ class DeviceModel(QObject):
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
         
+    # Return list of yard titles
+    def get_yard_list(self):
+        return [yard.title for yard in self.yards]
+        
     # Assumes that already checked it doesn't exist
     def add_yard (self, title, filename):
         self.yards.append(LocoYard(title,filename))
@@ -94,7 +98,7 @@ class DeviceModel(QObject):
     def check_yard_exist (self, filename):
         # Check the yard doesn't already exist
         for yard in self.yards:
-            if yard.yard_filename == filename:
+            if yard.yard_file == filename:
                 return True
         return False
         
