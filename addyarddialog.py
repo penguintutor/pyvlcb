@@ -14,6 +14,12 @@ class AddYardDialog(QDialog):
 
         self.setWindowTitle("Add New Yard")
         self.setFixedSize(300, 100)
+        # Set the window flag to keep the dialog on top
+        #self.setWindowFlags(self.windowFlags() | Qt.WindowStaysOnTopHint)
+        # Set the dialog to be modal right here in the initializer
+        #self.setModal(True)
+        # Set the window to be application-modal
+        #self.setWindowModality(Qt.ApplicationModal)
 
         # Variable to store the new yard name
         self.new_yard = None

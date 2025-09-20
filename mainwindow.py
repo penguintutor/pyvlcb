@@ -35,6 +35,7 @@ basedir = os.path.dirname(__file__)
 layout_file = "layout.json"
 layout_objs_file = "layoutobjects.json"
 automation_file = "automation.json"
+yard_file = "yards.json"
 
 app_title = "VLCB App"
 
@@ -53,6 +54,9 @@ class MainWindowUI(QMainWindow):
     # Keep alive timer must always be started and stopped on the GUI thread
     # this will start or stop as appropriate based on loco state
     update_kalive_signal = Signal()
+    
+    # Monitor for Window Activated to be able to manage the level of windows / dialog
+    windowActivated = Signal()
     
     def __init__(self):
         super().__init__()
@@ -191,6 +195,9 @@ class MainWindowUI(QMainWindow):
         
         # Status of the http connection
         self.status = "Not connected"
+        
+        # Load locos
+        device_model.load_yard_file (os.path.join(basedir, yard_file))
     
         # Initial discover request
         self.api.discover()

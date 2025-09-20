@@ -13,6 +13,7 @@ from devicemodel import device_model
 class LocoWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.parent = parent
 
         self.setWindowTitle("Loco Manager")
         self.setFixedSize(650, 400)
@@ -75,6 +76,11 @@ class LocoWindow(QMainWindow):
         bottom_bar_layout.addWidget(self.ok_button)
 
         main_layout.addLayout(bottom_bar_layout)
+        
+        # references to dialogs (so we can keep them on top)
+        self.dialog = None
+        # Watch if he dialog loses focus
+        #self.parent.windowActivated.connect(self.raise_dialog)
 
 #         # Examples
 #         self.add_loco_entry("0001", "A3 Class", "Flying Scotsman", "loco_image.png")
@@ -105,37 +111,57 @@ class LocoWindow(QMainWindow):
     # Replaces spaces with underscores and removes or replaces characters
     # that are not allowed in most common file systems.
     def title_to_filename(self, text):
-    # Replace spaces with underscores
-    filename = text.replace(' ', '_')
+        # Replace spaces with underscores
+        filename = text.replace(' ', '_')
 
-    # Remove characters that are generally not allowed in filenames.
-    # The regex pattern [^\w\s\-] matches any character that is NOT a word
-    # character (alphanumeric and underscore), whitespace, or a hyphen.
-    # The underscore replacement in the first step is why we want to keep
-    # the underscore in the valid characters here.
-    filename = re.sub(r'[^\w\.\-]', '', filename)
-    return filename
+        # Remove characters that are generally not allowed in filenames.
+        # The regex pattern [^\w\s\-] matches any character that is NOT a word
+        # character (alphanumeric and underscore), whitespace, or a hyphen.
+        # The underscore replacement in the first step is why we want to keep
+        # the underscore in the valid characters here.
+        filename = re.sub(r'[^\w\.\-]', '', filename)
+        return filename
 
     def open_add_yard_dialog(self):
-        dialog = AddYardDialog(self)
+        self.dialog = AddYardDialog(self)
+        self.parent.windowActivated.connect(self.raise_dialog)
+        
         # Show the dialog and wait for user input
-        if dialog.exec() == QDialog.Accepted:
+        if self.dialog.exec() == QDialog.Accepted:
             # The OK button was pressed
-            if dialog.new_yard:
+            if self.dialog.new_yard:
                 # New yard name is title
-                new_yard = dialog.new_yard
+                new_yard = self.dialog.new_yard
                 # create filename
                 filename = self.title_to_filename(new_yard)
-                # create the new yard
-                device_model.add_yard (new_yard, filename)
             else:
                 QMessageBox.warning(self, "Invalid Input", "The yard name cannot be empty.")
+                return
         else:
-            # The Cancel button was pressed or the dialog was closed
-            pass
+            # Cancel button pressed or dialog closed
+            return
+        # Check yard doesn't exist
+        if (device_model.check_yard_exist()):
+            QMessageBox.warning(self, "Warning", "The yard already exists.")
+            return
+        else:
+            # create the new yard
+            device_model.add_yard (new_yard, filename)
+
+
 
     def open_add_loco_dialog(self):
         print("Add new loco")
         # A custom QDialog would be instantiated and shown here.
         # Example: add_dialog = AddLocoDialog(self)
         #          add_dialog.exec()
+        
+    
+    # If the dialog (add yard or add loco) loses focus then raise
+    def raise_dialog(self):
+        print ("Raise")
+        # Check if the dialog exists and is visible before raising it
+        if self.dialog and self.dialog.isVisible():
+            print (f"Raising dialog {self.dialog}")
+            self.dialog.raise_()
+            self.dialog.activateWindow()

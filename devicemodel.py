@@ -1,5 +1,6 @@
 # Device Model or known as a Domain Model
 # manages the logical state of devices
+import json
 from PySide6.QtCore import Qt, QObject, Signal, Slot
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from pyvlcb import VLCB
@@ -7,16 +8,24 @@ from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
 from eventbus import EventBus, event_bus
-#from deviceevent import DeviceEvent
-#from guievent import GuiEvent
 from loco import Loco
-#from editeventdialog import EditEventDialog
+from locoyard import LocoYard
 from deviceevent import DeviceEvent
 from locoevent import LocoEvent
 from appevent import AppEvent
 from guievent import GuiEvent
 from automateevent import AutomateEvent
 
+
+## Serialize / Deserialize yards
+# The serialize_event function must be defined before it is used.
+def serialize_yard(obj):
+    if isinstance(obj, LocoYard):
+        return obj.__dict__()
+    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+
+def deserialize_yard(data):
+    return EventBus.event_map[data["event_type"]] (data)
 
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
@@ -74,15 +83,39 @@ class DeviceModel(QObject):
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
         
+    # Assumes that already checked it doesn't exist
     def add_yard (self, title, filename):
-        pass
+        self.yards.append(LocoYard(title,filename))
+        self.save_yards ()
+    
+        
+    # Uses filename (rather than title)
+    # Returns True if exists, False if not
+    def check_yard_exist (self, filename):
+        # Check the yard doesn't already exist
+        for yard in self.yards:
+            if yard.yard_filename == filename:
+                return True
+        return False
+        
+    def save_yards (self):
+        # Convert each LocoYard object to JSON-serializable dictionary
+        json_yard_list = [yard.to_json() for yard in self.yards]
+        try:
+            with open(self.yards_file, 'w') as data_file:
+                json.dump(json_yard_list, data_file, indent=4)
+        except Exception as e:
+            print (f"Error saving yard file {self.yards_file} {e}")
+                
+                
         
     def load_yard_file (self, filename):
+        self.yards_file = filename
         try:
             with open(filename, 'r') as data_file:
                 yard_data = json.load(data_file)
-            print("File loaded successfully!")
-            # process yard_data goes here
+            # process yard_data within try
+            self.yards = [LocoYard.from_json(item) for item in yard_data]
         except FileNotFoundError:
             print(f"Warning: Yard file '{filename}' was not found.")
             # Create a yard called "Default"
