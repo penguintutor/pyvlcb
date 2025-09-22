@@ -8,27 +8,31 @@ import os
 import json
 
 class LocoYard:
-    def __init__ (self, title, yard_file, loco_files=[]):
+    def __init__ (self, yards_dir, locos_dir, title, yard_file, loco_files=[]):
         self.title = title
+        self.yardsdir = yards_dir
+        self.locosdir = locos_dir
         self.yard_file = yard_file
         # Each loco is saved by it's filename (does not include the basedir)
         # Can query details from the files through methods but not stored in the LocoYard
+        # The filename is a unique ID and multiple yards can refer to the same loco
         self.loco_files = loco_files
         
         # Create directory names
-        basedir = os.path.dirname(__file__)
-        self.data_dir = os.path.join(basedir, "data")
-        self.loco_dir = os.path.join(self.data_dir, "locos")
+        #basedir = os.path.dirname(__file__)
+        #self.data_dir = os.path.join(basedir, "data")
+        #self.loco_dir = os.path.join(self.data_dir, "locos")
         # Load the yard
         # If it doesn't exist then assume new and it will get saved when edited (eg. loco added)
         try:
-            with open(os.path.join(self.data_dir, self.yard_file), 'r') as data_file:
+            with open(os.path.join(self.yardsdir, self.yard_file), 'r') as data_file:
                 self.data = json.load(data_file)
         except Exception as e:
             pass
             
-    # Gets summary from file
-    def load_file (self, filename):
+    # Gets loco summary from file
+    def load_file (self, loco_file):
+        filename = os.path.join(self.locosdir, filename)
         with open(filename, 'r') as data_file:
             loco_data = json.load(data_file)
         loco_id = self.loco_data["address"]
@@ -43,5 +47,5 @@ class LocoYard:
             }
     
     @classmethod
-    def from_json(cls, data):
-        return cls(data['title'], data['filename'], data['loco_files']) 
+    def from_json(cls, yards_dir, locos_dir, data):
+        return cls(yards_dir, locos_dir, data['title'], data['filename'], data['loco_files']) 

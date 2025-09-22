@@ -24,20 +24,32 @@ from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
 
-loader = QUiLoader()
-loader.registerCustomWidget(LayoutDisplay)
-basedir = os.path.dirname(__file__)
-datadir = os.path.join(basedir, "data")
-
-
 # Layout Display is from the loader to interact use
 # self.ui.layoutLabel
 
+# Default directories (with underscore relative to basedir - no underscore full path)
+data_dir = "data"
+# These are relative to data directory - join with data dir
+data_yards = "yards"
+data_locos = "locos"
+
 # These are default files - ability to change in future
+# These are in datadir
 layout_file = "layout.json"
-layout_objs_file = "layoutobjects.json"
-automation_file = "automation.json"
+layout_objs_file = "layoutobjects.json"		# Todo Perhaps make layout specific in future
+automation_file = "automation.json"			# Todo tie in to layout
 yard_file = "yards.json"
+# This is in yards directory
+active_file = "active.json"					# Virtual yard used for active locos
+
+loader = QUiLoader()
+loader.registerCustomWidget(LayoutDisplay)
+
+# Setup file paths
+basedir = os.path.dirname(__file__)
+datadir = os.path.join(basedir, data_dir)
+yardsdir = os.path.join(datadir, data_yards)
+locosdir = os.path.join(datadir, data_locos)
 
 app_title = "VLCB App"
 
@@ -198,8 +210,12 @@ class MainWindowUI(QMainWindow):
         # Status of the http connection
         self.status = "Not connected"
         
-        # Load locos
-        device_model.load_yard_file (os.path.join(datadir, yard_file))
+        # Files are passed as path, filename - so that relative files can be loaded
+        # Load locos - load the top-level yard file
+        # load_yard - also includes yards directory and locos directory as 3rd / 4th paramters
+        device_model.load_yard_file (datadir, yard_file, yardsdir, locosdir)
+        # active locos are the ones active for this session
+        device_model.load_active_file (yardsdir, active_file)
     
         # Initial discover request
         self.api.discover()

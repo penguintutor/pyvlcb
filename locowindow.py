@@ -42,10 +42,11 @@ class LocoWindow(QMainWindow):
         self.yard_label = QLabel("Yard: ")
         header_layout.addWidget(self.yard_label, alignment=Qt.AlignVCenter | Qt.AlignRight)
         self.yard_selection_combo = QComboBox()
+        self.yard_selection_combo.setMinimumWidth(100)
         self.yard_selection_combo.addItems(device_model.get_yard_list())
         header_layout.addWidget(self.yard_selection_combo, alignment=Qt.AlignTop | Qt.AlignLeft)
         
-        header_layout.addSpacing (80)
+        header_layout.addSpacing (60)
 
         # Add Yard button (top right)
         self.add_yard_button = QPushButton("Add Yard")

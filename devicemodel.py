@@ -1,5 +1,6 @@
 # Device Model or known as a Domain Model
 # manages the logical state of devices
+import os
 import json
 from PySide6.QtCore import Qt, QObject, Signal, Slot
 from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -57,10 +58,21 @@ class DeviceModel(QObject):
         # The yards are saved into the yards_file
         # Entries within each yard are then stored in seperate files
         self.yards = []
+        # Active yard is a special yard that holds the active locos
+        self.active_yard = None
         # typically the GUI will have one active loco = [0]
         # allow more to allow automation
         # Don't add directly instead use add_loco method which avoids duplicates
         self.locos = []
+        
+        # These directories and filenames as specified when first loading the yards
+        # Listed here for easy reference
+        # Directories for yards and locos
+        self.yardsdir = None
+        self.locosdir = None
+        # These are stored as full path
+        self.yard_file = None		# Top level yard file
+        self.active_file = None		# Active Yard
         
         # Other nodes are stored in here for lookup in menus or eventbus
         # Every "node" must be added to the device model
@@ -88,8 +100,9 @@ class DeviceModel(QObject):
         return [yard.title for yard in self.yards]
         
     # Assumes that already checked it doesn't exist
+    # Filename should be relative
     def add_yard (self, title, filename):
-        self.yards.append(LocoYard(title,filename))
+        self.yards.append(LocoYard(self.yardsdir, self.locosdir, title, filename))
         self.save_yards ()
     
         
@@ -100,36 +113,49 @@ class DeviceModel(QObject):
         for yard in self.yards:
             if yard.yard_file == filename:
                 return True
+            # also return true if it's the active yard - prevents conflict when checking before save
+            # however the active file is stored as the full path (to allow different directory if desired)
+            # so check full path
+            if active_file == os.path.join(datadir, filename):
+                return True
         return False
         
     def save_yards (self):
         # Convert each LocoYard object to JSON-serializable dictionary
         json_yard_list = [yard.to_json() for yard in self.yards]
         try:
-            with open(self.yards_file, 'w') as data_file:
+            with open(self.yard_file, 'w') as data_file:
                 json.dump(json_yard_list, data_file, indent=4)
         except Exception as e:
-            print (f"Error saving yard file {self.yards_file} {e}")
+            print (f"Error saving yard file {self.yard_file} {e}")
+            
+    # Load the default file - same as Yard, but for active locos
+    def load_active_file (self, dir_path, filename):
+        self.active_file = os.path.join(dir_path, filename)
                 
                 
-        
-    def load_yard_file (self, filename):
-        self.yards_file = filename
+    # Loads the yard top level file (list of yards), also store relative directories for yards and locos
+    def load_yard_file (self, datadir, filename, yardsdir, locosdir):
+        self.yard_file = os.path.join(datadir, filename)
+        self.yardsdir = yardsdir
+        self.locosdir = locosdir
         try:
-            with open(filename, 'r') as data_file:
+            with open(self.yard_file, 'r') as data_file:
                 yard_data = json.load(data_file)
             # process yard_data within try
-            self.yards = [LocoYard.from_json(item) for item in yard_data]
+            self.yards = [LocoYard.from_json(self.yardsdir, self.locosdir, item) for item in yard_data]
         except FileNotFoundError:
             print(f"Warning: Yard file '{filename}' was not found.")
+            # Todo - make sure works without a default
             # Create a yard called "Default"
-            self.add_yard ("Default", "default.json")
+            #self.add_yard ("Default", "default.json")
         except json.JSONDecodeError:
             print(f"Error: The file '{filename}' is not a valid JSON file.")
             # Create a yard called "Default"
-            self.add_yard ("Default", "default.json")
+            #self.add_yard ("Default", "default.json")
             return
         
+
     # Return Gui object matching name
     # Or return None
     def get_guiobject_name (self, name):
@@ -226,15 +252,10 @@ class DeviceModel(QObject):
     # Add node if not exist - else returnFalse
     # Only used for devices - also see add_gui_node
     def add_node (self, node):
-        #print (f"Adding node {node.node_id}")
         if not node in self.nodes.keys():
             self.nodes[node.node_id] = node
             # Also set name
-            #self.set_name (node.node_id, self.layout.node_name(node))
             self.set_name (node.node_id, self.layout.node_name(node.node_id))
-            # Add the gui node to the node_model
-            #print (f"GUI Node {self.nodes[node.node_id].get_gui_node().text()}")
-            #print (f"Adding {node.node_id} - {self.nodes[node.node_id].get_gui_node()}")
             
             # Add the node to the top level of the qtreeview
             # child nodes are added through the node as child on gui_node
@@ -249,10 +270,8 @@ class DeviceModel(QObject):
         self.node_model.appendRow(gui_object.get_gui_node())
         # Add the entire gui_object to other_nodes
         self.other_nodes['Gui'].append(gui_object)
-        #print (f"Gui node_model {self.node_model}")
 
     def set_name (self, node_id, name):
-        #print (f"Set name in devicemodel {node_id} = {name}")
         if not node_id in self.nodes.keys():
             return False
         # This must be through method and not directly editing name
@@ -304,12 +323,6 @@ class DeviceModel(QObject):
     def get_device_info(self, device_id: str):
         return self._devices.get(device_id, {})
 
-#     def activate_device(self, device_id: str, status: bool):
-#         # This method is called by the ViewModel, which then publishes a command
-#         # This isn't strictly necessary as the ViewModel could publish directly,
-#         # but the Model can act as a central place for business rules/validation.
-#         print(f"Model: Activating device {device_id} to {status}")
-#         event_bus.publish(SetDeviceCommand(device_id, status))
 
 # Singleton for the Device Model
 device_model = DeviceModel()

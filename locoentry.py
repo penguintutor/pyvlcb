@@ -44,6 +44,13 @@ class LocoEntry(QWidget):
 
         # Spacer to push buttons to the right
         row_layout.addStretch(1)
+        
+        # Enabled checkbox
+        self.enable_label = QLabel("Enable")
+        row_layout.addWidget(self.enable_label)
+        self.enable_checkbox = QCheckBox()
+        self.enable_checkbox.checkStateChanged.connect(self.enable_disable)
+        row_layout.addWidget(self.enable_checkbox)
 
         # Delete Button (Trash Icon)
         self.delete_button = QPushButton()
