@@ -231,7 +231,7 @@ class MainWindowUI(QMainWindow):
     # Edit events associations between different objects
     def loco_manager (self):
         if self.loco_window == None:
-            self.loco_window = LocoWindow(self)
+            self.loco_window = LocoWindow(self, yardsdir, locosdir)
         self.loco_window.update()
         self.loco_window.display()
 

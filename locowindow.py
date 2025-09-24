@@ -7,13 +7,17 @@ from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt, QSize
 from locoentry import LocoEntry
 from addyarddialog import AddYardDialog
+from addlocodialog import AddLocoDialog
 from devicemodel import device_model 
 
-
+# parent is required (although could be set to None it should normally be mainwindow)
+# directory of yards and locos is required 
 class LocoWindow(QMainWindow):
-    def __init__(self, parent=None):
+    def __init__(self, parent, yards_dir, locos_dir):
         super().__init__(parent)
         self.parent = parent
+        self.yardsdir = yards_dir
+        self.locosdir = locos_dir
 
         self.setWindowTitle("Loco Manager")
         self.setFixedSize(650, 400)
@@ -157,10 +161,9 @@ class LocoWindow(QMainWindow):
 
 
     def open_add_loco_dialog(self):
-        print("Add new loco")
-        # A custom QDialog would be instantiated and shown here.
-        # Example: add_dialog = AddLocoDialog(self)
-        #          add_dialog.exec()
+        #print("Add new loco")
+        add_dialog = AddLocoDialog(self, self.locosdir)
+        add_dialog.exec()
         
     
 #     # If the dialog (add yard or add loco) loses focus then raise

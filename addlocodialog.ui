@@ -1,0 +1,279 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Dialog</class>
+ <widget class="QDialog" name="Dialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>572</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Dialog</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout">
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_7">
+     <property name="text">
+      <string>Name:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>Original railway:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="5" rowspan="2" colspan="3">
+    <widget class="QLabel" name="label_16">
+     <property name="text">
+      <string>Decoder:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label_5">
+     <property name="text">
+      <string>Class:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="2" rowspan="2" colspan="2">
+    <widget class="QLineEdit" name="wheelsEdit"/>
+   </item>
+   <item row="2" column="4" rowspan="2" colspan="5">
+    <widget class="QLineEdit" name="classNameEdit"/>
+   </item>
+   <item row="0" column="0" colspan="3">
+    <widget class="QLabel" name="label_2">
+     <property name="font">
+      <font>
+       <pointsize>17</pointsize>
+      </font>
+     </property>
+     <property name="text">
+      <string>Add New Loco</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_4">
+     <property name="text">
+      <string>Display text:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="3">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Type:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="15" column="5" colspan="5">
+    <widget class="QDialogButtonBox" name="buttonBox">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
+     </property>
+     <property name="standardButtons">
+      <set>QDialogButtonBox::Cancel|QDialogButtonBox::Ok</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="3" rowspan="2">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Class Name:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1" rowspan="2" colspan="2">
+    <widget class="QLineEdit" name="originalYearEdit"/>
+   </item>
+   <item row="5" column="1" colspan="2">
+    <widget class="QLineEdit" name="numberEdit"/>
+   </item>
+   <item row="8" column="0" rowspan="2">
+    <widget class="QLabel" name="label_12">
+     <property name="text">
+      <string>Original year:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_6">
+     <property name="text">
+      <string>Number:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="3">
+    <widget class="QLineEdit" name="liveryRailwayEdit"/>
+   </item>
+   <item row="4" column="4" rowspan="2" colspan="4">
+    <widget class="QComboBox" name="locoTypeCombo">
+     <item>
+      <property name="text">
+       <string>Select type.</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Steam</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Diesel</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Electric</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Other</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="7" column="0">
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>Livery railway:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="10" column="8">
+    <widget class="QPushButton" name="uploadImageButton">
+     <property name="text">
+      <string>Upload Image</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" colspan="3">
+    <widget class="QLineEdit" name="nameEdit"/>
+   </item>
+   <item row="10" column="0" colspan="2">
+    <widget class="QLabel" name="label_14">
+     <property name="text">
+      <string>Wheel arrangement:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="9" rowspan="2">
+    <widget class="QPushButton" name="functionButton">
+     <property name="text">
+      <string>Functions</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="5">
+    <widget class="QLabel" name="label_3">
+     <property name="text">
+      <string>DCC ID:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="14" column="0" colspan="10">
+    <widget class="QTextEdit" name="summaryText"/>
+   </item>
+   <item row="1" column="6" colspan="3">
+    <widget class="QLineEdit" name="dccIDEdit"/>
+   </item>
+   <item row="8" column="4" rowspan="2" colspan="4">
+    <widget class="QLineEdit" name="liveryYearEdit"/>
+   </item>
+   <item row="12" column="7" colspan="3">
+    <widget class="QLineEdit" name="decoderEdit"/>
+   </item>
+   <item row="2" column="1" rowspan="2" colspan="2">
+    <widget class="QLineEdit" name="classEdit"/>
+   </item>
+   <item row="8" column="3">
+    <widget class="QLabel" name="label_13">
+     <property name="text">
+      <string>Livery year:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="3">
+    <widget class="QLineEdit" name="displayTextEdit"/>
+   </item>
+   <item row="12" column="2" colspan="3">
+    <widget class="QLineEdit" name="modelManufEdit"/>
+   </item>
+   <item row="6" column="1" colspan="3">
+    <widget class="QLineEdit" name="origRailwayEdit"/>
+   </item>
+   <item row="12" column="0" colspan="2">
+    <widget class="QLabel" name="label_15">
+     <property name="text">
+      <string>Model Manufacturer:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="13" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Details:</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="8" rowspan="4" colspan="2">
+    <widget class="QLabel" name="imageLabel">
+     <property name="minimumSize">
+      <size>
+       <width>187</width>
+       <height>110</height>
+      </size>
+     </property>
+     <property name="text">
+      <string>TextLabel</string>
+     </property>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>Dialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>Dialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>
