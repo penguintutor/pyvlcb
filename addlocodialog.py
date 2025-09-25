@@ -1,10 +1,17 @@
 import os
+from pathlib import Path
 from PySide6.QtCore import Qt, Signal, Slot, QFile
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QDialog, QVBoxLayout
 from PySide6.QtUiTools import QUiLoader
+from imageexistdialog import ImageExistDialog
 
-# loco directory is required for images
+# Dialog to get details about a loco
+# Also allows upload of an image
+# If image is already in locos directory then just add reference to it
+# if not and file doesn't exist then copies to the locosdir
+# if it does exist then dialog to rename or overwride
+# locos directory is required for images
 class AddLocoDialog(QDialog):
     
     def __init__(self, parent, locos_dir):
@@ -46,7 +53,64 @@ class AddLocoDialog(QDialog):
                 ))
             else:
                 image_preview_label.setText("Default image not found.")
-        
+
+
+    # Upload and save the image
+    def upload_image(self):
+        file_dialog = QFileDialog(self)
+        file_dialog.setWindowTitle("Select Image")
+        file_dialog.setFileMode(QFileDialog.ExistingFile)
+        file_dialog.setNameFilter("Images (*.png *.jpg *.jpeg *.bmp)")
+
+        # Get filename
+        if file_dialog.exec():
+            selected_file = file_dialog.selectedFiles()[0]
+            # later we will save just filename into self.image_filename
+            filename = os.path.basename(selected_file)
+            
+            # Is the file in the locosdir
+            if self.is_locosdir(selected_file):
+                self.image_filename = filename
+            # if not and doesn't exist in locosdir then copy
+            else:
+                # New path - includes filename
+                new_path = os.path.join(self.locosdir, filename)
+                if not (os.path.exists(new_path)):
+                    shutil.copyfile (selected_file, new_path)
+                    # Todo wrap above in try clause
+                    self.image_filename = filename
+                # File is not in locos directory and already matching file
+                # Create new dialog to get new filename
+                # Todo implement this
+                else:
+                    dialog = ImageExistDialog (self.locosdir)
+                    if self.dialog.exec() == QDialog.Accepted:
+                        # Handle dialog response here
+                        # saved in self.dialog.action
+                        return
+                    return
+                
+            
+            # Update the preview with the new image
+            #image_preview_label = self.ui_widget.findChild(QLabel, "image_preview_label")
+            image_preview_label = self.ui.imageLabel
+            if image_preview_label:
+                pixmap = QPixmap(os.path.join(self.locosdir, self.image_filename))
+                if not pixmap.isNull():
+                    image_preview_label.setPixmap(pixmap.scaled(
+                        image_preview_label.size(), Qt.KeepAspectRatio, Qt.SmoothTransformation
+                    ))
+
+   
+   # check if a filepath is in the locosdir
+    def is_locosdir(self, filepath):
+        try:
+            filepath = Path(filepath).resolve()
+            return filepath.parent == self.locosdir
+        except Exception as e:
+            print(f"Error checking path: {e}")
+            return False
+
 
     def accept (self):
         # Validate any mandatory fields
