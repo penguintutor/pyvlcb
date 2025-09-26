@@ -153,7 +153,7 @@
    <item row="10" column="8">
     <widget class="QPushButton" name="uploadImageButton">
      <property name="text">
-      <string>Upload Image</string>
+      <string>Upload image</string>
      </property>
     </widget>
    </item>
@@ -215,7 +215,7 @@
    <item row="12" column="0" colspan="2">
     <widget class="QLabel" name="label_15">
      <property name="text">
-      <string>Model Manufacturer:</string>
+      <string>Model manufacturer:</string>
      </property>
     </widget>
    </item>
