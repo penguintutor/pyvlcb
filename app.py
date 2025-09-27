@@ -2,6 +2,7 @@
 import sys
 from PySide6.QtWidgets import QApplication, QDialog, QFileDialog
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
 from mainwindow import MainWindowUI
 from locowindow import LocoWindow
 from addlocodialog import AddLocoDialog
@@ -39,6 +40,19 @@ def handle_focus_change(old_focus, new_focus):
         
 # Create QApplication instance 
 app = App(sys.argv)
+
+app.setStyle('Fusion')
+
+new_font = QFont("Sans Serif", 10) 
+app.setFont(new_font)
+
+# Load and apply QSS file
+try:
+    with open("style.qss", "r") as f:
+        _style = f.read()
+        app.setStyleSheet(_style)
+except FileNotFoundError:
+    print("Stylesheet file not found.")
 
 # Monitor for focus change
 app.focusChanged.connect(handle_focus_change)

@@ -1,7 +1,7 @@
 import os
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog
-from PySide6.QtGui import QPixmap, QImage, QPalette, QColor
+from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
 from layout import Layout
