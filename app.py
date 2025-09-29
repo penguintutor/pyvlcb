@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import sys
-from PySide6.QtWidgets import QApplication, QDialog, QFileDialog
+from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMessageBox
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from mainwindow import MainWindowUI
@@ -16,7 +16,7 @@ class App(QApplication):
 # These can be mainwindows (such as LocoWindow) or dialogs with subdialogs (eg. AddLocoDialog)
 windows_with_dialogs = (LocoWindow, AddLocoDialog)
 # Dialogs that need to get raised
-dialog_types = (QDialog, QFileDialog)
+dialog_types = (QDialog, QFileDialog, QMessageBox)
     
 # We can connect to the QApplication's focusChanged signal
 # This allows us to handle focus changes across the entire app
