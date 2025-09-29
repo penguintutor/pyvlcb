@@ -3,7 +3,7 @@ import shutil
 from pathlib import Path
 from PySide6.QtCore import Qt, Signal, Slot, QFile
 from PySide6.QtGui import QPixmap
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QFileDialog
+from PySide6.QtWidgets import QDialog, QVBoxLayout, QFileDialog, QMessageBox
 from PySide6.QtUiTools import QUiLoader
 from imageexistdialog import ImageExistDialog
 
@@ -13,12 +13,33 @@ from imageexistdialog import ImageExistDialog
 # if not and file doesn't exist then copies to the locosdir
 # if it does exist then dialog to rename or overwride
 # locos directory is required for images
+
+# These are the main GUI elements
+# displayTextEdit
+# dccIdEdit
+# classEdit
+# classNameEdit
+# nameEdit
+# numberEdit
+# locoTypeCombo
+# origRailwayEdit
+# liveryRailwayEdit
+# originalYearEdit
+# liveryYearEdit
+# wheelsEdit
+# modelManufEdit
+# decoderEdit
+# summaryText
+# imageLabel / self.default_pixmap / self.image_filename
+        
 class AddLocoDialog(QDialog):
     
     def __init__(self, parent, locos_dir):
         super().__init__(parent)
         self.gui = parent
         self.locosdir = locos_dir
+        self.loco_id = None	# Set here when accept so no need to recalculate
+        self.image_filename = ""
         #self.setModal(True)
         loader = QUiLoader()
         basedir = os.path.dirname(__file__)
@@ -35,15 +56,12 @@ class AddLocoDialog(QDialog):
         self.ui.buttonBox.accepted.connect (self.accept_click)
         self.ui.buttonBox.rejected.connect (self.cancel)
         self.ui.uploadImageButton.clicked.connect (self.upload_image)
-        #self.ui.stealButton.clicked.connect (self.steal)
-        #self.ui.shareButton.clicked.connect (self.share)
         
         self.set_default_image()
         
 
     # set default image on preview
     def set_default_image(self):
-        #image_preview_label = self.ui_widget.findChild(QLabel, "image_preview_label")
         image_preview_label = self.ui.imageLabel
         if image_preview_label:
             image_filename = os.path.join(self.locosdir, "default.png")
@@ -139,7 +157,36 @@ class AddLocoDialog(QDialog):
 
 
     def accept_click (self):
-        # Validate any mandatory fields
+        # Validate mandatory fields
+
+        
+        # loco_id (DCC ID) must exist
+        # It should also be unique - but only when active not when created
+        # This allows guest locos with same ID but not to be on the track
+        # at the same time.
+        
+        # Check the DCCID is included and is a number
+        dcc_id_text = self.ui.dccIDEdit.text()
+        try:
+            dcc_id_value = int(dcc_id_text)
+        # Any errors warn and do not accept (submit)
+        except:
+            QMessageBox.warning(
+                self, 
+                "Input Error", # The title of the dialog
+                "Please enter a valid number for a DCC ID." # The message content
+            )
+            return
+        if (dcc_id_value < 1 or dcc_id_value > 9999):
+            QMessageBox.warning(
+                self,
+                "Input Error", # The title of the dialog
+                "DCC ID must be between 1 and 9999." # The message content
+            )
+            return
+        
+        # Store the loco_id so that it can be retrieved
+        self.loco_id = dcc_id_value
         self.accept()
     
         

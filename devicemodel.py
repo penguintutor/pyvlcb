@@ -240,7 +240,8 @@ class DeviceModel(QObject):
     def set_layout (self, layout):
         self.layout = layout
         
-    def add_loco (self):
+    # Default add a loco with no details
+    def add_loco (self, loco_id=None):
         self.locos.append(Loco())
         return (len(self.locos)-1)
         

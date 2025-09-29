@@ -165,12 +165,25 @@ class LocoWindow(QMainWindow):
         add_dialog = AddLocoDialog(self, self.locosdir)
         add_dialog.exec()
         
-    
-#     # If the dialog (add yard or add loco) loses focus then raise
-#     def raise_dialog(self):
-#         print ("Raise")
-#         # Check if the dialog exists and is visible before raising it
-#         if self.dialog and self.dialog.isVisible():
-#             print (f"Raising dialog {self.dialog}")
-#             self.dialog.raise_()
-#             self.dialog.activateWindow()
+        # Create the loco entry
+        loco_pos = device_model.add_loco(add_dialog.loco_id)
+        # Create a dict of the values
+        data_dict = {
+            'displayname': add_dialog.ui.displayTextEdit.text(),
+            'class': add_dialog.ui.classEdit.text(),
+            'classname': add_dialog.ui.classNameEdit.text(),
+            'name': add_dialog.ui.nameEdit.text(),
+            'number': add_dialog.ui.numberEdit.text(),
+            'locotype': add_dialog.ui.locoTypeCombo.currentText(),
+            'origrailway': add_dialog.ui.origRailwayEdit.text(),
+            'liveryrailway': add_dialog.ui.liveryRailwayEdit.text(),
+            'originalyear': add_dialog.ui.originalYearEdit.text(),
+            'liveryyear': add_dialog.ui.liveryYearEdit.text(),
+            'wheels': add_dialog.ui.wheelsEdit.text(),
+            'modelManuf': add_dialog.ui.modelManufEdit.text(),
+            'decoder': add_dialog.ui.decoderEdit.text(),
+            'image': add_dialog.image_filename,
+            'summary': add_dialog.ui.summaryText.toPlainText()
+            }
+        device_model.locos[loco_pos].update_loco
+        

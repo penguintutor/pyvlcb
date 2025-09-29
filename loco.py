@@ -11,6 +11,7 @@ class Loco:
         # if gloc then set status to gloc - and then on after aquire (ploc)
         self.status = "off"   
         self.loco_id = loco_id
+        self.loco_class = ""
         self.loco_name = ""
         self.loco_data = {}
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
@@ -21,6 +22,20 @@ class Loco:
     
     def set_status (self, value):
         self.status = value
+    
+    # Data is a dict of what to change
+    # Changes info about the loco
+    def update_loco (self, data):
+        for key, value in data.items():
+            if key == 'id':
+                self.loco_id = value
+            elif key == 'class':
+                self.loco_class = value
+            elif key == 'name':
+                self.loco_name = value
+            else:
+                self.loco_data[key] = value
+        
     
     # Loads a json file with details of the loco
     # there are more details in the file - just pull out id and name for quick reference
