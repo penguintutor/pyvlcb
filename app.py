@@ -53,6 +53,8 @@ try:
         app.setStyleSheet(_style)
 except FileNotFoundError:
     print("Stylesheet file not found.")
+except Exception as e:
+    print (f"Error stylesheet not loaded {e}")
 
 # Monitor for focus change
 app.focusChanged.connect(handle_focus_change)

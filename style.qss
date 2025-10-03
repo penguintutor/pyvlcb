@@ -20,19 +20,10 @@ QComboBox {
     /* Set the border and padding for the combo box */
     border: 1px solid #8c8c8c; /* Example border */
     border-radius: 2px;       /* Apply 5-pixel rounded corners */
-    padding: 2px;             /* Space inside the combo box */
+    padding: 1px;             /* Space inside the combo box */
 }
 
-/* Apply rounded corners to the drop-down button (the 'arrow' part) */
-QComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: center right;
-    width: 20px;
-    
-    /* Ensure the button border blends with the main border if desired */
-    border-left-width: 1px;
-    border-left-color: #8c8c8c;
-    border-left-style: solid; 
-    border-top-right-radius: 2px;  
-    border-bottom-right-radius: 2px; 
+/* Enable the icon for the drop down arrow */
+QComboBox::down-arrow {
+    icon-size: 12px;
 }
