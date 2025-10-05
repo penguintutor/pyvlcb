@@ -4,7 +4,7 @@
 
 # The components that are placed on the layoutdisplay are based on guiobjects - which in turn are layoutobjects
 
-# This is ui.layoutLabel
+# This is ui.layoutDisplayLabel
 
 import sys, os
 import json
@@ -140,7 +140,7 @@ class LayoutDisplay(QLabel):
                 objects = json.load(f)
                 #print (f"Objects {objects}")
         except IOError as e:
-            print(f"Warning unable to loading file: {e}, possibly no assets defined")
+            print(f"Warning unable to load file: {e}, possibly no assets defined")
             return
         # Create an object for each entry
         for entry in objects:

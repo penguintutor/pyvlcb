@@ -25,31 +25,15 @@ from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
 
 # Layout Display is from the loader to interact use
-# self.ui.layoutLabel
-
-# Default directories (with underscore relative to basedir - no underscore full path)
-data_dir = "data"
-# These are relative to data directory - join with data dir
-data_yards = "yards"
-data_locos = "locos"
-
-# These are default files - ability to change in future
-# These are in datadir
-layout_file = "layout.json"
-layout_objs_file = "layoutobjects.json"		# Todo Perhaps make layout specific in future
-automation_file = "automation.json"			# Todo tie in to layout
-yard_file = "yards.json"
-# This is in yards directory
-active_file = "active.json"					# Virtual yard used for active locos
+# self.ui.layoutDisplayLabel
 
 loader = QUiLoader()
 loader.registerCustomWidget(LayoutDisplay)
 
 # Setup file paths
 basedir = os.path.dirname(__file__)
-datadir = os.path.join(basedir, data_dir)
-yardsdir = os.path.join(datadir, data_yards)
-locosdir = os.path.join(datadir, data_locos)
+
+#pc_can_id = 60      # CAN ID of CANUSB4
 
 app_title = "VLCB App"
 
@@ -58,6 +42,7 @@ url = "http://127.0.0.1:5000/"
 read_rate = 200
 
 class MainWindowUI(QMainWindow):
+    
     
     steal_dialog_signal = Signal(int)
     # Handle loco selection
@@ -72,9 +57,31 @@ class MainWindowUI(QMainWindow):
     # Monitor for Window Activated to be able to manage the level of windows / dialog
     windowActivated = Signal()
     
-    def __init__(self):
+    # files_dirs are passed from app - file structure is fixed
+    # Are all relative to basedir
+    # although some customisation of file names is allowed in configs
+    # settings provides an option for command line arguments (not yet supported)
+    def __init__(self, dirs, files, settings={}):
         super().__init__()
         self.debug = False
+        
+        # Command line arguments and directory settings
+        self.cmd_settings = settings
+        self.dirs = {} # dirs need to be updated with data_dir
+        self.files = files
+        
+        # All data files are relative to this directory
+        # Default this is basedir/data
+        # Can be overridden by command line arguments
+        if 'data_dir' in self.cmd_settings:
+            # Already checked this is a directory
+            self.data_dir = self.cmd_settings['data_dir']
+        else:
+            self.data_dir = os.path.join(basedir, "data/")
+            
+        # Update all the dirs to add data_dir
+        for key, value in dirs.items():
+            self.dirs[key] = os.path.join(self.data_dir, value)
         
         self.threadpool = QThreadPool()
         self.update_in_progress = False
@@ -97,12 +104,25 @@ class MainWindowUI(QMainWindow):
         self.kalive_timer.setInterval(4000)
         self.kalive_timer.timeout.connect(self.keep_alive)
         
-        #self.pc_can_id = 60      # CAN ID of CANUSB4
+        # Load the settings file here
+        # Todo - adding settings - implement this class
+        # Settings(os.path.join(basedir, "self.files["settings"]", self.cmd_settings)
+        # else print ("No settings file, using defaults")
+        
+        # Load the Layouts file to see what layouts are available
+        # Todo - add support for multiple layouts - implement this class
+        # layouts_file = os.path.join(basedir, self.files["layouts"])
+        # Layouts(layouts_file)
+        # else print (f"No layouts file '{layouts_file}', using default layout")
+        
+        layout_name = "Default"
+        layout_filename = "default.json"
+        layouts_dir = os.path.join(self.data_dir, self.dirs['layouts'])
     
-        # Layout is useful for giving real names to certain items
-        # Also provides list of valid locos
+        # Layout provides background image and
+        # is useful for giving real names to certain items
         # Variable is named railway to avoid potential conflict if named layout
-        self.railway = Layout(layout_file)
+        self.railway = Layout(layout_name, layouts_dir, layout_filename)
         # pass the layout to the devicemodel
         device_model.set_layout(self.railway)
         
@@ -188,13 +208,16 @@ class MainWindowUI(QMainWindow):
         self.control_loco = ControlLoco()
         event_bus.app_event_signal.connect(self.app_event)
         #event_bus.gui_event_signal.connect(self.gui_event)
-        # automation_file 
-        event_bus.load_rules(os.path.join(basedir, automation_file))
+        # automation_file
+        # Todo
+        # Need to determine which rules to load - this is default
+        
+        event_bus.load_rules(os.path.join(self.dirs['rules'], "default.json"))
         
         # Load layout background image
-        self.ui.layoutLabel.load_image(self)
+        self.ui.layoutDisplayLabel.load_image(self)
         # and UI objects
-        self.ui.layoutLabel.load_layout_objects(layout_objs_file)
+        self.ui.layoutDisplayLabel.load_layout_objects(self.railway.get_layout_objs_file())
         # Load close icon image (switch back to control mode)
         #close_image_file = os.path.join(basedir, "close-icon.png")
         #self.close_image = QImage (close_image_file)
@@ -209,14 +232,11 @@ class MainWindowUI(QMainWindow):
         
         # Status of the http connection
         self.status = "Not connected"
-        
-        # Files are passed as path, filename - so that relative files can be loaded
-        # Load locos - load the top-level yard file
-        # load_yard - also includes yards directory and locos directory as 3rd / 4th paramters
-        device_model.load_yard_file (datadir, yard_file, yardsdir, locosdir)
+               
         # active locos are the ones active for this session
-        device_model.load_active_file (yardsdir, active_file)
-    
+        full_path_locos = os.path.join(self.data_dir, self.files['locos'])
+        device_model.load_locos (self.dirs['locos'], full_path_locos)
+           
         # Initial discover request
         self.api.discover()
         
@@ -231,7 +251,7 @@ class MainWindowUI(QMainWindow):
     # Edit events associations between different objects
     def loco_manager (self):
         if self.loco_window == None:
-            self.loco_window = LocoWindow(self, yardsdir, locosdir)
+            self.loco_window = LocoWindow(self, self.dirs['locos'])
         self.loco_window.update()
         self.loco_window.display()
 
@@ -252,25 +272,25 @@ class MainWindowUI(QMainWindow):
             # response = id, text
             response = dialog.get_selected_values()
             # The first "text" is that it's a text style label (allows flexibility for future)
-            self.ui.layoutLabel.add_gui_device(response[0], response[1])
+            self.ui.layoutDisplayLabel.add_gui_device(response[0], response[1])
         
     def add_label_dialog (self):
-        dialog = AddLabelDialog(self.ui.layoutLabel.gui_object_names())
+        dialog = AddLabelDialog(self.ui.layoutDisplayLabel.gui_object_names())
         if dialog.exec():
             # response = id, text
             response = dialog.get_selected_values()
             #print(f"Selected value: {text}")
             # The first "text" is that it's a text style label (allows flexibility for future)
-            self.ui.layoutLabel.add_label(response[0], "text", {"text":response[1]})
+            self.ui.layoutDisplayLabel.add_label(response[0], "text", {"text":response[1]})
         
     def add_button_dialog (self):
-        #print (f"Label {self.ui.layoutLabel}")
-        #print (f"Obj names {self.ui.layoutLabel.gui_object_names()}")
-        dialog = AddButtonDialog(self.ui.layoutLabel.gui_object_names())
+        #print (f"Label {self.ui.layoutDisplayLabel}")
+        #print (f"Obj names {self.ui.layoutDisplayLabel.gui_object_names()}")
+        dialog = AddButtonDialog(self.ui.layoutDisplayLabel.gui_object_names())
         if dialog.exec():
             # response = id, button_type
             response = dialog.get_selected_values()
-            self.ui.layoutLabel.add_button(response[0], response[1], {})
+            self.ui.layoutDisplayLabel.add_button(response[0], response[1], {})
         
     def event_selection_dialog (self):
         dialog = EventDialog()
@@ -308,20 +328,20 @@ class MainWindowUI(QMainWindow):
     # Toggles between layout edit and control mode
     # or provide mode to switch to that mode (control / edit)
     def layout_edit (self, mode="toggle"):
-        #print (f"Changing {mode} - {self.ui.layoutLabel.mode}")
+        #print (f"Changing {mode} - {self.ui.layoutDisplayLabel.mode}")
         # if set is not valid then defaults to control (not expected)
         # If called from menu then mode will be False
         if mode == "toggle" or mode == False:
-            if self.ui.layoutLabel.mode == "control":
-                self.ui.layoutLabel.mode = "edit"
+            if self.ui.layoutDisplayLabel.mode == "control":
+                self.ui.layoutDisplayLabel.mode = "edit"
             else:
-                self.ui.layoutLabel.mode = "control"
+                self.ui.layoutDisplayLabel.mode = "control"
         elif mode == "edit":
-            self.ui.layoutLabel.mode = "edit"
+            self.ui.layoutDisplayLabel.mode = "edit"
         else:
-            self.ui.layoutLabel.mode = "control"
+            self.ui.layoutDisplayLabel.mode = "control"
         # Change layoutdisplay mode
-        if self.ui.layoutLabel.mode == "edit":
+        if self.ui.layoutDisplayLabel.mode == "edit":
             self.ui.actionLayoutEdit.setText("Layout Control")
             #self.ui.menuEditLayout.setVisible(True)
             self.ui.menuEditLayoutAction.setVisible(True)
@@ -330,7 +350,7 @@ class MainWindowUI(QMainWindow):
             #self.ui.menuEditLayout.setVisible(False)
             self.ui.menuEditLayoutAction.setVisible(False)
             # When switching back to control from edit then save config
-            self.ui.layoutLabel.save_layout_objects(layout_objs_file)
+            self.ui.layoutDisplayLabel.save_layout_objects(layout_objs_file)
     
     # Show console always calls show
     # If window already open then bring to front
@@ -365,8 +385,11 @@ class MainWindowUI(QMainWindow):
     # When loco change requested through combobox
     def loco_change (self, index):
         # Release old loco
-        self.api.start_request(self.api.vlcb.release_loco(self.control_loco.get_session()))
-        self.control_loco.release()
+        session = self.control_loco.get_session()
+        # If not session then nothing to release
+        if session != None:
+            self.api.start_request(self.api.vlcb.release_loco(session))
+            self.control_loco.release()
 
         # Check for a valid loco chosen (ie if gone back to 0 then return)
         if index == 0:
@@ -415,6 +438,10 @@ class MainWindowUI(QMainWindow):
         
     # Button has been pressed
     def loco_function_pressed (self):
+        # Check that button is valid (ie. not "-")
+        button_text = self.ui.locoFuncButton.text()
+        if button_text == "" or button_text == "-" or button_text == " - ":
+            return
         # get current index, need both tab and position in tab
         tab = self.ui.locoFuncTab.currentIndex()
         combo = self.ui.locoFuncCombo.currentIndex()
@@ -1062,7 +1089,8 @@ class MainWindowUI(QMainWindow):
     # Update the LCD display based on the speed
     def update_lcd (self):
         # If not in a session show --
-        if self.control_loco.is_active() == False or self.control_loco.get_status() == "stop" :
+        active = self.control_loco.is_active()
+        if active == None or active == False or self.control_loco.get_status() == "stop" :
             self.ui.locoSpeedLcd.display("--")
         # If 0 then use string to ensure 0 displayed
         elif self.control_loco.speed_value() == 0:
@@ -1096,21 +1124,27 @@ class MainWindowUI(QMainWindow):
         steal_dialog.exec_()
         
     def loco_forward (self):
-        # set forward and check active
-        if (self.control_loco.forward()):
-            self.api.start_request(self.api.vlcb.loco_speeddir(self.control_loco.get_session(), self.control_loco.get_speeddir()))
-            self.update_lcd()
+        # disable button if not active
+        if self.control_loco.is_active():
+            # set forward and check active
+            if (self.control_loco.forward()):
+                self.api.start_request(self.api.vlcb.loco_speeddir(self.control_loco.get_session(), self.control_loco.get_speeddir()))
+                self.update_lcd()
         
     def loco_reverse (self):
-        # set reverse and check active
-        if (self.control_loco.reverse()):
-            self.api.start_request(self.api.vlcb.loco_speeddir(self.control_loco.get_session(), self.control_loco.get_speeddir()))
-            self.update_lcd()
+        if self.control_loco.is_active():
+            # set reverse and check active
+            if (self.control_loco.reverse()):
+                self.api.start_request(self.api.vlcb.loco_speeddir(self.control_loco.get_session(), self.control_loco.get_speeddir()))
+                self.update_lcd()
         
         
     # Emergency stop - current loco
     # To reset need to set speed to 0 on the dial
     def loco_stop (self, msg="STOP!"):
+        # If not active then ignore
+        if not self.control_loco.is_active():
+            return
         # If calling from a clicked then gives False rather than msg
         if msg == False:
             msg = "STOP!"
@@ -1121,7 +1155,6 @@ class MainWindowUI(QMainWindow):
         self.update_lcd()
         
     # Emergency stop all
-    
     def loco_stop_all (self):
         #self.control_loco.stop_all()
         self.api.start_request(self.api.vlcb.loco_stop_all())

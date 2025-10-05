@@ -57,6 +57,11 @@ class AddLocoDialog(QDialog):
         self.ui.buttonBox.rejected.connect (self.cancel)
         self.ui.uploadImageButton.clicked.connect (self.upload_image)
         
+                
+        # Appears to be a bug relating to the focus
+        # Set to the first widget
+        self.ui.displayTextEdit.setFocus()
+        
         self.set_default_image()
         
 

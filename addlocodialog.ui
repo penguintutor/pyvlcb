@@ -241,6 +241,25 @@
    </item>
   </layout>
  </widget>
+ <tabstops>
+  <tabstop>displayTextEdit</tabstop>
+  <tabstop>dccIDEdit</tabstop>
+  <tabstop>classEdit</tabstop>
+  <tabstop>classNameEdit</tabstop>
+  <tabstop>nameEdit</tabstop>
+  <tabstop>locoTypeCombo</tabstop>
+  <tabstop>numberEdit</tabstop>
+  <tabstop>origRailwayEdit</tabstop>
+  <tabstop>liveryRailwayEdit</tabstop>
+  <tabstop>originalYearEdit</tabstop>
+  <tabstop>liveryYearEdit</tabstop>
+  <tabstop>wheelsEdit</tabstop>
+  <tabstop>modelManufEdit</tabstop>
+  <tabstop>decoderEdit</tabstop>
+  <tabstop>summaryText</tabstop>
+  <tabstop>functionButton</tabstop>
+  <tabstop>uploadImageButton</tabstop>
+ </tabstops>
  <resources/>
  <connections>
   <connection>

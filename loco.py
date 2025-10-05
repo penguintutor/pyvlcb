@@ -5,8 +5,10 @@ import json
 
 class Loco:
     # All arguments have default allowing creation of a dummy loco
-    def __init__ (self, loco_id=0, session=0, direction=1, speed=0):
-        # status tarts in off, change to rloc when rloc sent, then on when allocated
+    # Normally use classmethod from_file to open an existing file
+    # If filename specified must include full path
+    def __init__ (self, loco_id=0, session=0, direction=1, speed=0, filename=None):
+        # status starts in off, change to rloc when rloc sent, then on when allocated
         # if error after ploc then set to off
         # if gloc then set status to gloc - and then on after aquire (ploc)
         self.status = "off"   
@@ -19,9 +21,19 @@ class Loco:
         self.speed = speed # Allow 0 to 128 but maximum sent is 127. Speed 1 = emergency stop (not used - instead status = stop)
         # Track all functions. Only F0 to F12 are found from PLOC - rest assume start off
         self.function_status = [0] * 29
+        # Set filename to allow it to be saved - must be full path
+        self.filename = filename
     
     def set_status (self, value):
         self.status = value
+        
+    # Returns filename. If not filename then return default so as valid image
+    # Note that default.png must exist in the locos directory
+    def get_image_filename (self):
+        if 'image' in self.loco_data and self.loco_data['image'] != "":
+            return self.loco_data['image']
+        else:
+            return "default.png"
     
     # Data is a dict of what to change
     # Changes info about the loco
@@ -44,6 +56,13 @@ class Loco:
             self.loco_data = json.load(data_file)
         self.loco_id = self.loco_data["address"]
         self.loco_name = self.loco_data["display-name"]
+        
+    def save_file (self, filename=None):
+        if filename == None:
+            filename = self.filename
+        
+        with open(filename, 'w') as data_file:
+            json.dump(self.loco_data, data_file, indent=4)
         
     # Resets the functions - sets to all 0
     def function_reset (self):
@@ -223,3 +242,11 @@ class Loco:
         #print (f"Returning {byte1}, {byte2}")
         return [byte1, byte2]
     
+    
+    # Use this to normally create the class
+    @classmethod
+    def from_file (cls, loco_file):
+        # create a initial entry
+        new_loco = cls()
+        new_loco.load_file (loco_file)
+        return new_loco

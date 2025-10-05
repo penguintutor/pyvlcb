@@ -9,15 +9,34 @@ import os
 # particularly useful for giving friendly names
 # to replace nodeIDs
 class Layout():
-    def __init__ (self, layout_file):
-        self.layout_file = layout_file
+    def __init__ (self, layout_name, layout_dir, layout_file=None):
+        self.name = layout_name
+        self.layout_dir = layout_dir
+        # If not file specified then default to name.json
+        # Warning this will read and potentially write to the file if it already exists
+        if layout_file != None:
+            self.layout_file = layout_file
+        else:
+            layout_file = self.name+".json"
         # Create directory names
-        basedir = os.path.dirname(__file__)
-        self.data_dir = os.path.join(basedir, "data")
-        self.loco_dir = os.path.join(self.data_dir, "locos")
-        self.layout_dir = os.path.join(self.data_dir, "layout")
-        with open(os.path.join(self.data_dir, self.layout_file), 'r') as data_file:
-            self.layout_data = json.load(data_file)
+        #basedir = os.path.dirname(__file__)
+        #self.data_dir = os.path.join(basedir, "data")
+        #self.loco_dir = os.path.join(self.data_dir, "locos")
+        #self.layout_dir = os.path.join(self.data_dir, "layout")
+        filename = os.path.join(self.layout_dir, self.layout_file)
+        try:
+            with open(filename, 'r') as data_file:
+                self.layout_data = json.load(data_file)
+        except:
+            print (f"No layout file '{filename}' using default values")
+            self.layout_data = { }
+        # Check we have an objects file - if not then set default name
+        if 'layout-objs' in self.layout_data:
+            self.layout_objs_file = self.layout_data['layout-objs']
+        else:
+            # If not file specified then use default name = <name>-objects.json
+            # Using lower case
+            self.layout_objs_file = self.name.lower() + "-objects.json"
         
         
         self.node_names = {
@@ -34,13 +53,25 @@ class Layout():
             }
         
     def get_layout_image (self):
-        return os.path.join(self.layout_dir, self.layout_data['layout-image'])
+        # check we have an image - if not return default
+        # Only checks for a defined entry - can return invalid name if corrupt .json file or file deleted
+        if 'layout-image' in self.layout_data:
+            return os.path.join(self.layout_dir, self.layout_data['layout-image'])
+        else:
+            return os.path.join(os.path.dirname(__file__), "nolayout.png")
+        
+    def get_layout_objs_file (self):
+        # Returns filename - file may not exist if this is new
+        return self.layout_objs_file
         
     # Returns list of lists. Each entry ["Friendly name", "filename"]
     def get_locos (self):
         return self.layout_data['locos']
     
     def get_loco_names (self):
+        # Temp return empty string - looking to move to a new class
+        return []
+    
         names = []
         for loco_entry in self.layout_data['locos']:
             names.append(loco_entry[0])

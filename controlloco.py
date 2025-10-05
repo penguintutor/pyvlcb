@@ -19,7 +19,10 @@ class ControlLoco:
         # Index is the position in the list in the device_model
         # Create new loco in device_model and get index
         # For interactive this is normally position 0
-        self.loco_index = device_model.add_loco()
+        #self.loco_index = device_model.add_loco()
+        # Todo 
+        # Need to find index of active loco instead
+        self.loco_index = None
         # loco moved to devicemodel
         event_bus.loco_event_signal.connect (self.event_trigger)
         self.debug = False
@@ -98,9 +101,14 @@ class ControlLoco:
 
 
     def is_active(self):
+        if self.loco_index == None:
+            return False
         return device_model.locos[self.loco_index].is_active()
     
     def get_direction(self):
+        # defaults to 1 if no loco specified
+        if self.loco_index == None:
+            return 1
         return device_model.locos[self.loco_index].direction
     
     def speed_value(self):
@@ -118,6 +126,8 @@ class ControlLoco:
         return device_model.locos[self.loco_index].is_aquiring
     
     def get_session (self):
+        if self.loco_index == None:
+            return None
         return device_model.locos[self.loco_index].session
     
     def set_session (self, session):
@@ -131,6 +141,8 @@ class ControlLoco:
         return device_model.locos[self.loco_index].get_speeddir()
     
     def get_functions (self):
+        if self.loco_index == None:
+            return []
         return device_model.locos[self.loco_index].get_functions()
     
     def set_functions (self, fn1, fn2, fn3):
@@ -142,6 +154,8 @@ class ControlLoco:
     
     # This is the low level status - perhaps use is_aquiring or a similar method instead
     def get_status (self):
+        if self.loco_index == None:
+            return None
         return device_model.locos[self.loco_index].status
     
     def set_status (self, value):
@@ -169,8 +183,11 @@ class ControlLoco:
     # Update function selected features
     # When combobox / tab selected
     def function_selected (self, func_index):
-        # get [status, type]
-        status = device_model.locos[self.loco_index].get_function_status(func_index)
+        if self.loco_index != None:
+            # get [status, type]
+            status = device_model.locos[self.loco_index].get_function_status(func_index)
+        else:
+            status = None
         # If we don't have a status then the function button doesn't exist
         if status == None:
             return (" - ")
@@ -224,7 +241,7 @@ class ControlLoco:
     # Returns True if the loco is active - else false
     def change_speed (self, new_speed):
         # If not in a session then ignore
-        if device_model.locos[self.loco_index].is_active():
+        if self.loco_index != None and device_model.locos[self.loco_index].is_active():
             # Special case if stop and 0 then reset stop
             if device_model.locos[self.loco_index].status == "stop" and new_speed == 0:
                 device_model.locos[self.loco_index].status = "on"

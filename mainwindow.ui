@@ -338,7 +338,7 @@
              </size>
             </property>
             <property name="text">
-             <string>Activate</string>
+             <string>-</string>
             </property>
            </widget>
           </item>
@@ -686,7 +686,7 @@
        </widget>
       </item>
       <item>
-       <widget class="LayoutDisplay" name="layoutLabel">
+       <widget class="LayoutDisplay" name="layoutDisplayLabel">
         <property name="text">
          <string/>
         </property>

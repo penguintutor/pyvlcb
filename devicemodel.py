@@ -9,8 +9,8 @@ from vlcbformat import VLCBopcode
 from vlcbnode import VLCBNode
 from vlcbclient import VLCBClient
 from eventbus import EventBus, event_bus
+from locolist import LocoList
 from loco import Loco
-from locoyard import LocoYard
 from deviceevent import DeviceEvent
 from locoevent import LocoEvent
 from appevent import AppEvent
@@ -53,26 +53,16 @@ class DeviceModel(QObject):
         self.nodes = {}
         
         # Yards are used to load locos from
-        # Don't actually store the locos in here, but the yard is used to get the locos
-        # and append to self.locos
-        # The yards are saved into the yards_file
-        # Entries within each yard are then stored in seperate files
-        self.yards = []
-        # Active yard is a special yard that holds the active locos
-        self.active_yard = None
-        # typically the GUI will have one active loco = [0]
-        # allow more to allow automation
-        # Don't add directly instead use add_loco method which avoids duplicates
-        self.locos = []
+        # Don't actually store the locos in here, but the yard is used for grouping the locos
+
+        # Locos is now replaced with a Loco_list
+        # can't create until we've loaded the directories so set to None initially
+        self.locos = None
         
-        # These directories and filenames as specified when first loading the yards
+        # These directories and filenames as specified when first loading the loco
         # Listed here for easy reference
-        # Directories for yards and locos
-        self.yardsdir = None
-        self.locosdir = None
-        # These are stored as full path
-        self.yard_file = None		# Top level yard file
-        self.active_file = None		# Active Yard
+        self.locos_dir = None
+
         
         # Other nodes are stored in here for lookup in menus or eventbus
         # Every "node" must be added to the device model
@@ -102,7 +92,7 @@ class DeviceModel(QObject):
     # Assumes that already checked it doesn't exist
     # Filename should be relative
     def add_yard (self, title, filename):
-        self.yards.append(LocoYard(self.yardsdir, self.locosdir, title, filename))
+        self.yards.append(LocoYard(self.yards_dir, self.locos_dir, title, filename))
         self.save_yards ()
     
         
@@ -111,7 +101,7 @@ class DeviceModel(QObject):
     def check_yard_exist (self, filename):
         # Check the yard doesn't already exist
         for yard in self.yards:
-            if yard.yard_file == filename:
+            if yard.yards_file == filename:
                 return True
             # also return true if it's the active yard - prevents conflict when checking before save
             # however the active file is stored as the full path (to allow different directory if desired)
@@ -124,26 +114,39 @@ class DeviceModel(QObject):
         # Convert each LocoYard object to JSON-serializable dictionary
         json_yard_list = [yard.to_json() for yard in self.yards]
         try:
-            with open(self.yard_file, 'w') as data_file:
+            with open(self.yards_file, 'w') as data_file:
                 json.dump(json_yard_list, data_file, indent=4)
         except Exception as e:
-            print (f"Error saving yard file {self.yard_file} {e}")
+            print (f"Error saving yard file {self.yards_file} {e}")
             
-    # Load the default file - same as Yard, but for active locos
-    def load_active_file (self, dir_path, filename):
-        self.active_file = os.path.join(dir_path, filename)
+    # Load the locos
+    def load_locos (self, locos_path, locos_filename):
+        # Is this the first time we've seen locos_dir?
+        # if so save - if not then ignore the path
+        if self.locos_dir == None:
+            self.locos_dir = locos_path
+        # If the LocoList is not initialized then we do that here
+        if self.locos == None:
+            #full_path = os.path.join(self.data_dir, locos_filename)
+            self.locos = LocoList (self.locos_dir, locos_filename)
+        # If not then call load file against existing
+        else:
+            #full_path = os.path.join(self.data_dir, locos_filename)
+            self.locos.load_file (locos_filename)
                 
+    def get_all_locos (self):
+        return self.locos.get_all_locos()
                 
     # Loads the yard top level file (list of yards), also store relative directories for yards and locos
-    def load_yard_file (self, datadir, filename, yardsdir, locosdir):
-        self.yard_file = os.path.join(datadir, filename)
-        self.yardsdir = yardsdir
-        self.locosdir = locosdir
+    def load_yards_file (self, datadir, filename, yards_dir, locos_dir):
+        self.yards_file = os.path.join(datadir, filename)
+        self.yards_dir = yards_dir
+        self.locos_dir = locos_dir
         try:
-            with open(self.yard_file, 'r') as data_file:
+            with open(self.yards_file, 'r') as data_file:
                 yard_data = json.load(data_file)
             # process yard_data within try
-            self.yards = [LocoYard.from_json(self.yardsdir, self.locosdir, item) for item in yard_data]
+            self.yards = [LocoYard.from_json(self.yards_dir, self.locos_dir, item) for item in yard_data]
         except FileNotFoundError:
             print(f"Warning: Yard file '{filename}' was not found.")
             # Todo - make sure works without a default
@@ -241,9 +244,9 @@ class DeviceModel(QObject):
         self.layout = layout
         
     # Default add a loco with no details
-    def add_loco (self, loco_id=None):
-        self.locos.append(Loco())
-        return (len(self.locos)-1)
+    def add_loco (self, name, loco_id=0):
+        new_loco = self.locos.add_loco(name, loco_id)
+        return (new_loco)
         
     def node_exists (self, node):
         if node in self.nodes.keys():

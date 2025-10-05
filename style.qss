@@ -27,3 +27,9 @@ QComboBox {
 QComboBox::down-arrow {
     icon-size: 12px;
 }
+
+/* Enable the icon for any icon based buttons - eg. delete */
+QPushButton.showicon {
+    padding: 1px;
+    icon-size: 12px;
+}
