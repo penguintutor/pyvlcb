@@ -46,7 +46,7 @@
     <widget class="QLineEdit" name="wheelsEdit"/>
    </item>
    <item row="2" column="4" rowspan="2" colspan="5">
-    <widget class="QLineEdit" name="classNameEdit"/>
+    <widget class="QLineEdit" name="classificationEdit"/>
    </item>
    <item row="0" column="0" colspan="3">
     <widget class="QLabel" name="label_2">
@@ -87,7 +87,7 @@
    <item row="2" column="3" rowspan="2">
     <widget class="QLabel" name="label_8">
      <property name="text">
-      <string>Class Name:</string>
+      <string>Classification:</string>
      </property>
     </widget>
    </item>
@@ -113,35 +113,6 @@
    </item>
    <item row="7" column="1" colspan="3">
     <widget class="QLineEdit" name="liveryRailwayEdit"/>
-   </item>
-   <item row="4" column="4" rowspan="2" colspan="4">
-    <widget class="QComboBox" name="locoTypeCombo">
-     <item>
-      <property name="text">
-       <string>Select type.</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Steam</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Diesel</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Electric</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Other</string>
-      </property>
-     </item>
-    </widget>
    </item>
    <item row="7" column="0">
     <widget class="QLabel" name="label_11">
@@ -239,15 +210,43 @@
      </property>
     </widget>
    </item>
+   <item row="5" column="4">
+    <widget class="QComboBox" name="locoTypeCombo">
+     <item>
+      <property name="text">
+       <string>Select type.</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Steam</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Diesel</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Electric</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Other</string>
+      </property>
+     </item>
+    </widget>
+   </item>
   </layout>
  </widget>
  <tabstops>
   <tabstop>displayTextEdit</tabstop>
   <tabstop>dccIDEdit</tabstop>
   <tabstop>classEdit</tabstop>
-  <tabstop>classNameEdit</tabstop>
+  <tabstop>classificationEdit</tabstop>
   <tabstop>nameEdit</tabstop>
-  <tabstop>locoTypeCombo</tabstop>
   <tabstop>numberEdit</tabstop>
   <tabstop>origRailwayEdit</tabstop>
   <tabstop>liveryRailwayEdit</tabstop>

@@ -108,7 +108,9 @@ class LocoWindow(QMainWindow):
         if selected == "All locos":
             # for all then iterate directly from device_model
             #print (f"All locos {device_model.locos}"
-            for loco in device_model.get_all_locos():
+            all_locos = device_model.get_all_locos()
+            #print (f"All locos {all_locos}")
+            for loco in all_locos:
                 #print (f"Loco {loco.loco_name}")
                 image_path = os.path.join(self.locos_dir, loco.get_image_filename())
                 self.add_loco_entry(loco.loco_id, loco.loco_class, loco.loco_name, image_path)
@@ -164,25 +166,28 @@ class LocoWindow(QMainWindow):
     def open_add_loco_dialog(self):
         #print("Add new loco")
         add_dialog = AddLocoDialog(self, self.locos_dir)
-        add_dialog.exec()
+        result = add_dialog.exec()
+        if result != 1:
+            return
         
         # Create a dict of the values
         data_dict = {
-            'displayname': add_dialog.ui.displayTextEdit.text(),
-            'class': add_dialog.ui.classEdit.text(),
-            'classname': add_dialog.ui.classNameEdit.text(),
-            'name': add_dialog.ui.nameEdit.text(),
-            'number': add_dialog.ui.numberEdit.text(),
-            'locotype': add_dialog.ui.locoTypeCombo.currentText(),
-            'origrailway': add_dialog.ui.origRailwayEdit.text(),
-            'liveryrailway': add_dialog.ui.liveryRailwayEdit.text(),
-            'originalyear': add_dialog.ui.originalYearEdit.text(),
-            'liveryyear': add_dialog.ui.liveryYearEdit.text(),
-            'wheels': add_dialog.ui.wheelsEdit.text(),
-            'modelManuf': add_dialog.ui.modelManufEdit.text(),
-            'decoder': add_dialog.ui.decoderEdit.text(),
-            'image': add_dialog.image_filename,
-            'summary': add_dialog.ui.summaryText.toPlainText()
+            'address': add_dialog.loco_id,						# Uses loco_id which is already set to a number
+            'displayname': add_dialog.ui.displayTextEdit.text().strip(),
+            'class': add_dialog.ui.classEdit.text().strip(),
+            'classification': add_dialog.ui.classificationEdit.text().strip(),		# This is personal preference how used (eg. freight / mixed or Prairie or Pacific etc.)
+            'name': add_dialog.ui.nameEdit.text().strip(),
+            'number': add_dialog.ui.numberEdit.text().strip(),
+            'locotype': add_dialog.ui.locoTypeCombo.currentText().strip(),
+            'origrailway': add_dialog.ui.origRailwayEdit.text().strip(),
+            'liveryrailway': add_dialog.ui.liveryRailwayEdit.text().strip(),
+            'originalyear': add_dialog.ui.originalYearEdit.text().strip(),
+            'liveryyear': add_dialog.ui.liveryYearEdit.text().strip(),
+            'wheels': add_dialog.ui.wheelsEdit.text().strip(),
+            'modelManuf': add_dialog.ui.modelManufEdit.text().strip(),
+            'decoder': add_dialog.ui.decoderEdit.text().strip(),
+            'image': add_dialog.image_filename.strip(),
+            'summary': add_dialog.ui.summaryText.toPlainText().strip()
             }
         
         # Create a filename loco_id followed by class_id and name or class_name
@@ -192,13 +197,21 @@ class LocoWindow(QMainWindow):
         elif data_dict['classname'] != "":
             filename += "-" + data_dict['classname']
         # remove any non file save characters
-        safe_filename = re.sub(r'[<>:"/\|?*]', '_', filename.lower())
+        safe_filename = re.sub(r'[<>:"/\|?* ]', '_', filename.lower())
         safe_filename += ".json"
             
         # Create the loco entry
         loco = device_model.add_loco(safe_filename, add_dialog.loco_id)
         loco.update_loco(data_dict)
-        loco.save()
+        result = loco.save_file()
+        # save locos file afterwards in case of problem creating
+        if result == True:
+            device_model.save_locos()
+        # Otherwise cleanup (but no need to remove any files)
+        else:
+            device_model.remove_loco(safe_filename, delete=False)
+        # Update the display to show the new loco
+        self.update()
         
     # Launch loco edit dialog
     def loco_edit (self, clicked_entry: LocoEntry):

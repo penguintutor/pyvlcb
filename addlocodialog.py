@@ -150,11 +150,10 @@ class AddLocoDialog(QDialog):
    
    # check if a filepath is in the locosdir
     def is_locosdir(self, filepath):
-        #print (f"Checking {filepath} in {self.locosdir}")
+        print (f"Checking {filepath} in {self.locosdir}")
         try:
-            #filepath = Path(filepath).resolve()
-            #print (f"Filepath {filepath} {filepath.parent}")
             dir = os.path.dirname(filepath)
+            print (f"Test {dir}")
             return dir == self.locosdir
         except Exception as e:
             print(f"Error checking path: {e}")

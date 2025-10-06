@@ -14,7 +14,7 @@ class Loco:
         self.status = "off"   
         self.loco_id = loco_id
         self.loco_class = ""
-        self.loco_name = ""
+        self.loco_name = ""	# This needs to be unique (no checking so if not then the first will be returned)
         self.loco_data = {}
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
         self.direction = direction # 1 = forward, 0 = reverse
@@ -55,18 +55,30 @@ class Loco:
         with open(filename, 'r') as data_file:
             self.loco_data = json.load(data_file)
         self.loco_id = self.loco_data["address"]
-        self.loco_name = self.loco_data["display-name"]
+        self.loco_name = self.loco_data["displayname"]
         
+    # Returns True is successful save
     def save_file (self, filename=None):
         if filename == None:
             filename = self.filename
-        
-        with open(filename, 'w') as data_file:
-            json.dump(self.loco_data, data_file, indent=4)
+        try:
+            with open(filename, 'w') as data_file:
+                json.dump(self.loco_data, data_file, indent=4)
+        except:
+            return False
+        return True
+            
+    # get number of functions
+    # handles if none defined
+    def num_functions (self):
+        if "functions" in self.loco_data:
+            return len(self.loco_data["functions"])
+        else:
+            return 0
         
     # Resets the functions - sets to all 0
     def function_reset (self):
-        num_functions = len(self.loco_data["functions"])
+        num_functions = self.num_functions()
         # Minimum of 29 even if not used / available to allow dfun return codes
         if num_functions < 29:
             num_functions = 29

@@ -1,7 +1,7 @@
 import os
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
 from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog
-from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont
+from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont, QResizeEvent
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
 from layout import Layout
@@ -50,9 +50,13 @@ class MainWindowUI(QMainWindow):
     reset_loco_signal = Signal()
     steal_loco_signal = Signal() # Attempt to steal loco
     share_loco_signal = Signal() # Attempt to share loco
+    
     # Keep alive timer must always be started and stopped on the GUI thread
     # this will start or stop as appropriate based on loco state
     update_kalive_signal = Signal()
+    
+    # If locos updated then refresh selection list
+    updated_locos_signal = Signal()
     
     # Monitor for Window Activated to be able to manage the level of windows / dialog
     windowActivated = Signal()
@@ -69,6 +73,9 @@ class MainWindowUI(QMainWindow):
         self.cmd_settings = settings
         self.dirs = {} # dirs need to be updated with data_dir
         self.files = files
+        
+        # This will hold the QPixmap for the loco image
+        self.loco_image = None
         
         # All data files are relative to this directory
         # Default this is basedir/data
@@ -104,6 +111,8 @@ class MainWindowUI(QMainWindow):
         self.kalive_timer.setInterval(4000)
         self.kalive_timer.timeout.connect(self.keep_alive)
         
+        # Load the Assets prior to setting up the GUI
+        
         # Load the settings file here
         # Todo - adding settings - implement this class
         # Settings(os.path.join(basedir, "self.files["settings"]", self.cmd_settings)
@@ -126,6 +135,11 @@ class MainWindowUI(QMainWindow):
         # pass the layout to the devicemodel
         device_model.set_layout(self.railway)
         
+        # active locos are the ones active for this session
+        full_path_locos = os.path.join(self.data_dir, self.files['locos'])
+        device_model.load_locos (self.dirs['locos'], full_path_locos)
+
+        
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
         self.loco_window = None
@@ -138,6 +152,7 @@ class MainWindowUI(QMainWindow):
         self.share_loco_signal.connect (self.share_loco)
         self.update_kalive_signal.connect (self.update_kalive)
         # Other event related signals
+        self.updated_locos_signal.connect (self.update_loco_list)
         # Gui signal
         event_bus.gui_event_signal.connect(self.gui_event)
         # Listen to device_model signal for treeview updates
@@ -232,11 +247,7 @@ class MainWindowUI(QMainWindow):
         
         # Status of the http connection
         self.status = "Not connected"
-               
-        # active locos are the ones active for this session
-        full_path_locos = os.path.join(self.data_dir, self.files['locos'])
-        device_model.load_locos (self.dirs['locos'], full_path_locos)
-           
+                          
         # Initial discover request
         self.api.discover()
         
@@ -396,25 +407,26 @@ class MainWindowUI(QMainWindow):
             if self.kalive_timer.isActive():
                 self.kalive_timer.stop()
             return
-
-        # Update the self.loco entry once we start to aquire
         
-        # Get the loc_filename and load
-        # index is -1 to skip None selected
-        loco_index = self.control_loco.loco_index
-        filename = self.railway.get_loco_filename (index -1)
-        device_model.locos[loco_index].load_file (filename)
-        loco_name = device_model.locos[loco_index].loco_name
+        # Get the loco entry
+        loco_name = self.ui.locoComboBox.currentText()
+        
+        # Get the loco entry
+        loco = device_model.get_loco_from_name (loco_name)
+            
+        # If don't get a loco then close
+        self.control_loco.loco = loco
+        
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
-        device_model.locos[loco_index].status = 'rloc'
+        self.control_loco.loco.status = 'rloc'
         # Add images and summary
-        if "image" in device_model.locos[loco_index].loco_data:
-            loco_image = QPixmap(os.path.join(self.railway.loco_dir, device_model.locos[loco_index].loco_data['image']))
-            self.ui.locoImage.setPixmap(loco_image)
+        if "image" in self.control_loco.loco.loco_data:
+            self.loco_image = QPixmap(os.path.join(self.dirs['locos'], self.control_loco.loco.loco_data['image']))
+            self.ui.locoImage.setPixmap(self.loco_image)
         else:
             self.ui.locoImage.setPixmap(QPixmap())
-        if "summary" in device_model.locos[loco_index].loco_data:
-            self.ui.locoInfoText.setText(device_model.locos[loco_index].loco_data['summary'])
+        if "summary" in self.control_loco.loco.loco_data:
+            self.ui.locoInfoText.setText(self.control_loco.loco.loco_data['summary'])
         else:
             self.ui.locoInfoText.setText("")
         
@@ -494,7 +506,6 @@ class MainWindowUI(QMainWindow):
         request_off = self.api.vlcb.loco_set_dfun(self.control_loco.get_session(), *byte1_2)
         
         self.api.start_request_onoff (request_on, request_off, delay)
-          
     
     # Update the functions list
     # If index is not provided then use current
@@ -541,14 +552,42 @@ class MainWindowUI(QMainWindow):
         else:
             self.ui.locoStatusLabel.setText ("Released")
             
-        
+    # Updates the list of locos (both initial and when locos added / removed)
+    # Preserves list if already selected
     def update_loco_list (self):
+        # save current entry name - set this active if
+        current_index = self.ui.locoComboBox.currentIndex()
+        current_loco_text = self.ui.locoComboBox.itemText(current_index) if current_index > 0 else None
+        
+        # Block signals whilst updating
+        self.ui.locoComboBox.blockSignals(True)
+        
         self.ui.locoComboBox.clear()
         # Readd the default - none selected
         self.ui.locoComboBox.addItem("Select Locomotive")
-        # Returns the list of locos
-        for loco_name in self.railway.get_loco_names():
-            self.ui.locoComboBox.addItem(loco_name)
+        # Add all the locos
+        self.ui.locoComboBox.addItems(device_model.get_enabled_locos())
+        
+        # Set back to previous entry if still valid
+        if current_loco_text:
+            # Find the index of the previously selected loco in the new list
+            new_index = self.ui.locoComboBox.findText(current_loco_text)
+            
+            if new_index != -1: # Loco was found
+                self.ui.locoComboBox.setCurrentIndex(new_index)
+                # no need to update
+            else: # Loco was removed
+                # Entry changed so call loco_change manually
+                self.loco_change()
+        # Enable the signal
+        self.ui.locoComboBox.blockSignals(False)
+                
+        # Returns the list of locos - using get name
+        #for loco_name in device_model.get_enabled_locos():
+        #    self.ui.locoComboBox.addItem(loco_name)
+        #for loco_name in self.railway.get_loco_names():
+        #    self.ui.locoComboBox.addItem(loco_name)
+        
             
     ## Setup Dialog for appropriate object type
     def edit_dialog_guiobject (self):
@@ -884,25 +923,7 @@ class MainWindowUI(QMainWindow):
                 if new_item != None:
                     self.selected_node = new_item
                 
-                
-#                 if type(new_item) == GuiObject:
-#                     #self.selected_node = gui_node
-#                     self.node_table_show_gui_node(new_item)
-#                     # If num states < 2 then no button
-#                     if new_item.num_states < 2:
-#                         self.update_node_buttons (None, None)
-#                     # If exactly 2 then toggle button
-#                     elif new_item.num_states == 2:
-#                         self.update_node_buttons ("Toggle", None)
-#                     # If more than 2 then up / down
-#                     else:
-#                         self.update_node_buttons ("Prev", "Next")
-#                 # Otherwise it's a layoutobject (button / label)
-#                 else:
-#                     # new item for child is [parent, type, pos]
-#                     self.node_table_show_gui_child(new_item)
-#                     # Typically GUI children will say Toggle (for a label), or Activate for a button
-#                     self.update_node_buttons (new_item.get_action_type(), None)
+
         # If not structure name then most likely a normal node which can have any name
         else:
             # Special case - if CANCAM 65535 or CANCMD 65534 then hide buttons
@@ -918,12 +939,7 @@ class MainWindowUI(QMainWindow):
                 if new_item != None:
                     self.selected_node = new_item
                     # If this is a node then show that in table
-                    #if new_item[1] == 0:
-#                     if type(new_item) is VLCBNode:
-#                         self.node_table_show_node(new_item)
-#                     # or if it's a ev
-#                     else:
-#                         self.node_table_show_ev(new_item)
+
                         
         self.update_table()
 
@@ -1168,3 +1184,28 @@ class MainWindowUI(QMainWindow):
     # to GUI thread with the parent and the child details
     def add_to_tree (self, parent, child):
         parent.appendRow(child)
+        
+    # Override reiszeEvent
+    def resizeEvent(self, event: QResizeEvent):
+        self._scale_image_to_fit()
+        super().resizeEvent(event) # Call the base class implementation
+
+    # Scale the image
+    def _scale_image_to_fit(self):
+        if self.loco_image == None:
+            return
+
+        # Get the current size of the QLabel where the image will be displayed
+        label_size = self.ui.locoImage.size()
+
+        # Scale the original pixmap to fit the label's dimensions.
+        # Qt.KeepAspectRatio ensures the image ratio isn't distorted.
+        # Qt.SmoothTransformation uses a high-quality scaling algorithm.
+        scaled_pixmap = self.loco_image.scaled(
+            label_size,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation
+        )
+
+        # Set the newly scaled pixmap to the QLabel
+        self.ui.locoImage.setPixmap(scaled_pixmap)

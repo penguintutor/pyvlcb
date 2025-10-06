@@ -18,15 +18,19 @@ from guievent import GuiEvent
 from automateevent import AutomateEvent
 
 
+# Many of the methods in there (particularly when related to self.locos)
+# are just used to hand off to the other class. This maintains device_model as
+# the primary interface to decouple from LocoList etc.
+
 ## Serialize / Deserialize yards
 # The serialize_event function must be defined before it is used.
-def serialize_yard(obj):
-    if isinstance(obj, LocoYard):
-        return obj.__dict__()
-    raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
-
-def deserialize_yard(data):
-    return EventBus.event_map[data["event_type"]] (data)
+# def serialize_yard(obj):
+#     if isinstance(obj, LocoYard):
+#         return obj.__dict__()
+#     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
+# 
+# def deserialize_yard(data):
+#     return EventBus.event_map[data["event_type"]] (data)
 
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
@@ -84,31 +88,11 @@ class DeviceModel(QObject):
         # The GUI nodes are contained within the node class instances. This is specific to the node list in TreeView
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
+
+    # Get the loco object from the loco name
+    def get_loco_from_name (self, name):
+        return self.locos.get_loco_from_name (name)
         
-    # Return list of yard titles
-    def get_yard_list(self):
-        return [yard.title for yard in self.yards]
-        
-    # Assumes that already checked it doesn't exist
-    # Filename should be relative
-    def add_yard (self, title, filename):
-        self.yards.append(LocoYard(self.yards_dir, self.locos_dir, title, filename))
-        self.save_yards ()
-    
-        
-    # Uses filename (rather than title)
-    # Returns True if exists, False if not
-    def check_yard_exist (self, filename):
-        # Check the yard doesn't already exist
-        for yard in self.yards:
-            if yard.yards_file == filename:
-                return True
-            # also return true if it's the active yard - prevents conflict when checking before save
-            # however the active file is stored as the full path (to allow different directory if desired)
-            # so check full path
-            if active_file == os.path.join(datadir, filename):
-                return True
-        return False
         
     def save_yards (self):
         # Convert each LocoYard object to JSON-serializable dictionary
@@ -119,7 +103,7 @@ class DeviceModel(QObject):
         except Exception as e:
             print (f"Error saving yard file {self.yards_file} {e}")
             
-    # Load the locos
+    # Load the locos file by opening in LocoList 
     def load_locos (self, locos_path, locos_filename):
         # Is this the first time we've seen locos_dir?
         # if so save - if not then ignore the path
@@ -133,31 +117,18 @@ class DeviceModel(QObject):
         else:
             #full_path = os.path.join(self.data_dir, locos_filename)
             self.locos.load_file (locos_filename)
-                
+
+    # Get all locos as Loco objects            
     def get_all_locos (self):
         return self.locos.get_all_locos()
+    
+    # Get enabled locos - returns list of displaynames (or equivelant)
+    def get_enabled_locos (self):
+        # If locos not initialised yet return empty list
+        if self.locos == None:
+            return []
+        return self.locos.get_enabled_locos()
                 
-    # Loads the yard top level file (list of yards), also store relative directories for yards and locos
-    def load_yards_file (self, datadir, filename, yards_dir, locos_dir):
-        self.yards_file = os.path.join(datadir, filename)
-        self.yards_dir = yards_dir
-        self.locos_dir = locos_dir
-        try:
-            with open(self.yards_file, 'r') as data_file:
-                yard_data = json.load(data_file)
-            # process yard_data within try
-            self.yards = [LocoYard.from_json(self.yards_dir, self.locos_dir, item) for item in yard_data]
-        except FileNotFoundError:
-            print(f"Warning: Yard file '{filename}' was not found.")
-            # Todo - make sure works without a default
-            # Create a yard called "Default"
-            #self.add_yard ("Default", "default.json")
-        except json.JSONDecodeError:
-            print(f"Error: The file '{filename}' is not a valid JSON file.")
-            # Create a yard called "Default"
-            #self.add_yard ("Default", "default.json")
-            return
-        
 
     # Return Gui object matching name
     # Or return None
@@ -244,9 +215,22 @@ class DeviceModel(QObject):
         self.layout = layout
         
     # Default add a loco with no details
-    def add_loco (self, name, loco_id=0):
-        new_loco = self.locos.add_loco(name, loco_id)
+    # Note that this does not save the file, or add it to the locos.json file
+    # Instead that needs to be called separately when confirming
+    # that the save was successful
+    def add_loco (self, filename, loco_id=0):
+        new_loco = self.locos.add_loco(filename, loco_id)
         return (new_loco)
+    
+    # Remove loco - if deleted or fail to save
+    # delete = False does not clean up the <loco>.json file
+    # Set to true to remove the loco file (images are not deleted in case used elsewhere)
+    def remove_loco (self, filename, delete=False):
+        self.locos.remove_loco (filename, delete)
+    
+    # Save locos to file
+    def save_locos (self):
+        self.locos.save_file()
         
     def node_exists (self, node):
         if node in self.nodes.keys():

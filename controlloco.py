@@ -16,13 +16,9 @@ from devicemodel import DeviceModel, device_model
 # perhaps decouple in futures
 class ControlLoco:
     def __init__(self):
-        # Index is the position in the list in the device_model
-        # Create new loco in device_model and get index
-        # For interactive this is normally position 0
-        #self.loco_index = device_model.add_loco()
-        # Todo 
-        # Need to find index of active loco instead
-        self.loco_index = None
+        # Store a link to the loco (obtained from device_model)
+        # Refer to self.loco 
+        self.loco = None
         # loco moved to devicemodel
         event_bus.loco_event_signal.connect (self.event_trigger)
         self.debug = False
@@ -57,7 +53,8 @@ class ControlLoco:
                 if self.debug:
                     print (f"ERR ID {loco_id} does not match current Loco ID {self.get_id()}")
                 return
-            event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available", "loco_index": self.loco_index}))
+            if self.loco != None:
+                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available", "loco_id": self.loco.loco_id}))
 
         # Already taken - option to steal
         elif data_entry['ErrCode'] == 2:
@@ -79,7 +76,9 @@ class ControlLoco:
             # Let stealdialog request update gui
             #event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - address taken"}))
             # request steal dialog by signalling locotaken
-            event_bus.publish(AppEvent("locotaken", {'loco_id': loco_id, 'loco_index': self.loco_index}))
+            # Should be an allocated loco - otherwise why are we here, but just in case
+            if self.loco != None:
+                event_bus.publish(AppEvent("locotaken", {'loco_id': self.loco.loco_id}))
 
         elif data_entry['ErrCode'] == 8:
             # If we are trying to aquire a session then this could be us resetting other node
@@ -93,7 +92,8 @@ class ControlLoco:
                     print (f"Session cancelled {session_id}")
                 # This updates the loco and the GUI
                 self.reset_loco()
-                event_bus.publish(AppEvent("resetloco", {'loco_index': self.loco_index}))
+                if self.loco != None:
+                    event_bus.publish(AppEvent("resetloco", {'loco_id': self.loco.loco_id}))
             else:
                 # probably not for us
                 if self.debug:
@@ -101,81 +101,81 @@ class ControlLoco:
 
 
     def is_active(self):
-        if self.loco_index == None:
+        if self.loco == None:
             return False
-        return device_model.locos[self.loco_index].is_active()
+        return self.loco.is_active()
     
     def get_direction(self):
         # defaults to 1 if no loco specified
-        if self.loco_index == None:
+        if self.loco == None:
             return 1
-        return device_model.locos[self.loco_index].direction
+        return self.loco.direction
     
     def speed_value(self):
-        return device_model.locos[self.loco_index].speed_value()
+        return self.loco.speed_value()
     
     def get_name(self):
-        return device_model.locos[self.loco_index].loco_name
+        return self.loco.loco_name
     
     # Id is the loco id (eg DCC/running number) not index
     def get_id(self):
-        #print (f"Loco index {self.loco_index} id {device_model.locos[self.loco_index].loco_id} name {device_model.locos[self.loco_index].loco_name}")
-        return device_model.locos[self.loco_index].loco_id
+        #print (f"Loco index {self.loco_index} id {self.loco.loco_id} name {self.loco.loco_name}")
+        return self.loco.loco_id
     
     def is_aquiring(self):
-        return device_model.locos[self.loco_index].is_aquiring
+        return self.loco.is_aquiring
     
     def get_session (self):
-        if self.loco_index == None:
+        if self.loco == None:
             return None
-        return device_model.locos[self.loco_index].session
+        return self.loco.session
     
     def set_session (self, session):
-        device_model.locos[self.loco_index].session = session
+        self.loco.session = session
     
     # Sets speed and direction together
     def set_speeddir (self, speeddir):
-        device_model.locos[self.loco_index].set_speeddir(speeddir)
+        self.loco.set_speeddir(speeddir)
         
     def get_speeddir (self):
-        return device_model.locos[self.loco_index].get_speeddir()
+        return self.loco.get_speeddir()
     
     def get_functions (self):
-        if self.loco_index == None:
+        if self.loco == None:
             return []
-        return device_model.locos[self.loco_index].get_functions()
+        return self.loco.get_functions()
     
     def set_functions (self, fn1, fn2, fn3):
-        device_model.locos[self.loco_index].set_functions(fn1, fn2, fn3)
+        self.loco.set_functions(fn1, fn2, fn3)
         
     def get_function_status (self, func_index):
         # get [status, type]
-        return (device_model.locos[self.loco_index].get_function_status(func_index))
+        return (self.loco.get_function_status(func_index))
     
     # This is the low level status - perhaps use is_aquiring or a similar method instead
     def get_status (self):
-        if self.loco_index == None:
+        if self.loco == None:
             return None
-        return device_model.locos[self.loco_index].status
+        return self.loco.status
     
     def set_status (self, value):
-        device_model.locos[self.loco_index].set_status(value)
+        self.loco.set_status(value)
         
     def set_function_dfun (self, func_index, value):
         # for a list need brackets around the method - or store in temp variable
-        return (device_model.locos[self.loco_index].set_function_dfun (func_index, value))
+        return (self.loco.set_function_dfun (func_index, value))
 
         
     def function_reset (self):
-        device_model.locos[self.loco_index].function_reset()
+        self.loco.function_reset()
 
     def release (self):
         # Release old loco
-        if device_model.locos[self.loco_index].status == "on" and device_model.locos[self.loco_index].session != 0:
+        if self.loco.status == "on" and self.loco.session != 0:
             # Sends a release but doesn't check for a response
-            #event_bus.publish(GuiEvent("start_request", {'command': 'release_loco', 'arg1': device_model.locos[self.loco_index].session}))
+            #event_bus.publish(GuiEvent("start_request", {'command': 'release_loco', 'arg1': self.loco.session}))
             # Seperate request for GUI elements
-            device_model.locos[self.loco_index].released()
+            self.loco.released()
             # Normally would want to stop the keep alive but we are hoping to aquire a new session immediately after
             # So the keep alive will just ignore until aquired
 
@@ -183,9 +183,9 @@ class ControlLoco:
     # Update function selected features
     # When combobox / tab selected
     def function_selected (self, func_index):
-        if self.loco_index != None:
+        if self.loco != None:
             # get [status, type]
-            status = device_model.locos[self.loco_index].get_function_status(func_index)
+            status = self.loco.get_function_status(func_index)
         else:
             status = None
         # If we don't have a status then the function button doesn't exist
@@ -207,22 +207,22 @@ class ControlLoco:
             
     def steal_loco (self):
         # Check we have valid loco_id (if not reset)
-        if (device_model.locos[self.loco_index].loco_id == 0):
+        if (self.loco.loco_id == 0):
             self.reset_loco()
             return ""
-        loco_id = device_model.locos[self.loco_index].loco_id
-        #loco_name = device_model.locos[self.loco_index]_list.loco_name(loco_id)
-        loco_name = device_model.locos[self.loco_index].loco_name
-        device_model.locos[self.loco_index].status = 'gloc'
+        loco_id = self.loco.loco_id
+        #loco_name = self.loco_list.loco_name(loco_id)
+        loco_name = self.loco.loco_name
+        self.loco.status = 'gloc'
         return (f"Stealing {loco_name}")
         
     def share_loco (self):
         # Check we have valid loco_id (if not reset)
-        if (device_model.locos[self.loco_index].loco_id == 0):
+        if (self.loco.loco_id == 0):
             self.reset_loco()
             return ""
-        loco_id = device_model.locos[self.loco_index].loco_id
-        loco_name = device_model.locos[self.loco_index].loco_name
+        loco_id = self.loco.loco_id
+        loco_name = self.loco.loco_name
         return (f"Req sharing {loco_name}")
         
         
@@ -230,7 +230,7 @@ class ControlLoco:
     # Does not update GUI / remove keepalives
     # those should be handled by calling code
     def reset_loco (self):
-        device_model.locos[self.loco_index].reset()
+        self.loco.reset()
         # Send keepalive signal
         #event_bus.publish(AppEvent("keepalive", {'loco_id': self.loco_id}))
         # Change combo after reset - that way the post change
@@ -241,24 +241,24 @@ class ControlLoco:
     # Returns True if the loco is active - else false
     def change_speed (self, new_speed):
         # If not in a session then ignore
-        if self.loco_index != None and device_model.locos[self.loco_index].is_active():
+        if self.loco != None and self.loco.is_active():
             # Special case if stop and 0 then reset stop
-            if device_model.locos[self.loco_index].status == "stop" and new_speed == 0:
-                device_model.locos[self.loco_index].status = "on"
-            device_model.locos[self.loco_index].set_speed (new_speed)
+            if self.loco.status == "stop" and new_speed == 0:
+                self.loco.status = "on"
+            self.loco.set_speed (new_speed)
             return True
         return False
         
         
     def forward (self):
-        device_model.locos[self.loco_index].set_direction (1)
-        if device_model.locos[self.loco_index].is_active():
+        self.loco.set_direction (1)
+        if self.loco.is_active():
             return True
         return False
         
     def reverse (self):
-        device_model.locos[self.loco_index].set_direction (0)
-        if device_model.locos[self.loco_index].is_active():
+        self.loco.set_direction (0)
+        if self.loco.is_active():
             return True
         return False
         
@@ -266,8 +266,8 @@ class ControlLoco:
     # Emergency stop - current loco
     # To reset need to set speed to 0 on the dial
     def stop (self, msg="STOP!"):
-        device_model.locos[self.loco_index].set_stop()
-        if device_model.locos[self.loco_index].session != 0:
+        self.loco.set_stop()
+        if self.loco.session != 0:
             # check we have a session
             # don't check speed as this is emergency stop so send regardless
             return True

@@ -347,6 +347,9 @@
             <property name="text">
              <string/>
             </property>
+            <property name="alignment">
+             <set>Qt::AlignCenter</set>
+            </property>
            </widget>
           </item>
           <item>
@@ -705,7 +708,7 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>22</height>
+     <height>24</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
