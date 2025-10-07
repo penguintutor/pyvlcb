@@ -39,14 +39,14 @@ class Loco:
     # Changes info about the loco
     def update_loco (self, data):
         for key, value in data.items():
-            if key == 'id':
+            if key == 'address':
                 self.loco_id = value
             elif key == 'class':
                 self.loco_class = value
             elif key == 'name':
                 self.loco_name = value
-            else:
-                self.loco_data[key] = value
+            # Add to loco_data even if one of the special ones above
+            self.loco_data[key] = value
         
     
     # Loads a json file with details of the loco
@@ -56,6 +56,7 @@ class Loco:
             self.loco_data = json.load(data_file)
         self.loco_id = self.loco_data["address"]
         self.loco_name = self.loco_data["displayname"]
+        self.filename = filename
         
     # Returns True is successful save
     def save_file (self, filename=None):
@@ -253,6 +254,10 @@ class Loco:
             return None
         #print (f"Returning {byte1}, {byte2}")
         return [byte1, byte2]
+    
+    # Return the loco data which is already a dict
+    def to_dict (self):
+        return self.loco_data
     
     
     # Use this to normally create the class

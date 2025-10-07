@@ -21,7 +21,15 @@ class LocoList:
         # Load the locos.json file
         self.load_file()
         
+    def get_loco_from_filename (self, filename):
+        if filename in self.locos.keys():
+            return self.locos[filename]
+        else:
+            return None
+        
     # get a loco entry based on the display name
+    # does not guarentee only one match which filename does
+    # returns first occurance
     def get_loco_from_name (self, name):
         for loco in self.locos.values():
             if name == loco.loco_name:
@@ -127,5 +135,5 @@ class LocoList:
         if locos_file == None:
             locos_file = self.filename
         with open(locos_file, 'w') as data_file:
-            print (f"Saving locos {self.locos.keys()} to {locos_file}")
+            #print (f"Saving locos {self.locos.keys()} to {locos_file}")
             json.dump(list(self.locos.keys()), data_file, indent=4)

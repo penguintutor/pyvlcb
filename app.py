@@ -6,7 +6,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from mainwindow import MainWindowUI
 from locowindow import LocoWindow
-from addlocodialog import AddLocoDialog
+from locodialog import LocoDialog
 
 # filenames are relative to data directory
 # by default that is basedir/data/
@@ -62,7 +62,7 @@ if data_dir:
 # Windows with dialogs are ones that may lose focus to their dialogs
 # Add to this list to ensure their dialogs are kept on top
 # These can be mainwindows (such as LocoWindow) or dialogs with subdialogs (eg. AddLocoDialog)
-windows_with_dialogs = (LocoWindow, AddLocoDialog)
+windows_with_dialogs = (LocoWindow, LocoDialog)
 # Dialogs that need to get raised
 dialog_types = (QDialog, QFileDialog, QMessageBox)
     

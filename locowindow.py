@@ -6,12 +6,13 @@ from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt, QSize
 from locoentry import LocoEntry
-from addlocodialog import AddLocoDialog
+from locodialog import LocoDialog
 from devicemodel import device_model 
 
 # parent is required (although could be set to None it should normally be mainwindow)
 # directory of filters and locos is required - but the filters and locos are loaded from device_model
 class LocoWindow(QMainWindow):
+       
     def __init__(self, parent, locos_dir):
         super().__init__(parent)
         self.parent = parent
@@ -61,7 +62,7 @@ class LocoWindow(QMainWindow):
 
         # Add Loco button (top right)
         self.add_loco_button = QPushButton("Add Loco")
-        self.add_loco_button.clicked.connect(self.open_add_loco_dialog)
+        self.add_loco_button.clicked.connect(self.new_loco_dialog)
         header_layout.addWidget(self.add_loco_button, alignment=Qt.AlignTop | Qt.AlignRight)
 
         main_layout.addLayout(header_layout)
@@ -113,7 +114,7 @@ class LocoWindow(QMainWindow):
             for loco in all_locos:
                 #print (f"Loco {loco.loco_name}")
                 image_path = os.path.join(self.locos_dir, loco.get_image_filename())
-                self.add_loco_entry(loco.loco_id, loco.loco_class, loco.loco_name, image_path)
+                self.add_loco_entry(loco.loco_id, loco.loco_class, loco.loco_name, image_path, loco.filename)
         else:
             # load the current filter selection
             print (f"Selected {selected}")
@@ -141,8 +142,8 @@ class LocoWindow(QMainWindow):
         loco_name = self.loco_data["display-name"]
 
 
-    def add_loco_entry(self, loco_id, loco_class, loco_name, loco_image_path):
-        loco_entry = LocoEntry(loco_id, loco_class, loco_name, loco_image_path)
+    def add_loco_entry(self, loco_id, loco_class, loco_name, loco_image_path, filename):
+        loco_entry = LocoEntry(loco_id, loco_class, loco_name, loco_image_path, filename)
         # Add listener to the connect
         loco_entry.clicked.connect(self.loco_edit)
         self.loco_list_layout.addWidget(loco_entry)
@@ -163,58 +164,88 @@ class LocoWindow(QMainWindow):
         filename = filename.lower() + ".json"
         return filename
 
-    def open_add_loco_dialog(self):
+    # new_loco_dialog - passes to open_loco_dialog
+    # Called from button where first parameter is a bool - which is ignored
+    def new_loco_dialog(self):
+        self.open_loco_dialog()
+
+    # If data supplied then this is edit instead of new
+    # If filename provided then save as that. If no filename supplied but data is then this could be a copy
+    def open_loco_dialog(self, data=None, filename=None):
         #print("Add new loco")
-        add_dialog = AddLocoDialog(self, self.locos_dir)
-        result = add_dialog.exec()
+        loco_dialog = LocoDialog(self, self.locos_dir)
+        if data != None:
+            loco_dialog.from_dict(data)
+        result = loco_dialog.exec()
         if result != 1:
             return
         
-        # Create a dict of the values
-        data_dict = {
-            'address': add_dialog.loco_id,						# Uses loco_id which is already set to a number
-            'displayname': add_dialog.ui.displayTextEdit.text().strip(),
-            'class': add_dialog.ui.classEdit.text().strip(),
-            'classification': add_dialog.ui.classificationEdit.text().strip(),		# This is personal preference how used (eg. freight / mixed or Prairie or Pacific etc.)
-            'name': add_dialog.ui.nameEdit.text().strip(),
-            'number': add_dialog.ui.numberEdit.text().strip(),
-            'locotype': add_dialog.ui.locoTypeCombo.currentText().strip(),
-            'origrailway': add_dialog.ui.origRailwayEdit.text().strip(),
-            'liveryrailway': add_dialog.ui.liveryRailwayEdit.text().strip(),
-            'originalyear': add_dialog.ui.originalYearEdit.text().strip(),
-            'liveryyear': add_dialog.ui.liveryYearEdit.text().strip(),
-            'wheels': add_dialog.ui.wheelsEdit.text().strip(),
-            'modelManuf': add_dialog.ui.modelManufEdit.text().strip(),
-            'decoder': add_dialog.ui.decoderEdit.text().strip(),
-            'image': add_dialog.image_filename.strip(),
-            'summary': add_dialog.ui.summaryText.toPlainText().strip()
-            }
+        data_dict = loco_dialog.to_dict()
         
-        # Create a filename loco_id followed by class_id and name or class_name
-        filename = str(add_dialog.loco_id)
-        if data_dict['name'] != "" :
-            filename += "-" + data_dict['name']
-        elif data_dict['classname'] != "":
-            filename += "-" + data_dict['classname']
-        # remove any non file save characters
-        safe_filename = re.sub(r'[<>:"/\|?* ]', '_', filename.lower())
-        safe_filename += ".json"
+
+        # If filename is none then this is a new entry so create file and add to the device_model / locos.json etc.
+        if filename == None:
+            # Create a filename loco_id followed by class_id and name or classification
+            filename = str(loco_dialog.loco_id)
+            if data_dict['class'] != "":
+                filename += "-" + data_dict['class']
+            if data_dict['name'] != "" :
+                filename += "-" + data_dict['name']
+            elif data_dict['classification'] != "":
+                filename += "-" + data_dict['classification']
+            # remove any non file save characters
+            safe_filename = re.sub(r'[<>:"/\|?* ]', '_', filename.lower())
+            safe_filename += ".json"
             
-        # Create the loco entry
-        loco = device_model.add_loco(safe_filename, add_dialog.loco_id)
-        loco.update_loco(data_dict)
-        result = loco.save_file()
-        # save locos file afterwards in case of problem creating
-        if result == True:
-            device_model.save_locos()
-        # Otherwise cleanup (but no need to remove any files)
+            # check filename unique
+            unique_filename = self.unique_loco_filename (safe_filename)
+            
+            # Create the loco entry
+            loco = device_model.add_loco(unique_filename, loco_dialog.loco_id)
+            loco.update_loco(data_dict)
+            result = loco.save_file()
+            # save locos file afterwards in case of problem creating
+            if result == True:
+                device_model.save_locos()
+            # Otherwise cleanup (but no need to remove any files)
+            else:
+                device_model.remove_loco(safe_filename, delete=False)
+        # If existing filename then just update filename
         else:
-            device_model.remove_loco(safe_filename, delete=False)
+            #Todo implement save existing
+            pass
+        
         # Update the display to show the new loco
         self.update()
         
+    # make sure that the filename is unique - if not then add a numeric suffix
+    def unique_loco_filename(self, given_filename):
+        # Test using full path
+        full_path = os.path.join (self.locos_dir, given_filename)
+        if not os.path.exists(full_path):
+            return given_filename
+
+        name, ext = os.path.splitext(given_filename)
+        counter = 1
+
+        # Need to have an upper limit to stop looping forever
+        # although extremely unlikely we will exceed 99 with same filename
+        while counter < 100:
+            new_filename = f"{name}-{counter:02d}{ext}"
+            full_path = os.path.join (self.locos_dir, new_filename)
+            if not os.path.exists(full_path):
+                return new_filename
+            counter += 1
+        return None
+
+        
     # Launch loco edit dialog
     def loco_edit (self, clicked_entry: LocoEntry):
-        # Todo implement this
-        print (f"Loco edit triggered {clicked_entry.loco_id}")
-        
+        # Filename within LocoEntry is full path
+        filename = os.path.basename(clicked_entry.filename)
+        # Use filename as a unique entry to lookup loco
+        clicked_loco = device_model.get_loco_from_filename (filename)
+
+        # Assuming valid then launch edit dialog
+        if clicked_loco != None:
+            self.open_loco_dialog (clicked_loco.to_dict(), filename)

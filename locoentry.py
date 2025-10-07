@@ -12,12 +12,13 @@ class LocoEntry(QWidget):
     # If this object is clicked (perform an edit)
     clicked = Signal(QWidget)
     
-    def __init__(self, loco_id, loco_class, loco_name, loco_image_path, parent=None):
+    def __init__(self, loco_id, loco_class, loco_name, loco_image_path, filename, parent=None):
         super().__init__(parent)
         self.loco_id = loco_id
         self.loco_class = loco_class
         self.loco_name = loco_name
         self.loco_image_path = loco_image_path
+        self.filename = filename		# filename provides a unique id
 
         row_layout = QHBoxLayout(self)
         row_layout.setContentsMargins(5, 5, 5, 5)

@@ -310,6 +310,11 @@ class DeviceModel(QObject):
 
     def get_device_info(self, device_id: str):
         return self._devices.get(device_id, {})
+    
+    # uses filename only (strip using basename prior to calling this)
+    def get_loco_from_filename (self, filename):
+        # pass to locolist to reduce coupling
+        return self.locos.get_loco_from_filename (filename)
 
 
 # Singleton for the Device Model

@@ -32,7 +32,84 @@ from imageexistdialog import ImageExistDialog
 # summaryText
 # imageLabel / self.default_pixmap / self.image_filename
         
-class AddLocoDialog(QDialog):
+class LocoDialog(QDialog):
+    
+    # Map fields from the data dict to get / set for the UI / variables
+    field_map = {
+        'address': {
+            'get': lambda self: self.loco_id,
+            #'set': lambda self, val: setattr(self, 'loco_id', val)
+            'set': lambda self, val: self.ui.dccIDEdit.setText(str(val))
+        },
+        'displayname': {
+            'get': lambda self: self.ui.displayTextEdit.text().strip(),
+            'set': lambda self, val: self.ui.displayTextEdit.setText(val)
+        },
+        'class': {
+            'get': lambda self: self.ui.classEdit.text().strip(),
+            'set': lambda self, val: self.ui.classEdit.setText(val)
+        },
+        # Personal preference how classification is used - could be used for freight / mixed or Prairie / Pacific etc.
+        'classification': {
+            'get': lambda self: self.ui.classificationEdit.text().strip(),
+            'set': lambda self, val: self.ui.classificationEdit.setText(val)
+        },
+        'name': {
+            'get': lambda self: self.ui.nameEdit.text().strip(),
+            'set': lambda self, val: self.ui.nameEdit.setText(val)
+        },
+        # This is actually a string - typically the locos designation number
+        'number': {
+            'get': lambda self: self.ui.numberEdit.text().strip(),
+            'set': lambda self, val: self.ui.numberEdit.setText(val)
+        },
+        'locotype': {
+            'get': lambda self: self.ui.locoTypeCombo.currentText().strip(),
+            'set': lambda self, val: self.ui.locoTypeCombo.setCurrentText(val)
+        },
+        'origrailway': {
+            'get': lambda self: self.ui.origRailwayEdit.text().strip(),
+            'set': lambda self, val: self.ui.origRailwayEdit.setText(val)
+        },
+        'liveryrailway': {
+            'get': lambda self: self.ui.liveryRailwayEdit.text().strip(),
+            'set': lambda self, val: self.ui.liveryRailwayEdit.setText(val)
+        },
+        'originalyear': {
+            'get': lambda self: self.ui.originalYearEdit.text().strip(),
+            'set': lambda self, val: self.ui.originalYearEdit.setText(val)
+        },
+        'liveryyear': {
+            'get': lambda self: self.ui.liveryYearEdit.text().strip(),
+            'set': lambda self, val: self.ui.liveryYearEdit.setText(val)
+        },
+        'wheels': {
+            'get': lambda self: self.ui.wheelsEdit.text().strip(),
+            'set': lambda self, val: self.ui.wheelsEdit.setText(val)
+        },
+        'modelmanuf': {
+            'get': lambda self: self.ui.modelManufEdit.text().strip(),
+            'set': lambda self, val: self.ui.modelManufEdit.setText(val)
+        },
+        'originalyear': {
+            'get': lambda self: self.ui.originalYearEdit.text().strip(),
+            'set': lambda self, val: self.ui.originalYearEdit.setText(val)
+        },
+        'decoder': {
+            'get': lambda self: self.ui.decoderEdit.text().strip(),
+            'set': lambda self, val: self.ui.decoderEdit.setText(val)
+        },
+        'image': {
+            'get': lambda self: self.image_filename,
+            'set': lambda self, val: setattr(self, 'image_filename', val)
+        },
+        'summary': {
+            'get': lambda self: self.ui.summaryText.toPlainText().strip(),
+            'set': lambda self, val: self.ui.summaryText.setPlainText(val)
+        }
+    }
+
+
     
     def __init__(self, parent, locos_dir):
         super().__init__(parent)
@@ -43,12 +120,12 @@ class AddLocoDialog(QDialog):
         #self.setModal(True)
         loader = QUiLoader()
         basedir = os.path.dirname(__file__)
-        ui_filename = os.path.join(basedir, "addlocodialog.ui")
+        ui_filename = os.path.join(basedir, "locodialog.ui")
         ui_file = QFile (ui_filename)
         ui_file.open(QFile.ReadOnly)
         self.ui = loader.load(ui_file, None)
         ui_file.close()
-        self.setWindowTitle("Add New Loco")
+        self.setWindowTitle("Add / Edit Loco")
         # Layout is set in the QT designer to GridLayout
         self.setLayout(self.ui.layout())
         
@@ -196,5 +273,18 @@ class AddLocoDialog(QDialog):
         
     def cancel(self):
         self.reject()
+        
+    # Return all values as a dict
+    def to_dict(self):
+        return {key: field['get'](self) for key, field in self.field_map.items()}
+    
+    # Update dialogs from a dict
+    def from_dict(self, data_dict):
+        print (f"Loading {data_dict}")
+        for key, value in data_dict.items():
+            if key in self.field_map:
+                self.field_map[key]['set'](self, value)
+        # Todo - if applicable update the image display based on image filename
+
 
         
