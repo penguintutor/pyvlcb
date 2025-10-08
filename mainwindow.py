@@ -1266,8 +1266,7 @@ class MainWindowUI(QMainWindow):
                 #loco_filename = filename
             
             # Now load and add to the file
-            # import needs to be full path
             #print (f"Loading file {new_path}")
-            device_model.import_loco(new_path)
+            device_model.import_loco(filename)
             device_model.save_locos()
             self.updated_locos_signal.emit()

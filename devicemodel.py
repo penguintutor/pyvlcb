@@ -124,8 +124,8 @@ class DeviceModel(QObject):
             #full_path = os.path.join(self.data_dir, locos_filename)
             self.locos.load_file (locos_filename)
             
-    def import_loco (self, full_path):
-        self.locos.load_loco (full_path)
+    def import_loco (self, filename):
+        self.locos.load_loco (filename)
 
     # Get all locos as Loco objects            
     def get_all_locos (self):

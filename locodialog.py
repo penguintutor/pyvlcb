@@ -5,6 +5,7 @@ from PySide6.QtCore import Qt, Signal, Slot, QFile
 from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QFileDialog, QMessageBox
 from PySide6.QtUiTools import QUiLoader
+from functionsdialog import FunctionsDialog
 from imageexistdialog import ImageExistDialog
 
 # Dialog to get details about a loco
@@ -34,16 +35,13 @@ from imageexistdialog import ImageExistDialog
         
 class LocoDialog(QDialog):
     
-    
-
-
-    
     def __init__(self, parent, locos_dir):
         super().__init__(parent)
         self.gui = parent
         self.locosdir = locos_dir
         self.loco_id = None	# Set here when accept so no need to recalculate
         self.image_filename = ""
+        self.functions = []
         #self.setModal(True)
         loader = QUiLoader()
         basedir = os.path.dirname(__file__)
@@ -57,9 +55,11 @@ class LocoDialog(QDialog):
         self.setLayout(self.ui.layout())
         
         # handle button clicks
+        self.ui.functionButton.clicked.connect (self.open_functions_dialog)
+        self.ui.uploadImageButton.clicked.connect (self.upload_image)
         self.ui.buttonBox.accepted.connect (self.accept_click)
         self.ui.buttonBox.rejected.connect (self.cancel)
-        self.ui.uploadImageButton.clicked.connect (self.upload_image)
+        
         
         # This needs to be included after the setup as it references the ui
         # Map fields from the data dict to get / set for the UI / variables
@@ -167,6 +167,12 @@ class LocoDialog(QDialog):
                 'tooltip': "Some information about the loco.",
                 'get': lambda self: self.ui.summaryText.toPlainText().strip(),
                 'set': lambda self, val: self.ui.summaryText.setPlainText(val)
+            },
+            'functions': {
+                #'ui': self.ui.nameEdit,
+                #'tooltip': "Name plate - eg. Mallard",
+                'get': lambda self: self.functions,
+                'set': lambda self, val: setattr (self, 'functions', val)
             }
         }
                 
@@ -177,6 +183,10 @@ class LocoDialog(QDialog):
         self.add_tooltips()
         
         self.set_default_image()
+        
+    def open_functions_dialog (self):
+        self.functions_dialog = FunctionsDialog(self, self.functions)
+        self.functions_dialog.exec()
         
     # Set tab order for focus for the dialog
     # Note text block allows tab, so tab won't work out of that
