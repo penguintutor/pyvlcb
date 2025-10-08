@@ -1,6 +1,7 @@
 import os
+import shutil
 from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
-from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog
+from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog, QFileDialog
 from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont, QResizeEvent
 from PySide6.QtUiTools import QUiLoader
 from consolewindow import ConsoleWindowUI
@@ -159,17 +160,19 @@ class MainWindowUI(QMainWindow):
         device_model.add_node_signal.connect (self.add_to_tree)
         
         # File Menu
+        # (Import sub menu)
+        self.ui.actionImportLoco.triggered.connect(self.import_file)
         self.ui.actionExit.triggered.connect(self.quit_app)
         
         # Asset Menu
         self.ui.actionDiscover.triggered.connect(self.api.discover)
         
         # Tools Menu        
-        self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
-        self.ui.actionSettings.triggered.connect(self.settings)
         self.ui.actionLocoManager.triggered.connect(self.loco_manager)
         self.ui.actionEvents.triggered.connect(self.events_edit)
         self.ui.actionShowConsole.triggered.connect(self.show_console)
+        self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
+        self.ui.actionSettings.triggered.connect(self.settings)
         
         # EditLayout Menu - only show when in edit layout mode
         #self.ui.menuEditLayout.setVisible(False)
@@ -1209,3 +1212,62 @@ class MainWindowUI(QMainWindow):
 
         # Set the newly scaled pixmap to the QLabel
         self.ui.locoImage.setPixmap(scaled_pixmap)
+        
+    # check if a filepath is in dir (default to datadir, otherwise specify the dir to compare against)
+    def is_datadir(self, filepath, dir=None):
+        if dir==None:
+            check_dir = os.path.dirname(self.data_dir)
+        else:
+            check_dir = os.path.dirname(self.dirs[dir])
+        try:
+            filedir = os.path.dirname(filepath)
+            #print (f"Checking {filedir}, {check_dir}")
+            return filedir == check_dir
+        except Exception as e:
+            print(f"Error checking path: {e}")
+            return False
+        
+    # Import clicked on the menu - import assets (eg. loco file)
+    def import_file(self):
+        file_dialog = QFileDialog(self,
+                        caption="Select Loco file",
+                        directory=self.dirs['locos'],
+                        filter="Data (*.json)",
+                        fileMode=QFileDialog.FileMode.ExistingFile
+                        )
+
+        # Get filename
+        if file_dialog.exec():
+            selected_file = file_dialog.selectedFiles()[0]
+
+            filename = os.path.basename(selected_file)
+            # Check it doesn't already exist
+            if (device_model.check_loco_filename(filename) == True):
+                QMessageBox.warning(
+                    self, 
+                    "File exists", # The title of the dialog
+                    f"Filename {filename} already exists. Please rename the file first." # The message content
+                )
+                return
+            
+            # Todo - is it a valid loco file - try loading as json and ensure it has loco_id as minimum
+            
+            # Is the file in the locosdir
+            if self.is_datadir(selected_file, 'locos'):
+                #print (f"{filename} in data directory")
+                new_path = selected_file
+            # if not and then copy (not it will overwrite existing, but already established it's not being loaded)
+            else:
+                # New path - includes filename
+                new_path = os.path.join(self.dirs['locos'], filename)
+                print (f"Copying {selected_file} to {new_path}")
+                shutil.copyfile (selected_file, new_path)
+                # Todo wrap above in try clause
+                #loco_filename = filename
+            
+            # Now load and add to the file
+            # import needs to be full path
+            #print (f"Loading file {new_path}")
+            device_model.import_loco(new_path)
+            device_model.save_locos()
+            self.updated_locos_signal.emit()

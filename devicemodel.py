@@ -92,7 +92,13 @@ class DeviceModel(QObject):
     # Get the loco object from the loco name
     def get_loco_from_name (self, name):
         return self.locos.get_loco_from_name (name)
-        
+    
+    # Does the loco filename already existing in the loaded locos
+    # Doesn't check if the file exists, just if it's loaded
+    def check_loco_filename (self, filename):
+        if filename in self.locos.locos:
+            return True
+        return False
         
     def save_yards (self):
         # Convert each LocoYard object to JSON-serializable dictionary
@@ -117,6 +123,9 @@ class DeviceModel(QObject):
         else:
             #full_path = os.path.join(self.data_dir, locos_filename)
             self.locos.load_file (locos_filename)
+            
+    def import_loco (self, full_path):
+        self.locos.load_loco (full_path)
 
     # Get all locos as Loco objects            
     def get_all_locos (self):

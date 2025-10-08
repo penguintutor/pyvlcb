@@ -114,7 +114,7 @@ class LocoWindow(QMainWindow):
             for loco in all_locos:
                 #print (f"Loco {loco.loco_name}")
                 image_path = os.path.join(self.locos_dir, loco.get_image_filename())
-                self.add_loco_entry(loco.loco_id, loco.loco_class, loco.loco_name, image_path, loco.filename)
+                self.add_loco_entry(loco.loco_id, loco.get_display_name(), image_path, loco.filename)
         else:
             # load the current filter selection
             print (f"Selected {selected}")
@@ -142,8 +142,8 @@ class LocoWindow(QMainWindow):
         loco_name = self.loco_data["display-name"]
 
 
-    def add_loco_entry(self, loco_id, loco_class, loco_name, loco_image_path, filename):
-        loco_entry = LocoEntry(loco_id, loco_class, loco_name, loco_image_path, filename)
+    def add_loco_entry(self, loco_id, loco_name, loco_image_path, filename):
+        loco_entry = LocoEntry(loco_id, loco_name, loco_image_path, filename)
         # Add listener to the connect
         loco_entry.clicked.connect(self.loco_edit)
         self.loco_list_layout.addWidget(loco_entry)
@@ -209,11 +209,21 @@ class LocoWindow(QMainWindow):
                 device_model.save_locos()
             # Otherwise cleanup (but no need to remove any files)
             else:
+                print (f"Error tying to save file {safe_filename}")
                 device_model.remove_loco(safe_filename, delete=False)
-        # If existing filename then just update filename
+        # If existing filename then just update exising file
         else:
             #Todo implement save existing
-            pass
+            # get the current loco object (from filename)
+            loco = device_model.get_loco_from_filename(filename)
+            # If don't get loco then error (has file been deleted during edit)
+            if loco == None:
+                print ("Error trying to retrieve / update loco {filename}")
+            else:
+                loco.update_loco(data_dict)
+                result = loco.save_file()
+                if result != True:
+                    print ("Error trying to save loco changes {filename}")
         
         # Update the display to show the new loco
         self.update()

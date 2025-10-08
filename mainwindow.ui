@@ -708,13 +708,20 @@
      <x>0</x>
      <y>0</y>
      <width>945</width>
-     <height>24</height>
+     <height>22</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
     <property name="title">
      <string>File</string>
     </property>
+    <widget class="QMenu" name="menuImport">
+     <property name="title">
+      <string>Import</string>
+     </property>
+     <addaction name="actionImportLoco"/>
+    </widget>
+    <addaction name="menuImport"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuAssets">
@@ -727,11 +734,11 @@
     <property name="title">
      <string>Tools</string>
     </property>
-    <addaction name="actionLayoutEdit"/>
-    <addaction name="actionSettings"/>
     <addaction name="actionLocoManager"/>
     <addaction name="actionEvents"/>
     <addaction name="actionShowConsole"/>
+    <addaction name="actionLayoutEdit"/>
+    <addaction name="actionSettings"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -796,7 +803,7 @@
   </action>
   <action name="actionEvents">
    <property name="text">
-    <string>Event Manager</string>
+    <string>Rules</string>
    </property>
   </action>
   <action name="actionAddDevice">
@@ -807,6 +814,11 @@
   <action name="actionLocoManager">
    <property name="text">
     <string>Loco Manager</string>
+   </property>
+  </action>
+  <action name="actionImportLoco">
+   <property name="text">
+    <string>Loco</string>
    </property>
   </action>
  </widget>

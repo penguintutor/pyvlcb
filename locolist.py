@@ -130,7 +130,7 @@ class LocoList:
             # Now load each file
             self.load_loco (filename)
             
-        
+    # Saves the locosfile locos.json
     def save_file (self, locos_file = None):
         if locos_file == None:
             locos_file = self.filename

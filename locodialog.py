@@ -34,80 +34,7 @@ from imageexistdialog import ImageExistDialog
         
 class LocoDialog(QDialog):
     
-    # Map fields from the data dict to get / set for the UI / variables
-    field_map = {
-        'address': {
-            'get': lambda self: self.loco_id,
-            #'set': lambda self, val: setattr(self, 'loco_id', val)
-            'set': lambda self, val: self.ui.dccIDEdit.setText(str(val))
-        },
-        'displayname': {
-            'get': lambda self: self.ui.displayTextEdit.text().strip(),
-            'set': lambda self, val: self.ui.displayTextEdit.setText(val)
-        },
-        'class': {
-            'get': lambda self: self.ui.classEdit.text().strip(),
-            'set': lambda self, val: self.ui.classEdit.setText(val)
-        },
-        # Personal preference how classification is used - could be used for freight / mixed or Prairie / Pacific etc.
-        'classification': {
-            'get': lambda self: self.ui.classificationEdit.text().strip(),
-            'set': lambda self, val: self.ui.classificationEdit.setText(val)
-        },
-        'name': {
-            'get': lambda self: self.ui.nameEdit.text().strip(),
-            'set': lambda self, val: self.ui.nameEdit.setText(val)
-        },
-        # This is actually a string - typically the locos designation number
-        'number': {
-            'get': lambda self: self.ui.numberEdit.text().strip(),
-            'set': lambda self, val: self.ui.numberEdit.setText(val)
-        },
-        'locotype': {
-            'get': lambda self: self.ui.locoTypeCombo.currentText().strip(),
-            'set': lambda self, val: self.ui.locoTypeCombo.setCurrentText(val)
-        },
-        'origrailway': {
-            'get': lambda self: self.ui.origRailwayEdit.text().strip(),
-            'set': lambda self, val: self.ui.origRailwayEdit.setText(val)
-        },
-        'liveryrailway': {
-            'get': lambda self: self.ui.liveryRailwayEdit.text().strip(),
-            'set': lambda self, val: self.ui.liveryRailwayEdit.setText(val)
-        },
-        'originalyear': {
-            'get': lambda self: self.ui.originalYearEdit.text().strip(),
-            'set': lambda self, val: self.ui.originalYearEdit.setText(val)
-        },
-        'liveryyear': {
-            'get': lambda self: self.ui.liveryYearEdit.text().strip(),
-            'set': lambda self, val: self.ui.liveryYearEdit.setText(val)
-        },
-        'wheels': {
-            'get': lambda self: self.ui.wheelsEdit.text().strip(),
-            'set': lambda self, val: self.ui.wheelsEdit.setText(val)
-        },
-        'modelmanuf': {
-            'get': lambda self: self.ui.modelManufEdit.text().strip(),
-            'set': lambda self, val: self.ui.modelManufEdit.setText(val)
-        },
-        'originalyear': {
-            'get': lambda self: self.ui.originalYearEdit.text().strip(),
-            'set': lambda self, val: self.ui.originalYearEdit.setText(val)
-        },
-        'decoder': {
-            'get': lambda self: self.ui.decoderEdit.text().strip(),
-            'set': lambda self, val: self.ui.decoderEdit.setText(val)
-        },
-        'image': {
-            'get': lambda self: self.image_filename,
-            'set': lambda self, val: setattr(self, 'image_filename', val)
-        },
-        'summary': {
-            'get': lambda self: self.ui.summaryText.toPlainText().strip(),
-            'set': lambda self, val: self.ui.summaryText.setPlainText(val)
-        }
-    }
+    
 
 
     
@@ -134,12 +61,146 @@ class LocoDialog(QDialog):
         self.ui.buttonBox.rejected.connect (self.cancel)
         self.ui.uploadImageButton.clicked.connect (self.upload_image)
         
+        # This needs to be included after the setup as it references the ui
+        # Map fields from the data dict to get / set for the UI / variables
+        # For each field include a 'ui' (this is the ui element beginning with self.ui
+        # 'get' and 'set' - to allow getter / setter lambda method
+        # 'tooltip'
+        # The order in this dict determines tab order (override QT designer order which is not honoured by QUiLoader
+        self.field_map = {
+            'displayname': {
+                'ui': self.ui.displayTextEdit,
+                'tooltip': "Unique name to identify the particular locomotive",
+                'get': lambda self: self.ui.displayTextEdit.text().strip(),
+                'set': lambda self, val: self.ui.displayTextEdit.setText(val)
+            },
+            'address': {
+                'ui': self.ui.dccIDEdit,
+                'tooltip': "ID for DCC between 1 and 9999",
+                'get': lambda self: self.loco_id,
+                #'set': lambda self, val: setattr(self, 'loco_id', val)
+                'set': lambda self, val: self.ui.dccIDEdit.setText(str(val))
+            },
+            'class': {
+                'ui': self.ui.classEdit,
+                'tooltip': "Class eg. J72 / A4 / 47",
+                'get': lambda self: self.loco_id,
+                'get': lambda self: self.ui.classEdit.text().strip(),
+                'set': lambda self, val: self.ui.classEdit.setText(val)
+            },
+            # Personal preference how classification is used - could be used for freight / mixed or Prairie / Pacific etc.
+            'classification': {
+                'ui': self.ui.classificationEdit,
+                'tooltip': "Own preference - eg. freight / passenger or pacific / consolidation",
+                'get': lambda self: self.ui.classificationEdit.text().strip(),
+                'set': lambda self, val: self.ui.classificationEdit.setText(val)
+            },
+            'name': {
+                'ui': self.ui.nameEdit,
+                'tooltip': "Name plate - eg. Mallard",
+                'get': lambda self: self.ui.nameEdit.text().strip(),
+                'set': lambda self, val: self.ui.nameEdit.setText(val)
+            },
+            # This is actually a string - typically the locos designation number
+            'number': {
+                'ui': self.ui.numberEdit,
+                'tooltip': "Loco number eg. 4468",
+                'get': lambda self: self.ui.numberEdit.text().strip(),
+                'set': lambda self, val: self.ui.numberEdit.setText(val)
+            },
+            'locotype': {
+                'ui': self.ui.locoTypeCombo,
+                #'tooltip': ""	- no tooltip required as it's a pulldown
+                'get': lambda self: self.ui.locoTypeCombo.currentText().strip(),
+                'set': lambda self, val: self.ui.locoTypeCombo.setCurrentText(val)
+            },
+            'origrailway': {
+                'ui': self.ui.origRailwayEdit,
+                'tooltip': "Original railway that made this loco type eg. GWR",
+                'get': lambda self: self.ui.origRailwayEdit.text().strip(),
+                'set': lambda self, val: self.ui.origRailwayEdit.setText(val)
+            },
+            'liveryrailway': {
+                'ui': self.ui.liveryRailwayEdit,
+                'tooltip': "Livery for this specific loco. eg. BR",
+                'get': lambda self: self.ui.liveryRailwayEdit.text().strip(),
+                'set': lambda self, val: self.ui.liveryRailwayEdit.setText(val)
+            },
+            'originalyear': {
+                'ui': self.ui.originalYearEdit,
+                'tooltip': "Year this loco first built.",
+                'get': lambda self: self.ui.originalYearEdit.text().strip(),
+                'set': lambda self, val: self.ui.originalYearEdit.setText(val)
+            },
+            'liveryyear': {
+                'ui': self.ui.liveryYearEdit,
+                'tooltip': "Year this loco would have had this livery.",
+                'get': lambda self: self.ui.liveryYearEdit.text().strip(),
+                'set': lambda self, val: self.ui.liveryYearEdit.setText(val)
+            },
+            'wheels': {
+                'ui': self.ui.wheelsEdit,
+                'tooltip': "Wheel arrangment Eg. 2-6-2, or other classification",
+                'get': lambda self: self.ui.wheelsEdit.text().strip(),
+                'set': lambda self, val: self.ui.wheelsEdit.setText(val)
+            },
+            'image': {
+                'ui': self.ui.uploadImageButton,
+                #'tooltip': "", - tooltip not required
+                'get': lambda self: self.image_filename,
+                'set': lambda self, val: setattr(self, 'image_filename', val)
+            },
+            'modelmanuf': {
+                'ui': self.ui.modelManufEdit,
+                'tooltip': "Manufacturer of the model, eg. Accurascale",
+                'get': lambda self: self.ui.modelManufEdit.text().strip(),
+                'set': lambda self, val: self.ui.modelManufEdit.setText(val)
+            },
+            'decoder': {
+                'ui': self.ui.decoderEdit,
+                'tooltip': "Details about decoder",
+                'get': lambda self: self.ui.decoderEdit.text().strip(),
+                'set': lambda self, val: self.ui.decoderEdit.setText(val)
+            },
+            'summary': {
+                'ui': self.ui.summaryText,
+                'tooltip': "Some information about the loco.",
+                'get': lambda self: self.ui.summaryText.toPlainText().strip(),
+                'set': lambda self, val: self.ui.summaryText.setPlainText(val)
+            }
+        }
                 
-        # Appears to be a bug relating to the focus
+        # Order cannot be set by QUiLoader - so set manually
+        self.set_focus_order()
         # Set to the first widget
         self.ui.displayTextEdit.setFocus()
+        self.add_tooltips()
         
         self.set_default_image()
+        
+    # Set tab order for focus for the dialog
+    # Note text block allows tab, so tab won't work out of that
+    def set_focus_order(self):
+        prev_entry = None
+        for field in self.field_map.values():
+            # If not ui then skip
+            if 'ui' not in field:
+                continue
+            # Need two entries to set order
+            if prev_entry == None:
+                prev_entry = field['ui']
+                continue;
+            self.setTabOrder(prev_entry, field['ui'])
+            prev_entry = field['ui']
+        # Final entry is buttonBox for OK / Cancel
+        self.setTabOrder(prev_entry, self.ui.buttonBox)
+            
+    def add_tooltips(self):
+        for field in self.field_map.values():
+            # skip any entries without a ui or tooltip defined
+            if not ('ui' in field and 'tooltip' in field):
+                continue
+            field['ui'].setToolTip(field['tooltip'])
         
 
     # set default image on preview
@@ -227,20 +288,19 @@ class LocoDialog(QDialog):
    
    # check if a filepath is in the locosdir
     def is_locosdir(self, filepath):
-        print (f"Checking {filepath} in {self.locosdir}")
+        #print (f"Checking {filepath} in {self.locosdir}")
         try:
             dir = os.path.dirname(filepath)
-            print (f"Test {dir}")
+            #print (f"Test {dir}")
             return dir == self.locosdir
         except Exception as e:
-            print(f"Error checking path: {e}")
+            #print(f"Error checking path: {e}")
             return False
 
 
     def accept_click (self):
         # Validate mandatory fields
 
-        
         # loco_id (DCC ID) must exist
         # It should also be unique - but only when active not when created
         # This allows guest locos with same ID but not to be on the track
@@ -280,7 +340,7 @@ class LocoDialog(QDialog):
     
     # Update dialogs from a dict
     def from_dict(self, data_dict):
-        print (f"Loading {data_dict}")
+        #print (f"Loading {data_dict}")
         for key, value in data_dict.items():
             if key in self.field_map:
                 self.field_map[key]['set'](self, value)

@@ -13,19 +13,26 @@ class Loco:
         # if gloc then set status to gloc - and then on after aquire (ploc)
         self.status = "off"   
         self.loco_id = loco_id
-        self.loco_class = ""
+        #self.loco_class = ""
         self.loco_name = ""	# This needs to be unique (no checking so if not then the first will be returned)
+        #					todo - need to remove this unique depenccency use filename instead
         self.loco_data = {}
         self.session = session # If session == 0 then no session allocated (don't support none DCC)
         self.direction = direction # 1 = forward, 0 = reverse
         self.speed = speed # Allow 0 to 128 but maximum sent is 127. Speed 1 = emergency stop (not used - instead status = stop)
         # Track all functions. Only F0 to F12 are found from PLOC - rest assume start off
         self.function_status = [0] * 29
-        # Set filename to allow it to be saved - must be full path
+        # Set filename to allow it to be saved - must be full path - this is unique
+        # todo review alternatives to using full path - although doesn't cause any issues with portability as not saved within file
         self.filename = filename
     
     def set_status (self, value):
         self.status = value
+        
+    # Returns the display name
+    def get_display_name (self):
+        return self.loco_data['displayname']
+        
         
     # Returns filename. If not filename then return default so as valid image
     # Note that default.png must exist in the locos directory
@@ -41,8 +48,8 @@ class Loco:
         for key, value in data.items():
             if key == 'address':
                 self.loco_id = value
-            elif key == 'class':
-                self.loco_class = value
+            #elif key == 'class':
+            #    self.loco_class = value
             elif key == 'name':
                 self.loco_name = value
             # Add to loco_data even if one of the special ones above
@@ -75,7 +82,9 @@ class Loco:
         if "functions" in self.loco_data:
             return len(self.loco_data["functions"])
         else:
-            return 0
+            # If none then return 5 (just none defined)
+            return 5
+            #return 0
         
     # Resets the functions - sets to all 0
     def function_reset (self):
@@ -88,7 +97,8 @@ class Loco:
     def get_functions (self):
         f_titles = []
         if "functions" not in self.loco_data.keys():
-            return []
+            # If no functions defined then return some default ones
+            return ["F0", "F1", "F2", "F3", "F4" ]
         for this_function in self.loco_data["functions"]:
             # Function titles includes Fx and text
             f_titles.append(f"{this_function[0]} - {this_function[1]}")
@@ -98,7 +108,7 @@ class Loco:
     def get_function_status (self, func_num):
         # Check valid - should not get this as func_num should be based on the loaded functions
         if ("functions" not in self.loco_data.keys()) or (len(self.loco_data["functions"]) < func_num):
-            return None
+            return [self.function_status[func_num], "trigger"]
         this_function = self.loco_data["functions"][func_num]
         # 2 is type
         return [self.function_status[func_num], this_function[2]]

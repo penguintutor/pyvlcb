@@ -12,10 +12,10 @@ class LocoEntry(QWidget):
     # If this object is clicked (perform an edit)
     clicked = Signal(QWidget)
     
-    def __init__(self, loco_id, loco_class, loco_name, loco_image_path, filename, parent=None):
+    def __init__(self, loco_id, loco_name, loco_image_path, filename, parent=None):
         super().__init__(parent)
         self.loco_id = loco_id
-        self.loco_class = loco_class
+        #self.loco_class = loco_class
         self.loco_name = loco_name
         self.loco_image_path = loco_image_path
         self.filename = filename		# filename provides a unique id
@@ -31,13 +31,13 @@ class LocoEntry(QWidget):
         row_layout.addWidget(self.id_label)
 
         # Loco Class
-        self.class_label = QLabel(loco_class)
-        self.class_label.setFixedWidth(70)
-        row_layout.addWidget(self.class_label)
+#         self.class_label = QLabel(loco_class)
+#         self.class_label.setFixedWidth(70)
+#         row_layout.addWidget(self.class_label)
 
         # Loco Name
         self.name_label = QLabel(loco_name)
-        self.name_label.setFixedWidth(120)
+        self.name_label.setFixedWidth(350)
         row_layout.addWidget(self.name_label)
 
         # Spacer to push buttons to the right
