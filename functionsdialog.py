@@ -10,10 +10,11 @@ from functionentry import FunctionEntry
 
 class FunctionsDialog(QDialog):
        
-    def __init__(self, parent, functions={}):
+    def __init__(self, parent, functions=[]):
         super().__init__(parent)
         self.parent = parent
         self.functions = functions
+        self.function_entries = []
 
         self.setWindowTitle("Edit functions")
         self.setFixedSize(600, 400)
@@ -27,6 +28,14 @@ class FunctionsDialog(QDialog):
         header_label = QLabel("Edit functions")
         header_label.setStyleSheet("font-size: 24px;")
         header_layout.addWidget(header_label)
+        
+        # Spacer to push button to the right
+        header_layout.addStretch(1)
+
+        # Add Function button (top right)
+        self.add_function_button = QPushButton("Add Function")
+        self.add_function_button.clicked.connect(self.add_function)
+        header_layout.addWidget(self.add_function_button, alignment=Qt.AlignTop | Qt.AlignRight)
 
         
         main_layout.addLayout(header_layout)
@@ -50,7 +59,7 @@ class FunctionsDialog(QDialog):
         bottom_bar_layout.addWidget(self.cancel_button)
         self.ok_button = QPushButton("OK")
         self.ok_button.setFixedSize(80, 30)
-        self.ok_button.clicked.connect(self.accept)
+        self.ok_button.clicked.connect(self.ok_click)
         bottom_bar_layout.addWidget(self.ok_button)
 
         main_layout.addLayout(bottom_bar_layout)
@@ -64,8 +73,8 @@ class FunctionsDialog(QDialog):
         num_functions = len(self.functions)
         for i in range (0, num_functions):
             self.add_function_entry(i, self.functions[i])
-        if num_functions < 29:
-            # Add one more empty
+        if num_functions < 1:
+            # If no functions add a single entry
             self.add_function_entry(num_functions, ["","","",""])
             
             
@@ -83,10 +92,28 @@ class FunctionsDialog(QDialog):
     
     def display (self):
         self.show()
+        
+    def add_function (self):
+        # Add a new entry to the functions
+        self.functions.append(["","","",""])
+        num_functions = len(self.functions)
+        # Add an entry to the GUI
+        self.add_function_entry(num_functions, ["","","",""])
+        
     
     def add_function_entry(self, id, function={}):
-        function_entry = FunctionEntry(id, function)
+        self.function_entries.append(FunctionEntry(id, function))
         # Add listener to the connect
         #loco_entry.clicked.connect(self.loco_edit)
-        self.function_list_layout.addWidget(function_entry)
+        self.function_list_layout.addWidget(self.function_entries[-1])
+        
+    # OK pressed
+    # Update self.functions with all the values
+    def ok_click (self):
+        # clear existing entries
+        self.functions = []
+        for function_entry in self.function_entries :
+            # Read in from entry and add to list
+            self.functions.append(function_entry.get_list())
+        self.accept()
     

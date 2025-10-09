@@ -1,5 +1,5 @@
 import os
-import shutil
+import shutil, copy
 from pathlib import Path
 from PySide6.QtCore import Qt, Signal, Slot, QFile
 from PySide6.QtGui import QPixmap
@@ -50,6 +50,10 @@ class LocoDialog(QDialog):
         ui_file.open(QFile.ReadOnly)
         self.ui = loader.load(ui_file, None)
         ui_file.close()
+        
+        # Create null functions dialog entry (allows us to maintain functions dialog)
+        self.functions_dialog = None
+        
         self.setWindowTitle("Add / Edit Loco")
         # Layout is set in the QT designer to GridLayout
         self.setLayout(self.ui.layout())
@@ -185,8 +189,17 @@ class LocoDialog(QDialog):
         self.set_default_image()
         
     def open_functions_dialog (self):
-        self.functions_dialog = FunctionsDialog(self, self.functions)
-        self.functions_dialog.exec()
+        if self.functions_dialog == None:
+            self.functions_dialog = FunctionsDialog(self, self.functions)
+        response = self.functions_dialog.exec()
+        # if returns OK / accept then we keep the dialog (which can retrieve data)
+        # if returns cancel then delete the dialog (which will be recreated if needed)
+        if response == QDialog.Rejected:
+            self.functions_dialog = None
+        else :
+            # Need to do a deep copy in case the dialog is subsequently opened and cancelled
+            self.functions = copy.deepcopy(self.functions_dialog.functions)
+        #print (f"Functions are configured as {self.functions}")
         
     # Set tab order for focus for the dialog
     # Note text block allows tab, so tab won't work out of that

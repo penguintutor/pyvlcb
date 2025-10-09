@@ -33,18 +33,21 @@ class FunctionEntry(QWidget):
         if self.function[0] == "":
             self.function[0] = f"F{function_id}"
         self.function_ref_edit.setText(self.function[0])
+        self.function_ref_edit.setToolTip("Button ref. normally Fx")
         self.function_ref_edit.setFixedWidth(70)
         row_layout.addWidget(self.function_ref_edit)
 
         # Function description [1]
         self.function_desc_edit = QLineEdit ()
         self.function_desc_edit.setText(self.function[1])
+        self.function_desc_edit.setToolTip("Action (eg. Sound)")
         self.function_desc_edit.setFixedWidth(100)
         row_layout.addWidget(self.function_desc_edit)
         
         # Function type (eg. "none", "trigger", "toggle") [2]
         self.function_type_combo = QComboBox()
         self.function_type_combo.addItems(["None", "Latch", "Trigger"])
+        self.function_type_combo.setToolTip("Latch toggles on and off, trigger activates briefly.")
         # When saved they are lower case so setCurrentText needs first char as cap
         if (self.function[2] != ""):
             self.function_type_combo.setCurrentText(self.function[2].capitalize())
@@ -54,7 +57,20 @@ class FunctionEntry(QWidget):
         # Function comment [3]
         self.function_comment_edit = QLineEdit ()
         self.function_comment_edit.setText(self.function[3])
+        self.function_comment_edit.setToolTip("Comments")
         self.function_comment_edit.setFixedWidth(100)
         row_layout.addWidget(self.function_comment_edit)
+        
+    # Return a list with the current values
+    # No checks the mainwindows has some error handling for invalid values
+    def get_list (self):
+        return  [
+            self.function_ref_edit.text(),
+            self.function_desc_edit.text(),
+            self.function_type_combo.currentText().lower(),
+            self.function_comment_edit.text()
+            ]
+            
+            
 
     

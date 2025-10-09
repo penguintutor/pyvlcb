@@ -88,17 +88,10 @@ class LocoWindow(QMainWindow):
         main_layout.addLayout(bottom_bar_layout)
         
         # references to dialogs (so we can keep them on top)
-        self.dialog = None
+        #self.dialog = None
         # Watch if he dialog loses focus
         #self.parent.windowActivated.connect(self.raise_dialog)
 
-#         # Examples
-#         self.add_loco_entry("0001", "A3 Class", "Flying Scotsman", "loco_image.png")
-#         self.add_loco_entry(2, "A4 Class", "Mallard", "loco_image.png")
-#         self.add_loco_entry(3, "Coronation Class", "Duchess of Sutherland", "loco_image.png")
-#         self.add_loco_entry(4, "A3 Class", "Flying Scotsman", "loco_image.png")
-        # Update adds the entries to the display - already called from mw when window opened
-        #self.update()
 
     # Read in the selected filter and add the locos to the display
     def update (self):

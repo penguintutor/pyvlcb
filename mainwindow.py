@@ -418,6 +418,11 @@ class MainWindowUI(QMainWindow):
         loco = device_model.get_loco_from_name (loco_name)
             
         # If don't get a loco then close
+        if loco == None:
+            print ("No loco found with name {loco_name}")
+            return
+        
+        
         self.control_loco.loco = loco
         
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
