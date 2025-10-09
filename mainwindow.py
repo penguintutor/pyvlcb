@@ -1,6 +1,6 @@
 import os
 import shutil
-from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint
+from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QPoint, QSize
 from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog, QFileDialog
 from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont, QResizeEvent
 from PySide6.QtUiTools import QUiLoader
@@ -428,11 +428,13 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText(f"Aquiring {loco_name}")
         self.control_loco.loco.status = 'rloc'
         # Add images and summary
-        if "image" in self.control_loco.loco.loco_data:
+        if "image" in self.control_loco.loco.loco_data and self.control_loco.loco.loco_data['image'] != "":
             self.loco_image = QPixmap(os.path.join(self.dirs['locos'], self.control_loco.loco.loco_data['image']))
-            self.ui.locoImage.setPixmap(self.loco_image)
         else:
-            self.ui.locoImage.setPixmap(QPixmap())
+            self.loco_image = QPixmap(os.path.join(self.dirs['locos'], "default.png"))
+        self.ui.locoImage.setPixmap(self.loco_image)
+        # Scale the image to fit (include minimum size when first loading)
+        self._scale_image_to_fit(QSize(280, 180))
         if "summary" in self.control_loco.loco.loco_data:
             self.ui.locoInfoText.setText(self.control_loco.loco.loco_data['summary'])
         else:
@@ -1199,18 +1201,25 @@ class MainWindowUI(QMainWindow):
         super().resizeEvent(event) # Call the base class implementation
 
     # Scale the image
-    def _scale_image_to_fit(self):
+    # If min_size is specified then that is used instead of the QLabel Size
+    def _scale_image_to_fit(self, min_size=None):
         if self.loco_image == None:
             return
 
         # Get the current size of the QLabel where the image will be displayed
-        label_size = self.ui.locoImage.size()
+        image_size = self.ui.locoImage.size()
+        
+        # compare against min_size and if neccessary replace image_size
+        if (min_size != None):
+            if (image_size.width() < min_size.width() or
+                image_size.height() < min_size.height()):
+                image_size = min_size
 
         # Scale the original pixmap to fit the label's dimensions.
         # Qt.KeepAspectRatio ensures the image ratio isn't distorted.
         # Qt.SmoothTransformation uses a high-quality scaling algorithm.
         scaled_pixmap = self.loco_image.scaled(
-            label_size,
+            image_size,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation
         )

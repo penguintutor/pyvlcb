@@ -131,10 +131,14 @@ class ControlLoco:
         return self.loco.session
     
     def set_session (self, session):
+        if self.loco == None:
+            return None
         self.loco.session = session
     
     # Sets speed and direction together
     def set_speeddir (self, speeddir):
+        if self.loco == None:
+            return None
         self.loco.set_speeddir(speeddir)
         
     def get_speeddir (self):
@@ -146,6 +150,8 @@ class ControlLoco:
         return self.loco.get_functions()
     
     def set_functions (self, fn1, fn2, fn3):
+        if self.loco == None:
+            return []
         self.loco.set_functions(fn1, fn2, fn3)
         
     def get_function_status (self, func_index):
