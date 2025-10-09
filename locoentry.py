@@ -1,9 +1,10 @@
-import sys
+import sys, os
 from PySide6.QtWidgets import (QApplication, QMainWindow, QWidget, QVBoxLayout,
     QHBoxLayout, QLabel, QPushButton, QScrollArea, QFrame, QCheckBox, QDialog,
     QDialogButtonBox, QStyle) 
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt, QSize, Signal, QEvent
+from devicemodel import device_model
 
 
 # A simple class to represent a single row for a loco
@@ -14,6 +15,7 @@ class LocoEntry(QWidget):
     
     def __init__(self, loco_id, loco_name, loco_image_path, filename, parent=None):
         super().__init__(parent)
+        self.locowin = parent
         self.loco_id = loco_id
         #self.loco_class = loco_class
         self.loco_name = loco_name
@@ -29,11 +31,6 @@ class LocoEntry(QWidget):
         self.id_label = QLabel(f"ID: {loco_id}")
         self.id_label.setFixedWidth(70)
         row_layout.addWidget(self.id_label)
-
-        # Loco Class
-#         self.class_label = QLabel(loco_class)
-#         self.class_label.setFixedWidth(70)
-#         row_layout.addWidget(self.class_label)
 
         # Loco Name
         self.name_label = QLabel(loco_name)
@@ -65,9 +62,19 @@ class LocoEntry(QWidget):
 #         self.delete_button.setProperty("class", "showicon") # Set a class so that the stylesheet shows theicon
 #         row_layout.addWidget(self.delete_button, alignment=Qt.AlignmentFlag.AlignVCenter)
 
+    # If clicked then update enabled list
     def enable_disable(self):
-        #Todo implement this
-        pass
+        # note that our saved filename is full path - so just get the basename
+        basename = os.path.basename(self.filename)
+        if self.enable_checkbox.isChecked():
+            device_model.enable_loco(basename)
+        else:
+            device_model.disable_loco(basename)
+        # Send updated signal
+        # locowin locowindow, parent is mainwindow
+        self.locowin.parent.updated_locos_signal.emit()
+        # also tell mainwindow to save settings
+        self.locowin.parent.save_settings_signal.emit()
 
     def show_delete_dialog(self):
         msg_box = QDialog(self)

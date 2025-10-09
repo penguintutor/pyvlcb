@@ -4,6 +4,7 @@ from PySide6.QtCore import QTimer, QCoreApplication, Signal, QThreadPool, Qt, QP
 from PySide6.QtWidgets import QApplication, QMainWindow, QAbstractItemView, QMenu, QLineEdit, QDialog, QColorDialog, QFileDialog
 from PySide6.QtGui import QPixmap, QImage, QPalette, QColor, QFont, QResizeEvent
 from PySide6.QtUiTools import QUiLoader
+from settings import Settings
 from consolewindow import ConsoleWindowUI
 from layout import Layout
 from layoutdisplay import LayoutDisplay
@@ -14,7 +15,7 @@ from eventbus import event_bus
 from appevent import AppEvent
 from devicemodel import device_model
 from locowindow import LocoWindow
-from eventwindow import EventWindow
+from ruleswindow import RulesWindow
 from adddevicedialog import AddDeviceDialog
 from addlabeldialog import AddLabelDialog
 from addbuttondialog import AddButtonDialog
@@ -61,6 +62,9 @@ class MainWindowUI(QMainWindow):
     
     # Monitor for Window Activated to be able to manage the level of windows / dialog
     windowActivated = Signal()
+    
+    # Whenever settings change - request save
+    save_settings_signal = Signal()
     
     # files_dirs are passed from app - file structure is fixed
     # Are all relative to basedir
@@ -115,9 +119,7 @@ class MainWindowUI(QMainWindow):
         # Load the Assets prior to setting up the GUI
         
         # Load the settings file here
-        # Todo - adding settings - implement this class
-        # Settings(os.path.join(basedir, "self.files["settings"]", self.cmd_settings)
-        # else print ("No settings file, using defaults")
+        self.settings = Settings(self, self.data_dir, self.files['settings'])
         
         # Load the Layouts file to see what layouts are available
         # Todo - add support for multiple layouts - implement this class
@@ -136,15 +138,19 @@ class MainWindowUI(QMainWindow):
         # pass the layout to the devicemodel
         device_model.set_layout(self.railway)
         
-        # active locos are the ones active for this session
+        # Load all locos
         full_path_locos = os.path.join(self.data_dir, self.files['locos'])
         device_model.load_locos (self.dirs['locos'], full_path_locos)
+        
+        # Now set enabled locos from settings
+        if 'enabledlocos' in self.settings.settings:
+            device_model.enable_locos (self.settings.settings['enabledlocos'])
 
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
         self.loco_window = None
-        self.event_window = None
+        self.rules_window = None
         
         # Signals
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
@@ -158,6 +164,8 @@ class MainWindowUI(QMainWindow):
         event_bus.gui_event_signal.connect(self.gui_event)
         # Listen to device_model signal for treeview updates
         device_model.add_node_signal.connect (self.add_to_tree)
+        # Save setings
+        self.save_settings_signal.connect (self.save_settings)
         
         # File Menu
         # (Import sub menu)
@@ -172,7 +180,7 @@ class MainWindowUI(QMainWindow):
         self.ui.actionEvents.triggered.connect(self.events_edit)
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
-        self.ui.actionSettings.triggered.connect(self.settings)
+        self.ui.actionSettings.triggered.connect(self.settings_edit)
         
         # EditLayout Menu - only show when in edit layout mode
         #self.ui.menuEditLayout.setVisible(False)
@@ -271,14 +279,20 @@ class MainWindowUI(QMainWindow):
 
     # Edit events associations between different objects
     def events_edit (self):
-        if self.event_window == None:
-            self.event_window = EventWindow(self)
-        self.event_window.update()
-        self.event_window.display()
+        if self.rules_window == None:
+            self.rules_window = RulesWindow(self)
+        self.rules_window.update()
+        self.rules_window.display()
     
     # Edit settings
-    def settings (self):
+    def settings_edit (self):
         pass
+    
+    def save_settings (self):
+        self.settings.save_settings()
+    
+    def get_enabled_locos (self):
+        return device_model.get_enabled_loco_filenames ()
     
     def add_device_dialog (self):
         dialog = AddDeviceDialog()
@@ -397,7 +411,8 @@ class MainWindowUI(QMainWindow):
         self.ui.locoStatusLabel.setText("None active")
         
     # When loco change requested through combobox
-    def loco_change (self, index):
+    # or if loco removed from list in that case defaults to index=0 (Select Loco)
+    def loco_change (self, index=0):
         # Release old loco
         session = self.control_loco.get_session()
         # If not session then nothing to release

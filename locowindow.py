@@ -21,9 +21,6 @@ class LocoWindow(QMainWindow):
         self.setWindowTitle("Loco Manager")
         self.setFixedSize(750, 400)
         
-        # List containing filenames holding the loco info
-        # and whether it is enabled or not (filename, enabled
-        self.loco_files = []
 
         # Main widget and layout
         main_widget = QWidget()
@@ -136,7 +133,7 @@ class LocoWindow(QMainWindow):
 
 
     def add_loco_entry(self, loco_id, loco_name, loco_image_path, filename):
-        loco_entry = LocoEntry(loco_id, loco_name, loco_image_path, filename)
+        loco_entry = LocoEntry(loco_id, loco_name, loco_image_path, filename, self)
         # Add listener to the connect
         loco_entry.clicked.connect(self.loco_edit)
         self.loco_list_layout.addWidget(loco_entry)

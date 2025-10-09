@@ -66,6 +66,13 @@ class DeviceModel(QObject):
         # These directories and filenames as specified when first loading the loco
         # Listed here for easy reference
         self.locos_dir = None
+        
+        # Track which locos are enabled (by filename)
+        # Initially set based on settings file but then
+        # Updated as clicked from locowindow
+        #self.enabled_locos = []
+        # moved to locos
+        # self.locos.enabled_locos
 
         
         # Other nodes are stored in here for lookup in menus or eventbus
@@ -88,6 +95,26 @@ class DeviceModel(QObject):
         # The GUI nodes are contained within the node class instances. This is specific to the node list in TreeView
         self.node_model = QStandardItemModel()
         self.node_model.setHorizontalHeaderLabels(['Nodes'])
+        
+    # Enable / disable locos
+    # Does not report back if successful (if already that state then just silently ignores)
+    def enable_loco (self, filename):
+        if not filename in self.locos.enabled_locos:
+            self.locos.enabled_locos.append(filename)
+            
+    def disable_loco (self, filename):
+        if filename in self.locos.enabled_locos:
+            self.locos.enabled_locos.remove(filename)
+            
+    # Enable multiple locos from a list
+    def enable_locos (self, loco_list):
+        # Add individually - which will skip any that don't exist as locos
+        for loco_filename in loco_list:
+            self.enable_loco (loco_filename)
+            
+    def get_enabled_loco_filenames (self):
+        # Get enabled_locs as list of filenames (no path)
+        return self.locos.enabled_locos
 
     # Get the loco object from the loco name
     def get_loco_from_name (self, name):

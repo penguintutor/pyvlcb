@@ -18,6 +18,8 @@ class LocoList:
         
         self.enabled_locos = []	# This is whether it's allowed in this session - not if it's been aquired etc
         # The order that they are stored in this list determines how they are returned
+        # Stores the filename which is unique and allows easy lookup
+        
         # Load the locos.json file
         self.load_file()
         
@@ -51,11 +53,15 @@ class LocoList:
         loco_names = []
         # special case if none enabled then return all
         if len(self.enabled_locos) == 0:
-            selected_locos = list(self.locos.values())
+            for loco in self.locos.values():
+                loco_names.append (loco.loco_name)
         else:
-            selected_locos = self.enabled_locos
-        for loco in selected_locos:
-            loco_names.append (loco.loco_name)
+            #print (f"self.locos {self.locos}")
+            #print (f"Enabled locos {self.enabled_locos}")
+            for filename in self.enabled_locos:
+                if filename in self.locos:
+                    loco_names.append (self.locos[filename].loco_name)
+                # If not a known loco then skip (possibly loco removed but still in settings)
         return loco_names
     
     # Create a loco with defaults 
