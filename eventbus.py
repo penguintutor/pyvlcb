@@ -164,11 +164,10 @@ class EventBus(QObject):
 
         except Exception as e:
             # Could be new file
-            print (f"File not found {self.rules_filename} - {e}")
+            #print (f"File not found {self.rules_filename} - {e}")
+            print (f"File not found {self.rules_filename}")
         
-    
-  
-    
+
     def save_rules (self):
         try:
             with open(self.rules_filename, 'w') as data_file:

@@ -12,7 +12,7 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtUiTools import QUiLoader
 from devicemodel import device_model
-from editeventdialog import EditEventDialog
+from ruledialog import RuleDialog
 from deviceevent import DeviceEvent
 from locoevent import LocoEvent
 from appevent import AppEvent
@@ -31,15 +31,15 @@ loader = QUiLoader()
 basedir = os.path.dirname(__file__)
 
 
-app_title = "Event Manager" 
+app_title = "Rules Manager" 
 
-class EventWindow(QMainWindow):
+class RulesWindow(QMainWindow):
     def __init__(self, parent=None):
         super().__init__()
         
         self.parent = parent
         
-        self.ui = loader.load(os.path.join(basedir, "eventwindow.ui"), None)
+        self.ui = loader.load(os.path.join(basedir, "ruleswindow.ui"), None)
         self.ui.setWindowTitle(app_title)
         
         # Map to Classes
@@ -58,7 +58,7 @@ class EventWindow(QMainWindow):
         # create list from UI elements to allow reference by index
         self.event_elements = {"event":[], "action":[], "options":[], "delete":[]}
         for i in range (0, 10):
-            exec ("self.event_elements[\"event\"].append("+f"self.ui.event_{i:02}_Label"+")")
+            exec ("self.event_elements[\"event\"].append("+f"self.ui.rule_{i:02}_Label"+")")
             exec ("self.event_elements[\"action\"].append("+f"self.ui.action_{i:02}_Label"+")")
             exec ("self.event_elements[\"options\"].append("+f"self.ui.options_{i:02}_Label"+")")
             exec ("self.event_elements[\"delete\"].append("+f"self.ui.delButton_{i:02}"+")") 
@@ -123,7 +123,7 @@ class EventWindow(QMainWindow):
         self.update_list()
    
     def new_event (self):
-        dialog = EditEventDialog()
+        dialog = RuleDialog()
         # Create dict with the details 
         event_dict = {}
         action_dict = {}

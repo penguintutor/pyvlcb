@@ -7,13 +7,13 @@ from PySide6.QtCore import Qt
 from devicemodel import device_model
 from eventbus import event_bus
 
-class EditEventDialog(QDialog):
+class RuleDialog(QDialog):
     """
     A dialog window for editing event details with a grid layout for selections.
     """
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Edit Event Details")
+        self.setWindowTitle("Edit Rule Details")
         self.setMinimumSize(600, 200) # Set a reasonable minimum size for the dialog
 
         # Main vertical layout for the dialog

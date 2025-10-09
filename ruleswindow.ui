@@ -50,7 +50,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Event Manager</string>
+     <string>Rules Manager</string>
     </property>
    </widget>
    <widget class="QDialogButtonBox" name="buttonBox">
@@ -77,7 +77,7 @@
     </property>
     <layout class="QGridLayout" name="gridLayout">
      <item row="3" column="0">
-      <widget class="QLabel" name="event_03_Label">
+      <widget class="QLabel" name="rule_03_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -85,7 +85,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 4</string>
+        <string>Rule 4</string>
        </property>
       </widget>
      </item>
@@ -97,7 +97,7 @@
       </widget>
      </item>
      <item row="9" column="0">
-      <widget class="QLabel" name="event_09_Label">
+      <widget class="QLabel" name="rule_09_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -105,7 +105,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 10</string>
+        <string>Rule 10</string>
        </property>
       </widget>
      </item>
@@ -127,7 +127,7 @@
       </widget>
      </item>
      <item row="7" column="0">
-      <widget class="QLabel" name="event_07_Label">
+      <widget class="QLabel" name="rule_07_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -135,7 +135,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 8</string>
+        <string>Rule 8</string>
        </property>
       </widget>
      </item>
@@ -177,7 +177,7 @@
       </widget>
      </item>
      <item row="4" column="0">
-      <widget class="QLabel" name="event_04_Label">
+      <widget class="QLabel" name="rule_04_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -191,12 +191,12 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 5</string>
+        <string>Rule 5</string>
        </property>
       </widget>
      </item>
      <item row="6" column="0">
-      <widget class="QLabel" name="event_06_Label">
+      <widget class="QLabel" name="rule_06_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -204,7 +204,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 7</string>
+        <string>Rule 7</string>
        </property>
       </widget>
      </item>
@@ -216,7 +216,7 @@
       </widget>
      </item>
      <item row="1" column="0">
-      <widget class="QLabel" name="event_01_Label">
+      <widget class="QLabel" name="rule_01_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -224,7 +224,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 2</string>
+        <string>Rule 2</string>
        </property>
       </widget>
      </item>
@@ -263,7 +263,7 @@
       </widget>
      </item>
      <item row="2" column="0">
-      <widget class="QLabel" name="event_02_Label">
+      <widget class="QLabel" name="rule_02_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -271,7 +271,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 3</string>
+        <string>Rule 3</string>
        </property>
       </widget>
      </item>
@@ -358,7 +358,7 @@
       </widget>
      </item>
      <item row="0" column="0">
-      <widget class="QLabel" name="event_00_Label">
+      <widget class="QLabel" name="rule_00_Label">
        <property name="minimumSize">
         <size>
          <width>300</width>
@@ -366,7 +366,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 1</string>
+        <string>Rule 1</string>
        </property>
       </widget>
      </item>
@@ -465,7 +465,7 @@
       </widget>
      </item>
      <item row="5" column="0">
-      <widget class="QLabel" name="event_05_Label">
+      <widget class="QLabel" name="rule_05_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -473,12 +473,12 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 6</string>
+        <string>Rule 6</string>
        </property>
       </widget>
      </item>
      <item row="8" column="0">
-      <widget class="QLabel" name="event_08_Label">
+      <widget class="QLabel" name="rule_08_Label">
        <property name="minimumSize">
         <size>
          <width>0</width>
@@ -486,7 +486,7 @@
         </size>
        </property>
        <property name="text">
-        <string>Event 9</string>
+        <string>Rule 9</string>
        </property>
       </widget>
      </item>
@@ -594,7 +594,7 @@
      </rect>
     </property>
     <property name="text">
-     <string>Add Event</string>
+     <string>Add Rule</string>
     </property>
    </widget>
    <widget class="QPushButton" name="prevPageButton">
