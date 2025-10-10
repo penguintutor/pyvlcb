@@ -21,8 +21,11 @@ from devicemodel import device_model
 class LayoutDisplay(QLabel):
     def __init__(self, parent):
         super().__init__(parent)
-        # Main window is not known here (as parent is within .ui) - store when loading file
+        
+        # Main window is not known here (as parent is within .ui) - store when passing railway / layout
         self.mainwindow = None
+        self.railway = None		# Railway is the layout class - known as railway for consistancy with mw and avoid conflict with layout
+        
         self.setMouseTracking(True)  # Enable mouse tracking even when no button is pressed
         #self.last_mouse_pos = QPoint()
         
@@ -133,14 +136,26 @@ class LayoutDisplay(QLabel):
                 # Todo show this on the UI instead
         except IOError as e:
             print(f"Error saving file: {e}")
-            
-    def load_layout_objects (self, filename):
+          
+    # Set the layout - also set the mainwindow
+    def set_layout (self, mainwindow, layout):
+        self.mainwindow = mainwindow
+        self.railway = layout
+        # Load the objects
+        self.load_image()
+        # Todo
+          
+    # This replaced by passing the layout object to this class - see self.railway
+    # Loaded from set_layout
+    def load_layout_objects_old (self, filename):
         try:
             with open(filename, 'r') as f:
                 objects = json.load(f)
                 #print (f"Objects {objects}")
         except IOError as e:
-            print(f"Warning unable to load file: {e}, possibly no assets defined")
+            # Most likely no layout objects file
+            # Only give error if debug
+            # print(f"Warning unable to load file: {e}, possibly no assets defined")
             return
         # Create an object for each entry
         for entry in objects:
@@ -155,9 +170,9 @@ class LayoutDisplay(QLabel):
                     gui_node_id = self.gui_name_toid(entry['guiobject'])
                     self.guiobjects[gui_node_id].add_label(entry['label_type'], entry['settings'], entry['pos'])
 
-    def load_image (self, mainwindow):
-        self.mainwindow = mainwindow
-        image_file = self.mainwindow.railway.get_layout_image()
+
+    def load_image (self):
+        image_file = self.railway.get_layout_image()
         self.canvas = QPixmap(image_file)
         
         # Initial pixmap size is incorrect - instead use approximation based on window size
@@ -168,8 +183,6 @@ class LayoutDisplay(QLabel):
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
         self.setPixmap(scaled_pixmap)
         
-        #print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
-        
         # Adjust Size updates the label so that querying the size gives correct values
         self.adjustSize()
         button_settings = {
@@ -177,7 +190,33 @@ class LayoutDisplay(QLabel):
             # Todo these are not currently used - see layoutbutton values
             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
             }
-        #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
+
+
+
+    # Now loaded from set_layout
+#     def load_image_old (self, mainwindow):
+#         self.mainwindow = mainwindow
+#         image_file = self.mainwindow.railway.get_layout_image()
+#         self.canvas = QPixmap(image_file)
+#         
+#         # Initial pixmap size is incorrect - instead use approximation based on window size
+#         w = self.mainwindow.ui.size().width() - 330
+#         h = self.mainwindow.ui.size().height() - 60
+#         self.canvas_size = QSize(w, h)
+#         
+#         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
+#         self.setPixmap(scaled_pixmap)
+#         
+#         #print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
+#         
+#         # Adjust Size updates the label so that querying the size gives correct values
+#         self.adjustSize()
+#         button_settings = {
+#             'size': (2,2),
+#             # Todo these are not currently used - see layoutbutton values
+#             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
+#             }
+#         #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
         
     def resizeEvent(self, event=None):
         #self.canvas_size = self.ui.layoutLabel.size()

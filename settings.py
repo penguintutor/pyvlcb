@@ -41,3 +41,13 @@ class Settings:
     def update_settings (self):
         # Get enabled_locos
         self.settings['enabledlocos'] = self.parent.get_enabled_locos()
+       
+    # Many of the settings are available through getters which can handle no data
+    # Get the layout filename
+    # If new then return default.json
+    # May also break if directory changed and no longer matches - so check later
+    def get_layout_filename (self):
+        if 'layoutfile' in self.settings:
+            return self.settings['layoutfile']
+        else:
+            return "default.json"

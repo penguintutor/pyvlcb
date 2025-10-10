@@ -126,15 +126,7 @@ class DeviceModel(QObject):
         if filename in self.locos.locos:
             return True
         return False
-        
-    def save_yards (self):
-        # Convert each LocoYard object to JSON-serializable dictionary
-        json_yard_list = [yard.to_json() for yard in self.yards]
-        try:
-            with open(self.yards_file, 'w') as data_file:
-                json.dump(json_yard_list, data_file, indent=4)
-        except Exception as e:
-            print (f"Error saving yard file {self.yards_file} {e}")
+
             
     # Load the locos file by opening in LocoList 
     def load_locos (self, locos_path, locos_filename):

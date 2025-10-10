@@ -750,6 +750,7 @@
     <property name="title">
      <string>Edit Layout</string>
     </property>
+    <addaction name="actionChangeImage"/>
     <addaction name="actionAddDevice"/>
     <addaction name="actionAddLabel"/>
     <addaction name="actionAddButton"/>
@@ -819,6 +820,11 @@
   <action name="actionImportLoco">
    <property name="text">
     <string>Loco</string>
+   </property>
+  </action>
+  <action name="actionChangeImage">
+   <property name="text">
+    <string>Change Image</string>
    </property>
   </action>
  </widget>

@@ -22,9 +22,11 @@ from addbuttondialog import AddButtonDialog
 from vlcbnode import VLCBNode
 from vlcbev import VLCBEv
 from guiobject import GuiObject
+from layouts import Layouts
 from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
+from imageexistdialog import ImageExistDialog
 
 # Layout Display is from the loader to interact use
 # self.ui.layoutDisplayLabel
@@ -121,20 +123,20 @@ class MainWindowUI(QMainWindow):
         # Load the settings file here
         self.settings = Settings(self, self.data_dir, self.files['settings'])
         
+        ## Add Layouts file - Todo move to appropriate file - only required when managing
+        
         # Load the Layouts file to see what layouts are available
         # Todo - add support for multiple layouts - implement this class
-        # layouts_file = os.path.join(basedir, self.files["layouts"])
-        # Layouts(layouts_file)
+        #layouts_file = os.path.join(basedir, self.files["layouts"])
+        #self.all_layouts = Layouts(self.data_dir, self.files['layouts'])
         # else print (f"No layouts file '{layouts_file}', using default layout")
         
-        layout_name = "Default"
-        layout_filename = "default.json"
-        layouts_dir = os.path.join(self.data_dir, self.dirs['layouts'])
-    
+        
+        # Load the Current Layout file from settings
         # Layout provides background image and
-        # is useful for giving real names to certain items
+        # can also be used for giving real names to certain items
         # Variable is named railway to avoid potential conflict if named layout
-        self.railway = Layout(layout_name, layouts_dir, layout_filename)
+        self.railway = Layout(self.dirs['layouts'], self.settings.get_layout_filename())
         # pass the layout to the devicemodel
         device_model.set_layout(self.railway)
         
@@ -186,6 +188,7 @@ class MainWindowUI(QMainWindow):
         #self.ui.menuEditLayout.setVisible(False)
         self.ui.menuEditLayoutAction = self.ui.menuEditLayout.menuAction()
         self.ui.menuEditLayoutAction.setVisible(False)
+        self.ui.actionChangeImage.triggered.connect(self.change_layout_image_dialog)
         self.ui.actionAddDevice.triggered.connect(self.add_device_dialog)
         self.ui.actionAddLabel.triggered.connect(self.add_label_dialog)
         self.ui.actionAddButton.triggered.connect(self.add_button_dialog)
@@ -240,13 +243,15 @@ class MainWindowUI(QMainWindow):
         
         event_bus.load_rules(os.path.join(self.dirs['rules'], "default.json"))
         
-        # Load layout background image
-        self.ui.layoutDisplayLabel.load_image(self)
+        
+        # Pass the layout details to LayoutDisplay to allow it to load other resources
+        #self.ui.layoutDisplayLabel.load_image(self)
+        # Also pass safe so it can access mainwindow
+        self.ui.layoutDisplayLabel.set_layout(self, self.railway)
+        # Includes load layout background image
         # and UI objects
-        self.ui.layoutDisplayLabel.load_layout_objects(self.railway.get_layout_objs_file())
-        # Load close icon image (switch back to control mode)
-        #close_image_file = os.path.join(basedir, "close-icon.png")
-        #self.close_image = QImage (close_image_file)
+        #self.ui.layoutDisplayLabel.load_layout_objects(self.railway.get_layout_objs_file())
+
         
         # Update LCD - used to set '-' at start
         self.update_lcd()
@@ -294,6 +299,63 @@ class MainWindowUI(QMainWindow):
     def get_enabled_locos (self):
         return device_model.get_enabled_loco_filenames ()
     
+    # Get a new image name then pass to the layoutDisplay
+    def change_layout_image_dialog (self):
+        file_dialog = QFileDialog(self,
+                        caption="Select Background Image",
+                        directory=self.dirs['layouts'],
+                        filter="Images (*.png *.jpg *.jpeg *.bmp)",
+                        fileMode=QFileDialog.FileMode.ExistingFile
+                        )
+
+        # Get filename
+        if file_dialog.exec():
+            selected_file = file_dialog.selectedFiles()[0]
+            
+            filename = os.path.basename(selected_file)
+            
+            # Is the file in the layoutdir then move on to
+            # updating in the layout - but if it's not then we need to copy (perhaps)
+            if not self.is_datadir(selected_file, 'layouts'):
+                # if not then copy it there (if exist check overwrite with user first)
+                new_path = os.path.join(self.dirs['layouts'], filename)
+                # If it's not existing just copy
+                if not (os.path.exists(new_path)):
+                    shutil.copyfile (selected_file, new_path)
+                # File is not in layouts directory and already matching file
+                # Create new dialog to get confirmation / new filename
+                else:
+                    exist_dialog = ImageExistDialog (self, self.dirs['layouts'])
+                    if exist_dialog.exec() == QDialog.Accepted:
+                        # Handle dialog response here
+                        # saved in self.dialog.action
+                        if exist_dialog.action == "overwrite":
+                            # copy over existing
+                            shutil.copyfile (selected_file, new_path)
+                        elif exist_dialog.action == "existing":
+                            # nothing to do just use the existing
+                            pass
+                        # For new file to be selected then we should have already checked
+                        # that the filename is valid
+                        elif exist_dialog.action == "save":
+                            new_filename = exist_dialog.ui.filenameEdit.text()
+                            new_path = os.path.join(self.dirs['layouts'], new_filename)
+                            #print (f"Copying {selected_file} to {new_path}")
+                            shutil.copyfile (selected_file, new_path)
+                            filename = new_filename
+                        else:
+                            # Unknown state
+                            return
+                    # Most likely cancel pressed just ignore
+                    else:
+                        return
+            # Reach here then filename is valid    
+            # Save it into layout (includes a save)
+            self.railway.set_layout_image (filename)
+            
+            # Tell layout display to update
+            self.ui.layoutDisplayLabel.load_image()
+    
     def add_device_dialog (self):
         dialog = AddDeviceDialog()
         if dialog.exec():
@@ -301,6 +363,7 @@ class MainWindowUI(QMainWindow):
             response = dialog.get_selected_values()
             # The first "text" is that it's a text style label (allows flexibility for future)
             self.ui.layoutDisplayLabel.add_gui_device(response[0], response[1])
+        
         
     def add_label_dialog (self):
         dialog = AddLabelDialog(self.ui.layoutDisplayLabel.gui_object_names())
@@ -378,7 +441,7 @@ class MainWindowUI(QMainWindow):
             #self.ui.menuEditLayout.setVisible(False)
             self.ui.menuEditLayoutAction.setVisible(False)
             # When switching back to control from edit then save config
-            self.ui.layoutDisplayLabel.save_layout_objects(layout_objs_file)
+            self.railway.save_file()
     
     # Show console always calls show
     # If window already open then bring to front

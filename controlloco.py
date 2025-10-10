@@ -165,6 +165,8 @@ class ControlLoco:
         return self.loco.status
     
     def set_status (self, value):
+        if self.loco == None:
+            return None
         self.loco.set_status(value)
         
     def set_function_dfun (self, func_index, value):
