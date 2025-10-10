@@ -5,7 +5,7 @@ QPushButton {
     padding: 5px 5px; /* Padding for size */
     border: 1px solid #555555;
     border-radius: 2px; /* Rounded corners */
-    min-width: 80px; /* Consistent minimum width */
+    /*min-width: 80px;  Consistent minimum width */
     /* Ensure standard roles don't display icons */
     icon-size: 0px; 
 }

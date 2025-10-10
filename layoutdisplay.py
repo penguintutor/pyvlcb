@@ -1,6 +1,6 @@
 # Layout display handles the layout area of the screen - showing the layout image
 # and then other buttons etc.
-# This is a sbuclass of a QLabel class (which is used to house the image)
+# This is a subclass of a QLabel class (which is used to house the image)
 
 # The components that are placed on the layoutdisplay are based on guiobjects - which in turn are layoutobjects
 
@@ -39,8 +39,8 @@ class LayoutDisplay(QLabel):
         # so we use same size for pixmap and status images
         self.canvas_size = QSize(200, 200)
 
+        # All buttons / labels etc. have been moved to railway.guiobjects
         # Contains all the objects to display
-        self.guiobjects = []
         # buttons and labels have been moved into guiobjects
 
         # Mode is control or edit
@@ -53,45 +53,6 @@ class LayoutDisplay(QLabel):
         close_image_file = os.path.join(basedir, "close-icon.png")
         self.close_image = QImage (close_image_file)
         
-        
-    def add_gui_device (self, device_type, device_name):
-        self.guiobjects.append(GuiObject(self, device_type, device_name, {}))
-        # Add to node tree
-        #print (f"Adding to node tree {self.guiobjects[-1].name}")
-        device_model.add_gui_node(self.guiobjects[-1])
-        
-    # Labels and buttons are added to guiobjects - so pass through to guiobects
-    # Here pos is optional so it's moved to the end
-    def add_label (self, gui_node_name, label_type, settings, pos=(5,5)):
-        gui_node_id = self.gui_name_toid(gui_node_name)
-        # check gui node is valid (no reason it shouldn't be)
-        if gui_node_id < 0:
-            print (f"Invalid gui name {gui_node_name}")
-        self.guiobjects[gui_node_id].add_label (label_type, settings, pos)
-        
-    def add_button (self, gui_node_name, button_type, settings, pos=(5,5)):
-        gui_node_id = self.gui_name_toid(gui_node_name)
-        # check gui node is valid (no reason it shouldn't be)
-        if gui_node_id < 0:
-            print (f"Invalid gui name {gui_node_name}")
-        self.guiobjects[gui_node_id].add_button (button_type, settings, pos)
-        
-    def gui_object_names (self):
-        #print (f"GUI objects {self.guiobjects}")
-        return_list = []
-        for object in self.guiobjects:
-            return_list.append(object.name)
-        #print (f"List {return_list}")
-        return return_list
-    
-    # From name get pos in list
-    # used when adding buttons / labels etc.
-    def gui_name_toid (self, gui_name):
-        for i in range (0, len(self.guiobjects)):
-            if self.guiobjects[i].name == gui_name:
-                return i
-        # Shouldn't return -1 as gui wouldn't show name that doesn't exist
-        return -1
         
     def paintEvent (self, event):
         super().paintEvent(event)
@@ -106,7 +67,7 @@ class LayoutDisplay(QLabel):
         brush.setStyle(Qt.SolidPattern)
         painter.setBrush(brush)
         
-        for object in self.guiobjects:
+        for object in self.railway.guiobjects:
             object.paint(painter)
             
         # If in edit mode then show the cross
@@ -119,24 +80,6 @@ class LayoutDisplay(QLabel):
         painter.end()
         self.update()
 
-
-    # Save the objects (when finished editing layout)
-    def save_layout_objects (self, filename):
-        data_list = []
-        
-        for object in self.guiobjects:
-            data_list.extend(object.get_save_objects())
-        
-        #print (f"Save list {data_list}")
-            
-        try:
-            with open(filename, 'w') as f:
-                json.dump(data_list, f, indent=4)
-                #print(f"Objects successfully saved to '{filename}'")
-                # Todo show this on the UI instead
-        except IOError as e:
-            print(f"Error saving file: {e}")
-          
     # Set the layout - also set the mainwindow
     def set_layout (self, mainwindow, layout):
         self.mainwindow = mainwindow
@@ -145,31 +88,6 @@ class LayoutDisplay(QLabel):
         self.load_image()
         # Todo
           
-    # This replaced by passing the layout object to this class - see self.railway
-    # Loaded from set_layout
-    def load_layout_objects_old (self, filename):
-        try:
-            with open(filename, 'r') as f:
-                objects = json.load(f)
-                #print (f"Objects {objects}")
-        except IOError as e:
-            # Most likely no layout objects file
-            # Only give error if debug
-            # print(f"Warning unable to load file: {e}, possibly no assets defined")
-            return
-        # Create an object for each entry
-        for entry in objects:
-            if 'object' in entry.keys():
-                if entry['object'] == 'gui':
-                    #self.guiobjects.append(GuiObject(self, entry['type'], entry['name'], {}))
-                    self.add_gui_device(entry['type'], entry['name'])
-                elif entry['object'] == 'button':
-                    gui_node_id = self.gui_name_toid(entry['guiobject'])
-                    self.guiobjects[gui_node_id].add_button(entry['button_type'], entry['settings'], entry['pos'])
-                elif entry['object'] == 'label':
-                    gui_node_id = self.gui_name_toid(entry['guiobject'])
-                    self.guiobjects[gui_node_id].add_label(entry['label_type'], entry['settings'], entry['pos'])
-
 
     def load_image (self):
         image_file = self.railway.get_layout_image()
@@ -191,33 +109,7 @@ class LayoutDisplay(QLabel):
             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
             }
 
-
-
-    # Now loaded from set_layout
-#     def load_image_old (self, mainwindow):
-#         self.mainwindow = mainwindow
-#         image_file = self.mainwindow.railway.get_layout_image()
-#         self.canvas = QPixmap(image_file)
-#         
-#         # Initial pixmap size is incorrect - instead use approximation based on window size
-#         w = self.mainwindow.ui.size().width() - 330
-#         h = self.mainwindow.ui.size().height() - 60
-#         self.canvas_size = QSize(w, h)
-#         
-#         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
-#         self.setPixmap(scaled_pixmap)
-#         
-#         #print (f"Canvas {self.canvas_size}, Pixmap {self.pixmap().size()}")
-#         
-#         # Adjust Size updates the label so that querying the size gives correct values
-#         self.adjustSize()
-#         button_settings = {
-#             'size': (2,2),
-#             # Todo these are not currently used - see layoutbutton values
-#             'color_on': '#00FF00', 'color_off': '#FF0000', 'color_unknown': '#555555'
-#             }
-#         #self.buttons.append(LayoutButton(self, (25,25), "circle", button_settings))
-        
+       
     def resizeEvent(self, event=None):
         #self.canvas_size = self.ui.layoutLabel.size()
         self.canvas_size = self.size()
@@ -281,7 +173,7 @@ class LayoutDisplay(QLabel):
         # set distance to a value far beyond any reasonable range (1000)
         # saves needing to test for a null value
         nearest_distance = 1000
-        for guiobject in self.guiobjects:
+        for guiobject in self.railway.guiobjects:
             # result is None if no matches or (object, distance)
             result = guiobject.nearestToClick(click_pos, types)
             if result == None:
@@ -295,33 +187,6 @@ class LayoutDisplay(QLabel):
         offset_percentage = nearest_object.get_offset(click_pos)
         self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
         return nearest_object
-                
-#         nearest_object = None
-#         # set distance to a value far beyond any reasonable range (1000)
-#         # saves needing to test for a null value
-#         nearest_distance = 1000
-#         if types == "button" or types=="all":
-#             for button in self.buttons:
-#                 hit_test = button.is_hit(click_pos)
-#                 #print (f"Button {hit_test}")
-#                 # Todo determine closest (ignore any < 0)
-#                 if hit_test >=0 and hit_test < nearest_distance:
-#                     nearest_object = button
-#                     nearest_distance = hit_test
-#         if types == "label" or types=="all":
-#             for label in self.labels:
-#                 hit_test = label.is_hit(click_pos)
-#                 #print (f"Label {hit_test}")
-#                 # Todo determine closest (ignore any < 0)
-#                 if hit_test >=0 and hit_test < nearest_distance:
-#                     nearest_object = label
-#                     nearest_distance = hit_test
-#         if nearest_object != None:
-#             # get offset to the nearest object
-#             offset_percentage = nearest_object.get_offset(click_pos)
-#             self.click_offset = QPoint(*nearest_object.pixel_pos(offset_percentage))
-#         return nearest_object
-    
                     
     def mouseMoveEvent(self, event: QMouseEvent):
         # Drag event

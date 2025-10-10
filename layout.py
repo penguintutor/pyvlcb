@@ -3,6 +3,8 @@
 # Todo in future add multiple layout files
 import json
 import os
+from guiobject import GuiObject
+from devicemodel import device_model
 
 
 # Holds specific information about the layout
@@ -10,10 +12,18 @@ import os
 # layout_file - filename must be provided, but if not exist it will be created without warning
 
 class Layout():
-    def __init__ (self, layout_dir, layout_file):
+    def __init__ (self, mainwindow, layout_dir, layout_file):
+        self.mainwindow = mainwindow
         self.layout_file = layout_file
         self.layout_dir = layout_dir
+        
+        # general settings are stored in self.layout_data
+        # Objects on the GUI are saved under guiobjects
+        self.guiobjects = []
+        self.load_file()
 
+
+    def load_file (self):
         filename = os.path.join(self.layout_dir, self.layout_file)
         try:
             with open(filename, 'r') as data_file:
@@ -25,13 +35,52 @@ class Layout():
         if not ('title' in self.layout_data):
             self.layout_data['title'] = "Default Layout"
             
-        # Check we have an objects file - if not then set default name
-#         if 'layout-objs' in self.layout_data:
-#             self.layout_objs_file = self.layout_data['layout-objs']
-#         else:
-#             # If not file specified then use default name = <name>-objects.json
-#             # Using lower case
-#             self.layout_objs_file = self.name.lower() + "-objects.json"
+        # Load the guiobjects from self.layout_data['guiobjects']
+        # First reset guiobjects so we don't add to the end of existing
+        self.guiobjects = []
+        for entry in self.layout_data['guiobjects']:
+            if 'object' in entry.keys():
+                if entry['object'] == 'gui':
+                    #self.railway.guiobjects.append(GuiObject(self, entry['type'], entry['name'], {}))
+                    self.add_gui_device(entry['type'], entry['name'])
+                elif entry['object'] == 'button':
+                    gui_node_id = self.gui_name_toid(entry['guiobject'])
+                    self.guiobjects[gui_node_id].add_button(entry['button_type'], entry['settings'], entry['pos'])
+                elif entry['object'] == 'label':
+                    gui_node_id = self.gui_name_toid(entry['guiobject'])
+                    self.guiobjects[gui_node_id].add_label(entry['label_type'], entry['settings'], entry['pos'])
+            
+                
+    def add_gui_device (self, device_type, device_name):
+        self.guiobjects.append(GuiObject(self, device_type, device_name, {}))
+        # Add to node tree
+        #print (f"Adding to node tree {self.railway.guiobjects[-1].name}")
+        device_model.add_gui_node(self.guiobjects[-1])
+        
+    # Labels and buttons are added to guiobjects 
+    # Here pos is optional so it's moved to the end
+    def add_label (self, gui_node_name, label_type, settings, pos=(5,5)):
+        gui_node_id = self.gui_name_toid(gui_node_name)
+        # check gui node is valid (no reason it shouldn't be)
+        if gui_node_id < 0:
+            print (f"Invalid gui name {gui_node_name}")
+        self.guiobjects[gui_node_id].add_label (label_type, settings, pos)
+        
+    def add_button (self, gui_node_name, button_type, settings, pos=(5,5)):
+        gui_node_id = self.gui_name_toid(gui_node_name)
+        # check gui node is valid (no reason it shouldn't be)
+        if gui_node_id < 0:
+            print (f"Invalid gui name {gui_node_name}")
+        self.guiobjects[gui_node_id].add_button (button_type, settings, pos)
+        
+    # From name get pos in list
+    # used when adding buttons / labels etc.
+    def gui_name_toid (self, gui_name):
+        for i in range (0, len(self.guiobjects)):
+            if self.guiobjects[i].name == gui_name:
+                return i
+        # Shouldn't return -1 as gui wouldn't show name that doesn't exist
+        return -1
         
         
 #         self.node_names = {
@@ -67,39 +116,28 @@ class Layout():
     
     def save_file (self):
         filename = os.path.join(self.layout_dir, self.layout_file)
+        
+        # Add all gui objects into self.layout_data['guiobjects']
+        
+        # clear out any existing objects
+        self.layout_data['guiobjects'] = []
+        
+        for object in self.guiobjects:
+            self.layout_data['guiobjects'].extend(object.get_save_objects())
+        
+        
         try:
             with open(filename, 'w') as data_file:
                 json.dump(self.layout_data, data_file, indent=4)
         except Exception as e:
             print (f"Error saving layout file {filename} {e}")
             
-            
-        
-        
-    # Returns list of lists. Each entry ["Friendly name", "filename"]
-   # def get_locos (self):
-   #     return self.layout_data['locos']
-    
-   # def get_loco_names (self):
-   #     # Temp return empty string - looking to move to a new class
-   #     return []
-    
-    #    names = []
-    #    for loco_entry in self.layout_data['locos']:
-    #        names.append(loco_entry[0])
-    #    return names
-    
-    # Just return one loco name
-    #def get_loco_name (self, num):
-    #    return self.layout_data['locos'][num][0]
-    
-    # Get loco filename based on position in list
-    # Based on same order as get_loco
-    # Returns full path
-    #def get_loco_filename (self, num):
-    #    return os.path.join(self.loco_dir, self.layout_data['locos'][num][1])
-        
-        
+    def gui_object_names (self):
+        return_list = []
+        for object in self.guiobjects:
+            return_list.append(object.name)
+        return return_list
+                   
     # Translation from node_id to friendly name
     # Ideally this should be done within the module, but could be supported here
     # Temporarily disabled

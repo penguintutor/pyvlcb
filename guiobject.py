@@ -12,7 +12,8 @@ from guievent import GuiEvent
 class GuiObject:
     # object_type - eg. "point" (two buttons to select between), "toggle" (toggle can be used for lights etc. all buttons toggle)
     def __init__(self, parent, object_type, name, data_dict):
-        # parent is the gui object (Layout Display)
+        ### parent is the gui object (Layout Display)
+        # parent is now layout - which has variable mainwindow to get to the mainwindow
         # which is passed to LayoutObjects
         self.parent = parent
         self.object_type = object_type

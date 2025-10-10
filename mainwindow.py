@@ -131,16 +131,21 @@ class MainWindowUI(QMainWindow):
         #self.all_layouts = Layouts(self.data_dir, self.files['layouts'])
         # else print (f"No layouts file '{layouts_file}', using default layout")
         
+        self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
+        self.setWindowTitle(app_title)
+        self.loco_window = None
+        self.rules_window = None
         
         # Load the Current Layout file from settings
         # Layout provides background image and
         # can also be used for giving real names to certain items
+        # Needs to come after self.ui is loaded
         # Variable is named railway to avoid potential conflict if named layout
-        self.railway = Layout(self.dirs['layouts'], self.settings.get_layout_filename())
+        self.railway = Layout(self, self.dirs['layouts'], self.settings.get_layout_filename())
         # pass the layout to the devicemodel
         device_model.set_layout(self.railway)
         
-        # Load all locos
+         # Load all locos
         full_path_locos = os.path.join(self.data_dir, self.files['locos'])
         device_model.load_locos (self.dirs['locos'], full_path_locos)
         
@@ -148,11 +153,6 @@ class MainWindowUI(QMainWindow):
         if 'enabledlocos' in self.settings.settings:
             device_model.enable_locos (self.settings.settings['enabledlocos'])
 
-        
-        self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
-        self.setWindowTitle(app_title)
-        self.loco_window = None
-        self.rules_window = None
         
         # Signals
         self.steal_dialog_signal.connect (self.steal_loco_dialog)
@@ -362,7 +362,7 @@ class MainWindowUI(QMainWindow):
             # response = id, text
             response = dialog.get_selected_values()
             # The first "text" is that it's a text style label (allows flexibility for future)
-            self.ui.layoutDisplayLabel.add_gui_device(response[0], response[1])
+            self.railway.add_gui_device(response[0], response[1])
         
         
     def add_label_dialog (self):
@@ -372,7 +372,7 @@ class MainWindowUI(QMainWindow):
             response = dialog.get_selected_values()
             #print(f"Selected value: {text}")
             # The first "text" is that it's a text style label (allows flexibility for future)
-            self.ui.layoutDisplayLabel.add_label(response[0], "text", {"text":response[1]})
+            self.railway.add_label(response[0], "text", {"text":response[1]})
         
     def add_button_dialog (self):
         #print (f"Label {self.ui.layoutDisplayLabel}")
@@ -381,7 +381,7 @@ class MainWindowUI(QMainWindow):
         if dialog.exec():
             # response = id, button_type
             response = dialog.get_selected_values()
-            self.ui.layoutDisplayLabel.add_button(response[0], response[1], {})
+            self.railway.add_button(response[0], response[1], {})
         
     def event_selection_dialog (self):
         dialog = EventDialog()
@@ -1362,3 +1362,7 @@ class MainWindowUI(QMainWindow):
             device_model.import_loco(filename)
             device_model.save_locos()
             self.updated_locos_signal.emit()
+            
+    # shortcut to get layoutDisplay
+#    def get_layoutDisplay(self):
+#        return self.ui.layoutDisplayLabel

@@ -120,10 +120,6 @@ class LayoutLabel (LayoutObject):
     def get_long_name (self):
         return f"Label: {self.get_name()}"
             
-    # What action does this have
-    # Button is normally Activate, label is Toggle
-    #def get_action_type (self):
-    #    return "Toggle"
     
     # Get index position of the label
     # Normally add 1 if need user friendly name

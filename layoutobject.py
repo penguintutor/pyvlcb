@@ -19,7 +19,8 @@ class LayoutObject:
         # Layout display is the parent of the gui object
         # use this to make code cleaner and to be able
         # to get scaling details etc.
-        self.layout_disp = parent.parent
+        # Ouch this is a long route to get to LayouDisplay 
+        self.layout_disp = parent.parent.mainwindow.ui.layoutDisplayLabel
         self.pos = pos # Pos is % of position of image
         # device_type exists over all types - inc Gui / VLCB etc.
         # all layout objects are device_type Gui
