@@ -22,6 +22,7 @@ from addbuttondialog import AddButtonDialog
 from vlcbnode import VLCBNode
 from vlcbev import VLCBEv
 from guiobject import GuiObject
+from layoutdialog import LayoutDialog
 from layouts import Layouts
 from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
@@ -123,13 +124,7 @@ class MainWindowUI(QMainWindow):
         # Load the settings file here
         self.settings = Settings(self, self.data_dir, self.files['settings'])
         
-        ## Add Layouts file - Todo move to appropriate file - only required when managing
-        
-        # Load the Layouts file to see what layouts are available
-        # Todo - add support for multiple layouts - implement this class
-        #layouts_file = os.path.join(basedir, self.files["layouts"])
-        #self.all_layouts = Layouts(self.data_dir, self.files['layouts'])
-        # else print (f"No layouts file '{layouts_file}', using default layout")
+        ## Add Layouts file - Moved to LayoutDialog - only required when managing
         
         self.ui = loader.load(os.path.join(basedir, "mainwindow.ui"), None)
         self.setWindowTitle(app_title)
@@ -170,6 +165,7 @@ class MainWindowUI(QMainWindow):
         self.save_settings_signal.connect (self.save_settings)
         
         # File Menu
+        self.ui.actionChangeLayout.triggered.connect(self.change_layout_dialog)
         # (Import sub menu)
         self.ui.actionImportLoco.triggered.connect(self.import_file)
         self.ui.actionExit.triggered.connect(self.quit_app)
@@ -366,7 +362,7 @@ class MainWindowUI(QMainWindow):
         
         
     def add_label_dialog (self):
-        dialog = AddLabelDialog(self.ui.layoutDisplayLabel.gui_object_names())
+        dialog = AddLabelDialog(self.railway.gui_object_names())
         if dialog.exec():
             # response = id, text
             response = dialog.get_selected_values()
@@ -377,7 +373,7 @@ class MainWindowUI(QMainWindow):
     def add_button_dialog (self):
         #print (f"Label {self.ui.layoutDisplayLabel}")
         #print (f"Obj names {self.ui.layoutDisplayLabel.gui_object_names()}")
-        dialog = AddButtonDialog(self.ui.layoutDisplayLabel.gui_object_names())
+        dialog = AddButtonDialog(self.railway.gui_object_names())
         if dialog.exec():
             # response = id, button_type
             response = dialog.get_selected_values()
@@ -1363,6 +1359,19 @@ class MainWindowUI(QMainWindow):
             device_model.save_locos()
             self.updated_locos_signal.emit()
             
-    # shortcut to get layoutDisplay
-#    def get_layoutDisplay(self):
-#        return self.ui.layoutDisplayLabel
+    def change_layout_dialog (self):
+        layout_dialog = LayoutDialog(self, self.data_dir, self.dirs['layouts'], self.files['layouts'], self.settings)
+        result = layout_dialog.exec()
+        # If not changed then ignore
+        if result != 1:
+            return    
+            
+        # Get the new Layout filename
+        new_filename = layout_dialog.selected_layout
+        self.railway.load_file(new_filename)
+        
+        self.ui.layoutDisplayLabel.set_layout(self, self.railway)
+        # Update the layout display
+        # Includes load layout background image
+        # and UI objects
+        self.ui.layoutDisplayLabel.update()

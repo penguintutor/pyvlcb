@@ -21,23 +21,46 @@ class Layout():
         # Objects on the GUI are saved under guiobjects
         self.guiobjects = []
         self.load_file()
+        
+    def set_title (self, title):
+        # title is required / created when loading file  so no need to check it exists
+        self.layout_data['title'] = title
+        # perform save whenever title is updates
+        self.save_file()
+        
+    # Title is mandatory, but still have a getter that just returns it for consistancy with set
+    def get_title (self):
+        return self.layout_data['title']
 
 
-    def load_file (self):
-        filename = os.path.join(self.layout_dir, self.layout_file)
-        try:
-            with open(filename, 'r') as data_file:
-                self.layout_data = json.load(data_file)
-        except:
-            #print (f"No layout file '{filename}' using default values")
-            self.layout_data = { }
+    # Call without filename to load current layout
+    # Add filename to replace the current layout_file
+    # Note does not check for existing file - but that would mean a corrupt layouts file
+    def load_file (self, layout_filename=None):
+        if layout_filename != None and layout_filename != "":
+            self.layout_file = layout_filename
+        if self.layout_file != None:
+            filename = os.path.join(self.layout_dir, self.layout_file)
+            try:
+                with open(filename, 'r') as data_file:
+                    self.layout_data = json.load(data_file)
+            except:
+                #print (f"No layout file '{filename}' using default values")
+                self.layout_data = {}
+        else:
+            self.layout_data = {}
         # If no title (eg. new filename - then set)
+        # If it's being created through dialog then that should change to new title
+        # It it's first run then this title will be created for the default
         if not ('title' in self.layout_data):
             self.layout_data['title'] = "Default Layout"
             
         # Load the guiobjects from self.layout_data['guiobjects']
         # First reset guiobjects so we don't add to the end of existing
         self.guiobjects = []
+        # If no objects in the layout_data then nothing else to do
+        if not 'guiobjects' in self.layout_data:
+            return
         for entry in self.layout_data['guiobjects']:
             if 'object' in entry.keys():
                 if entry['object'] == 'gui':

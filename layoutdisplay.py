@@ -79,14 +79,19 @@ class LayoutDisplay(QLabel):
             
         painter.end()
         self.update()
+        
+    # Update reloads data from the layout (if layout changed etc.)
+    # Aslso used during initial setup
+    def update(self):
+        self.load_image()
 
     # Set the layout - also set the mainwindow
     def set_layout (self, mainwindow, layout):
         self.mainwindow = mainwindow
         self.railway = layout
         # Load the objects
-        self.load_image()
-        # Todo
+        self.update()
+        
           
 
     def load_image (self):
@@ -99,6 +104,7 @@ class LayoutDisplay(QLabel):
         self.canvas_size = QSize(w, h)
         
         scaled_pixmap = self.canvas.scaled(self.canvas_size, Qt.KeepAspectRatio)
+        #self.image_size = scaled_pixmap.size()
         self.setPixmap(scaled_pixmap)
         
         # Adjust Size updates the label so that querying the size gives correct values
@@ -117,6 +123,7 @@ class LayoutDisplay(QLabel):
         self.setPixmap(scaled_pixmap)
         # other objects are drawn through a paintEvent which is called
         # whenever the Pixmap is replaced
+        self.adjustSize()
 
 
     def mousePressEvent(self, event: QMouseEvent):
@@ -158,8 +165,8 @@ class LayoutDisplay(QLabel):
             self.selected = self.nearestToClick(click_pos)
             if self.selected == None:
                 return
-            #print (f"{self.selected}")
-            #print(f"Mouse Left Clicked at: {self.last_mouse_pos.x()}, {self.last_mouse_pos.y()}")
+            #print (f"Selected {self.selected}")
+            #print(f"Mouse Left Clicked at: {mouse_pos.x()}, {mouse_pos.y()}")
         elif event.button() == Qt.MouseButton.RightButton:
             #print(f"Mouse Right Clicked at: {event.position().x()}, {event.position().y()}")
             pass
@@ -238,11 +245,15 @@ class LayoutDisplay(QLabel):
             x_val = position.x()
             y_val = position.y()
         
-        # subtract height1/2 height difference if not relative 
-        if rel==False:
-            height_diff = label_size.height() - image_size.height()
-            if height_diff > 0:
-                y_val -= int(height_diff/2)
+        # subtract height1/2 height difference if not relative
+        ## canvas size and image_size report the same value
+        ## calling adjustSize() has positioned the image to the top - so this is no longer needed
+#         if rel==False:
+#             print (f"Label size {label_size.width()} {label_size.height()}")
+#             print (f"Image size {image_size.width()} {image_size.height()}")
+#             height_diff = label_size.height() - image_size.height()
+#             if height_diff > 0:
+#                 y_val -= int(height_diff/2)
         # now have actual pos within the image pixmap (if not relative)
         # calculate as a percentage of image_size
         x_percent = (x_val / image_size.width()) * 100

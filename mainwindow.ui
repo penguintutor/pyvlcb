@@ -721,6 +721,7 @@
      </property>
      <addaction name="actionImportLoco"/>
     </widget>
+    <addaction name="actionChangeLayout"/>
     <addaction name="menuImport"/>
     <addaction name="actionExit"/>
    </widget>
@@ -825,6 +826,11 @@
   <action name="actionChangeImage">
    <property name="text">
     <string>Change Image</string>
+   </property>
+  </action>
+  <action name="actionChangeLayout">
+   <property name="text">
+    <string>Change Layout</string>
    </property>
   </action>
  </widget>

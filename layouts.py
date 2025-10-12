@@ -6,12 +6,12 @@ import os
 
 
 class Layouts():
-    def __init__ (self, data_dir, layout_file):
+    def __init__ (self, data_dir, layouts_file):
         self.data_dir = data_dir
-        self.layout_file = layout_file
+        self.layouts_file = layouts_file
         self.layouts = {}		# Dict key=filename, value=title
 
-        filename = os.path.join(self.data_dir, self.layout_file)
+        filename = os.path.join(self.data_dir, self.layouts_file)
         try:
             with open(filename, 'r') as data_file:
                 self.layouts = json.load(data_file)
@@ -20,9 +20,14 @@ class Layouts():
             self.layouts = {}
             self.save_file()
             
+    def add_layout (self, filename, title):
+        self.layouts[filename] = title
+        # Save
+        self.save_file()
+            
 
     def save_file (self):
-        filename = os.path.join(self.data_dir, self.layout_file)
+        filename = os.path.join(self.data_dir, self.layouts_file)
         try:
             with open(filename, 'w') as data_file:
                 json.dump(self.layouts, data_file, indent=4)

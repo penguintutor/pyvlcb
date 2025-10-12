@@ -174,6 +174,7 @@ class GuiObject:
         return data_list
     
     def nearestToClick(self, click_pos, types="all"):
+        #print (f"Checking object {self} for nearest {click_pos}")
         nearest_object = None
         # set distance to a value far beyond any reasonable range (1000)
         # saves needing to test for a null value
@@ -182,7 +183,7 @@ class GuiObject:
             for button in self.buttons:
                 hit_test = button.is_hit(click_pos)
                 #print (f"Button {hit_test}")
-                # Todo determine closest (ignore any < 0)
+                # determine closest (ignore any < 0)
                 if hit_test >=0 and hit_test < nearest_distance:
                     nearest_object = button
                     nearest_distance = hit_test
@@ -190,7 +191,7 @@ class GuiObject:
             for label in self.labels:
                 hit_test = label.is_hit(click_pos)
                 #print (f"Label {hit_test}")
-                # Todo determine closest (ignore any < 0)
+                # determine closest (ignore any < 0)
                 if hit_test >=0 and hit_test < nearest_distance:
                     nearest_object = label
                     nearest_distance = hit_test
