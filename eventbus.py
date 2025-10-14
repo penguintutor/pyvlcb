@@ -9,7 +9,7 @@ from deviceevent import DeviceEvent
 from appevent import AppEvent
 from guievent import GuiEvent
 from locoevent import LocoEvent
-from automateevent import AutomateEvent
+from timerevent import TimerEvent
 
 # The serialize_event function must be defined before it is used.
 def serialize_event(obj):
@@ -33,7 +33,7 @@ class EventBus(QObject):
     device_event_signal = Signal(DeviceEvent)
     gui_event_signal = Signal(GuiEvent)
     loco_event_signal = Signal(LocoEvent)
-    automate_event_signal = Signal(AutomateEvent)
+    timer_event_signal = Signal(TimerEvent)
     
     # Is automation enabled. If not then don't apply rules.
     # If excessive calls (eg. excessive recursion) then stop automatically
@@ -55,7 +55,7 @@ class EventBus(QObject):
         'Loco': LocoEvent,
         'App': AppEvent,
         'Gui': GuiEvent,
-        'Automate': AutomateEvent
+        'Timer': TimerEvent
         }
 
     _instance = None
@@ -88,8 +88,8 @@ class EventBus(QObject):
             self.device_event_signal.emit(event)
         elif isinstance(event, LocoEvent):
             self.loco_event_signal.emit(event)
-        elif isinstance(event, AutomateEvent):
-            self.automate_event_signal.emit(event)
+        elif isinstance(event, TimerEvent):
+            self.timer_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
         

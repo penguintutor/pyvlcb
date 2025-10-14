@@ -17,7 +17,7 @@ from deviceevent import DeviceEvent
 from locoevent import LocoEvent
 from appevent import AppEvent
 from guievent import GuiEvent
-from automateevent import AutomateEvent
+from timerevent import TimerEvent
 from eventbus import event_bus
 
 
@@ -49,7 +49,7 @@ class RulesWindow(QMainWindow):
             'Loco': LocoEvent,
             'App': AppEvent,
             'Gui': GuiEvent,
-            'Automate': AutomateEvent
+            'Timer': TimerEvent
             }
         
         # Current page number

@@ -15,7 +15,7 @@ from deviceevent import DeviceEvent
 from locoevent import LocoEvent
 from appevent import AppEvent
 from guievent import GuiEvent
-from automateevent import AutomateEvent
+from timerevent import TimerEvent
 
 
 # Many of the methods in there (particularly when related to self.locos)
@@ -44,7 +44,7 @@ class DeviceModel(QObject):
         'Loco': LocoEvent,
         'App': AppEvent,
         'Gui': GuiEvent,
-        'Automate': AutomateEvent
+        'Timer': TimerEvent
         }
     
     # Used to update treeview on gui thread
@@ -82,7 +82,7 @@ class DeviceModel(QObject):
             'Gui': [],
             # 'DeviceEvent': [], # Device are stored in self.nodes
             # 'Loco': [], # Loco are in self.locos
-            'Automate': []
+            'Timer': []
         }
         
         # Subscribe to events from the API layer
@@ -167,7 +167,7 @@ class DeviceModel(QObject):
         return None
         
     # Given a node respond with Event type
-    # Eg. device, loco, app, gui, automate (in that order - if duplicate - although should not be duplicates) 
+    # Eg. device, loco, app, gui, timer (in that order - if duplicate - although should not be duplicates) 
     def get_type_node (self, node_name):
         # First lookup own devices
         for key, this_node in self.nodes.items():
@@ -233,7 +233,7 @@ class DeviceModel(QObject):
             if node in self.nodes.keys():
                 return self.nodes[node].get_ev_names()
         # Todo add Gui here
-        elif type in self.other_nodes.keys():
+        elif type in self.other_nodes.keys() and node in self.other_nodes[type]:
             #print (f"Checking for EVs {self.other_nodes[type]}")
             return self.other_nodes[type][node].get_ev_names()
         return ""
