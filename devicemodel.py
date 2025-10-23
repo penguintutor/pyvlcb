@@ -59,8 +59,9 @@ class DeviceModel(QObject):
         # Yards are used to load locos from
         # Don't actually store the locos in here, but the yard is used for grouping the locos
 
-        # Locos is now replaced with a Loco_list
+        # Locos is now replaced with a LocoList (object containing a list not a python list)
         # can't create until we've loaded the directories so set to None initially
+        # Need to check it's not None before use
         self.locos = None
         
         # These directories and filenames as specified when first loading the loco
@@ -82,7 +83,10 @@ class DeviceModel(QObject):
             'Gui': [],
             # 'DeviceEvent': [], # Device are stored in self.nodes
             # 'Loco': [], # Loco are in self.locos
-            'Timer': []
+            'Timer': [],
+            'Variable': []	# Use to get and set variables - can trigger events as well
+            # Variables are global across the app, but can prefix with specific automation
+            # to avoid conflicts eg. "engshed1_variable1"
         }
         
         # Subscribe to events from the API layer
@@ -173,14 +177,19 @@ class DeviceModel(QObject):
         for key, this_node in self.nodes.items():
             if this_node.name == node_name:
                 return "VLCB"
-        for loco in self.locos:
-            if this_loco.name == node_name:
-                return "Loco"
-        # todo test this
-        for other_event in self.other_nodes:
-            for this_event in other_event:
-                if this_event == node_name:
+        # Check it's been initialised (not None)
+        if self.locos != None:
+            for loco in self.locos:
+                if this_loco.name == node_name:
+                    return "Loco"
+        # Now included in tests
+        for key in self.other_nodes.keys():
+            for this_event in self.other_nodes[key]:
+                #print (f"This event {this_event.name} node {node_name}")
+                if this_event.name == node_name:
                     return this_event.type()
+        # If not found return None
+        return None
                 
     # Get list of nodes by names
     # Default return All types - including VLCB & Gui etc.
@@ -333,7 +342,8 @@ class DeviceModel(QObject):
         
     
     def get_gui_node (self, node_id):
-        return self.nodes[node_id].gui_node
+    #    return self.nodes[node_id].gui_node
+        return self.other_nodes["Gui"][node_id]
 
 
     def get_device_info(self, device_id: str):

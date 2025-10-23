@@ -35,6 +35,9 @@ class DeviceEvent (Event):
         return self.data['event_id']
         
     def get_value (self):
+        # If no value then return None
+        if not 'value' in self.data:
+            return None
         return self.data['value']
         
     # Does this event match

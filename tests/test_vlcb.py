@@ -1,8 +1,14 @@
 import unittest
 
+import os
+
 from pyvlcb import VLCB
 from vlcbformat import VLCBformat, VLCBopcode
+from loco import Loco
+from guiobject import GuiObject
+from devicemodel import device_model
 
+## Test for VLCB library
 # Test that the OpCodes are formatted correctly (particular the format field)
 class TestOpCodes(unittest.TestCase):
     # Check each of the format entries exist in the field_formats list
@@ -13,9 +19,9 @@ class TestOpCodes(unittest.TestCase):
                 continue
             field_codes = VLCBopcode.opcodes[thisopcode]['format'].split(',')
             for this_code in field_codes:
-                print (f"Checking Opcode {thisopcode} format :{this_code}:")
+                #print (f"Checking Opcode {thisopcode} format :{this_code}:")
                 self.assertTrue(this_code in VLCBopcode.field_formats.keys())
-                
+
                 
 if __name__ == '__main__':
     unittest.main()

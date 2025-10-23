@@ -736,7 +736,8 @@
      <string>Tools</string>
     </property>
     <addaction name="actionLocoManager"/>
-    <addaction name="actionEvents"/>
+    <addaction name="actionRules"/>
+    <addaction name="actionAutomationMgr"/>
     <addaction name="actionShowConsole"/>
     <addaction name="actionLayoutEdit"/>
     <addaction name="actionSettings"/>
@@ -803,7 +804,7 @@
     <string>Add Button</string>
    </property>
   </action>
-  <action name="actionEvents">
+  <action name="actionRules">
    <property name="text">
     <string>Rules</string>
    </property>
@@ -831,6 +832,11 @@
   <action name="actionChangeLayout">
    <property name="text">
     <string>Change Layout</string>
+   </property>
+  </action>
+  <action name="actionAutomationMgr">
+   <property name="text">
+    <string>Automation Mgr</string>
    </property>
   </action>
  </widget>

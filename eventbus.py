@@ -80,6 +80,7 @@ class EventBus(QObject):
     # Broadcast signal
     def broadcast(self, event):
         # Broadcast the event
+        #print ("Broadcast")
         if isinstance(event, AppEvent):
             self.app_event_signal.emit(event)
         elif isinstance(event, GuiEvent):

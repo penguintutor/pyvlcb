@@ -84,10 +84,9 @@ def mainThread():
             # Todo Handle errors
             
 
-app = create_app()
-#pixels = Pixels(default_config_filename, custom_config_filename, custom_light_config_filename)
-
 if __name__ == "__main__":
+    app = create_app()
+
     # run as two threads - main thread and flask thread
     mt = threading.Thread(target=mainThread)
     ft = threading.Thread(target=flaskThread)

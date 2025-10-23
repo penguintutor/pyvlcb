@@ -154,8 +154,13 @@ class GuiObject:
                 return (self.labels[i])
         return None
         
+    # Type replies with "Gui"
+    # for specific type use object_type (eg. Point)
     def type (self):
-        return object_type
+        return "Gui"
+        
+    def object_type (self):
+        return self.object_type
     
     def get_save_objects(self):
         data_list = [
