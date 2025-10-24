@@ -57,10 +57,10 @@ class ConsoleWindowUI(QMainWindow):
         
     def app_update (self, app_event):
         #print (f"App Event {app_event.data}")
-        if app_event.event_type == "newdata":
+        if app_event.action == "newdata":
             self.add_log(app_event.get_response())
             self.update_log()
-        if app_event.event_type == "showconsole":
+        if app_event.action == "showconsole":
             self.show()
             self.showNormal()
             self.raise_()

@@ -28,6 +28,7 @@ from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
 from imageexistdialog import ImageExistDialog
+from automationmanagerdialog import AutomationManagerDialog
 
 # Layout Display is from the loader to interact use
 # self.ui.layoutDisplayLabel
@@ -175,7 +176,8 @@ class MainWindowUI(QMainWindow):
         
         # Tools Menu        
         self.ui.actionLocoManager.triggered.connect(self.loco_manager)
-        self.ui.actionEvents.triggered.connect(self.events_edit)
+        self.ui.actionRules.triggered.connect(self.rules_edit)
+        self.ui.actionAutomationMgr.triggered.connect(self.automation_manager)
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
         self.ui.actionSettings.triggered.connect(self.settings_edit)
@@ -278,12 +280,17 @@ class MainWindowUI(QMainWindow):
         self.loco_window.update()
         self.loco_window.display()
 
-    # Edit events associations between different objects
-    def events_edit (self):
+    # Edit rules - eg events associations between different objects
+    def rules_edit (self):
         if self.rules_window == None:
             self.rules_window = RulesWindow(self)
         self.rules_window.update()
         self.rules_window.display()
+        
+    # Launch the automation manager dialog
+    def automation_manager (self):
+        dialog = AutomationManagerDialog([])
+        dialog.exec()
     
     # Edit settings
     def settings_edit (self):
@@ -396,19 +403,19 @@ class MainWindowUI(QMainWindow):
         # Otherwise event is most likely for automation
         if 'loco_index' in app_event.data and app_event.data['loco_index'] != 0:
             return
-        if app_event.event_type == "uitext":
+        if app_event.action == "uitext":
             if app_event.data['label'] == "locoStatusLabel":
                 self.ui.locoStatusLabel.setText (app_event.data['value'])
-        elif app_event.event_type == "lcd":
+        elif app_event.action == "lcd":
             self.update_lcd()
-        elif app_event.event_type == "keepalive":
+        elif app_event.action == "keepalive":
             self.update_kalive_signal.emit()
         # If locotaken then launch steal_dialog
-        elif app_event.event_type == "locotaken":
+        elif app_event.action == "locotaken":
             # Set status message - then launch dialog
             self.ui.locoStatusLabel.setText ('Error - address taken')
             self.steal_dialog_signal.emit(app_event.data['loco_id'])
-        elif app_event.event_type == "resetloco":
+        elif app_event.action == "resetloco":
             # Only reset gui parts - already reset in controlloco
             self.reset_loco_gui()
             
@@ -443,7 +450,7 @@ class MainWindowUI(QMainWindow):
     # If window already open then bring to front
     def show_console (self):
         # Send as an app event to decouple
-        event_bus.publish(AppEvent("showconsole"))
+        event_bus.publish(AppEvent({"action":"showconsole"}))
         
     
     def steal_loco (self):

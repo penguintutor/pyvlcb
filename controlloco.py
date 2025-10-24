@@ -54,7 +54,7 @@ class ControlLoco:
                     print (f"ERR ID {loco_id} does not match current Loco ID {self.get_id()}")
                 return
             if self.loco != None:
-                event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - no sessions available", "loco_id": self.loco.loco_id}))
+                event_bus.publish(AppEvent({"action":"uitext", 'label': "locoStatusLabel", 'value': "Error - no sessions available", "loco_id": self.loco.loco_id}))
 
         # Already taken - option to steal
         elif data_entry['ErrCode'] == 2:
@@ -74,11 +74,11 @@ class ControlLoco:
                 return
             # It is our loco and we are trying to aquire - so allow aquire
             # Let stealdialog request update gui
-            #event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Error - address taken"}))
+            #event_bus.publish(AppEvent({"action":"uitext", 'label': "locoStatusLabel", 'value': "Error - address taken"}))
             # request steal dialog by signalling locotaken
             # Should be an allocated loco - otherwise why are we here, but just in case
             if self.loco != None:
-                event_bus.publish(AppEvent("locotaken", {'loco_id': self.loco.loco_id}))
+                event_bus.publish(AppEvent({"action": "locotaken", 'loco_id': self.loco.loco_id}))
 
         elif data_entry['ErrCode'] == 8:
             # If we are trying to aquire a session then this could be us resetting other node
@@ -93,7 +93,7 @@ class ControlLoco:
                 # This updates the loco and the GUI
                 self.reset_loco()
                 if self.loco != None:
-                    event_bus.publish(AppEvent("resetloco", {'loco_id': self.loco.loco_id}))
+                    event_bus.publish(AppEvent({"action":"resetloco", 'loco_id': self.loco.loco_id}))
             else:
                 # probably not for us
                 if self.debug:
@@ -240,7 +240,7 @@ class ControlLoco:
     def reset_loco (self):
         self.loco.reset()
         # Send keepalive signal
-        #event_bus.publish(AppEvent("keepalive", {'loco_id': self.loco_id}))
+        #event_bus.publish(AppEvent({"action":"keepalive", 'loco_id': self.loco_id}))
         # Change combo after reset - that way the post change
         # will not send a release message
         

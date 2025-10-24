@@ -224,7 +224,7 @@ class ApiHandler(QObject):
             print (f"Incoming data {response}")
             
         # pass to console (unparsed)
-        event_bus.publish(AppEvent("newdata", {"response":response}))
+        event_bus.publish(AppEvent({"action":"newdata", "response":response}))
         # temp send all as DeviceEvent (is that too much?)
         # Not implemented here - instead just send relevant events
         # event_bus.publish(DeviceEvent(response))
@@ -326,12 +326,12 @@ class ApiHandler(QObject):
                 'Status': "on"
                 }))
             
-            event_bus.publish(AppEvent("uitext", {'label': "locoStatusLabel", 'value': "Ready"}))
+            event_bus.publish(AppEvent({"action":"uitext", 'label': "locoStatusLabel", 'value': "Ready"}))
             # Set status to on last gives time to ensure all entries updated
             # Todo update controller with new values
-            event_bus.publish(AppEvent("lcd", {}))
+            event_bus.publish(AppEvent({"action":"lcd"}))
             # Start the keepalive timer
-            event_bus.publish(AppEvent("keepalive", {}))
+            event_bus.publish(AppEvent({"action":"keepalive"}))
         ## Update events - these need to notify other devices
         # Accessory On (eg ACON = Acc / ASON = short)
         # Works on both event codes (eg. ACON) and status codes (eg. ARON)

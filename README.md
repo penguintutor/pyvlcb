@@ -44,6 +44,15 @@ After starting the server then from another terminal session run
     python3 app.py 
 
 
+# Tests
+
+Unittest is used to provide testing of some of the backend classes. This is not exhaustive.
+There is no testing of the GUI components beyond testing of the use of Signals and Slots.
+
+To run the tests change to the tests directory and run 
+
+    python3 run_tests.py
+
 
 # Features / limitations
 

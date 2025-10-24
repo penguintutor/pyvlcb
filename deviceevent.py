@@ -42,11 +42,7 @@ class DeviceEvent (Event):
         
     # Does this event match
     def matches (self, event):
-#         print ("Checking for node")
-#         print (f"Self {self.data}")
-#         print (f"Event {event.data}")
         if self.get_node() == event.get_node() or self.get_node_id() == event.get_node_id():
-            #print (f"Checkng for event_id Self {self.data} Event {event.data}")
             if self.get_event_id() == event.get_event_id() and self.get_value() == event.get_value():
                 return True
         return False
