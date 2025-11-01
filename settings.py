@@ -51,3 +51,8 @@ class Settings:
             return self.settings['layoutfile']
         else:
             return "default.json"
+    
+    # Sets the layout filename and saves the update
+    def set_layout_filename (self, filename):
+        self.settings['layoutfile'] = filename
+        self.save_settings()

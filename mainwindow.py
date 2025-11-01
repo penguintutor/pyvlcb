@@ -122,6 +122,17 @@ class MainWindowUI(QMainWindow):
         
         # Load the Assets prior to setting up the GUI
         
+        # Create App variable class
+        # Variables are global across the app, but can prefix with specific automation
+        # to avoid conflicts eg. "engshed1_variable1"
+        # Note that the actual variables are not stored in the device_model but they do need
+        # Added there for lookup by menus etc. but all updates are via the self.appvariables
+        # which are then in the AppVar class
+        # should be set using the following methods (in mainwindow.appvariables) so that they are also reflected here
+        # and can also trigger events.
+        # get_variable(variable_name), set_variable(variable_name, new_value), inc_variable(variable_name, inc_amount)
+        
+        
         # Load the settings file here
         self.settings = Settings(self, self.data_dir, self.files['settings'])
         

@@ -1,3 +1,5 @@
+# Simple Worker class used by the ApiHandler class
+# Complex automation tasks use AutomationRunner which hands off to the API
 from PySide6.QtCore import Qt, QTimer, QThreadPool, QRunnable, Slot
 
 class Worker (QRunnable):

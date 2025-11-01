@@ -22,16 +22,6 @@ from timerevent import TimerEvent
 # are just used to hand off to the other class. This maintains device_model as
 # the primary interface to decouple from LocoList etc.
 
-## Serialize / Deserialize yards
-# The serialize_event function must be defined before it is used.
-# def serialize_yard(obj):
-#     if isinstance(obj, LocoYard):
-#         return obj.__dict__()
-#     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
-# 
-# def deserialize_yard(data):
-#     return EventBus.event_map[data["event_type"]] (data)
-
 class DeviceModel(QObject):
     # This signal is internal to the model or for ViewModels to subscribe to
     # to react to state changes in the core data.
@@ -56,9 +46,6 @@ class DeviceModel(QObject):
         # dict of nodes indexed by NN
         self.nodes = {}
         
-        # Yards are used to load locos from
-        # Don't actually store the locos in here, but the yard is used for grouping the locos
-
         # Locos is now replaced with a LocoList (object containing a list not a python list)
         # can't create until we've loaded the directories so set to None initially
         # Need to check it's not None before use
@@ -87,6 +74,12 @@ class DeviceModel(QObject):
             'Variable': []	# Use to get and set variables - can trigger events as well
             # Variables are global across the app, but can prefix with specific automation
             # to avoid conflicts eg. "engshed1_variable1"
+            # Note that the actual variables are not stored in the device_model - there names are
+            # Added here for lookup by menus etc. but all updates are via the mainwindow self.appvariables
+            # which are then in the AppVar class
+            # should be set using the following methods (in mainwindow.appvariables) so that they are also reflected here
+            # and can also trigger events.
+            # get_variable(variable_name), set_variable(variable_name, new_value), inc_variable(variable_name, inc_amount)
         }
         
         # Subscribe to events from the API layer
@@ -353,6 +346,24 @@ class DeviceModel(QObject):
     def get_loco_from_filename (self, filename):
         # pass to locolist to reduce coupling
         return self.locos.get_loco_from_filename (filename)
+
+    def get_variable (self, variable_name):
+        if variable_name in self.other_nodes['Variable']:
+            return self.other_nodes['Variable'][variable_name]
+        else:
+            return None
+        
+    def set_variable (self, variable_name, new_value):
+        self.other_nodes['Variable'][variable_name] = new_value
+        
+    # Increase variable - if variable does not exist or is not a number then replace with 1
+    # Returns new variable
+    def inc_variable (self, variable_name, inc_amount=1):
+        try:
+            self.other_nodes['Variable'][variable_name] += inc_amount
+        except:
+            self.other_nodes['Variable'][variable_name] = 1
+        return 1
 
 
 # Singleton for the Device Model
