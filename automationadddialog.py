@@ -7,7 +7,8 @@ from PySide6.QtWidgets import (
     QListWidget, QFormLayout, QLineEdit, QSpinBox 
 )
 from PySide6.QtCore import Qt
-from automationrule import AutomationRule, AutomationStep, AutomationSequence
+from automationrule import AutomationRule
+from automationsequence import AutomationStep, AutomationSequence
 
 class AutomationAddDialog(QDialog):
     def __init__(self, sequence=None, parent=None):
