@@ -1,14 +1,29 @@
 
+
+from automationrule import AutomationRule
+
 # Automation routine, composed of multiple steps
 # Each step is a rule, command or launch another sequence
 # These are provided as a list with each entry as a dict with the AutomationStep
+# Settings is used to pass the locos, but should also include "appvar" which links to the AppVar class
 class AutomationSequence:
-    def __init__(self, title, steps, settings = {}):
+    def __init__(self, title, list_steps, settings = {}):
         self.title = title
-        self.steps = steps  # List of AutomationStep objects
+        self.steps = []  # List of AutomationStep objects
         self.settings = settings
-        if num_locos in settings:
+        if "num_locos" in settings:
             self.num_locos = settings['num_locos'] # 1, 2, or 3 locos required
+        else:
+            self.num_locos = 0
+        
+        for step_data in list_steps:
+            self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
+            
+    def run (self):
+        print ("Starting sequence")
+        for position in range (0, len(self.steps)):
+            print (f"Step {position}")
+            self.steps[position].run()
 
     def __repr__(self):
         return f"AutomationSequence (title, steps, settings): {self.title} ({self.num_locos} Locos)"
@@ -26,7 +41,7 @@ class AutomationStep:
     # type is Rule, Var (plus operation), Label, Loop, Sequence
     # name is the name passed to the rule, or in the case of the label is the actual label
     # all other parameters are included in settings
-    def __init__(self, parent, step_type, step_name, settings={}):
+    def __init__(self, parent, step_type, step_name, data={}):
         self.parent = parent #parent sequence
         self.step_type = data["type"]
         self.step_name = data["name"]
@@ -34,7 +49,7 @@ class AutomationStep:
         
         # If the step_type is a rule then create an automation rule
         if self.step_type == "Rule":
-            self.rule = AutomationRule(step_name, step_type, data)
+            self.rule = AutomationRule(step_name, data['ruletype'], data)
             
             
     def run (self):

@@ -5,7 +5,7 @@ import os
 import json
 from unittest.mock import patch, MagicMock
 
-# Setup PySide6 environment for testin
+# Setup PySide6 environment for testing
 from PySide6.QtCore import QObject
 from PySide6.QtTest import QSignalSpy
 from PySide6.QtWidgets import QApplication
@@ -129,7 +129,6 @@ class TestEventBus(unittest.TestCase):
         # Use .count()
         # Assert: The action event should be broadcast
         self.assertEqual(gui_spy.count(), 1, "Action event should be broadcast")
-        # FIXED: Use .pop(0)[0]
         self.assertEqual(gui_spy.at(0)[0], action)
 
         # Assert: The original event should NOT be broadcast

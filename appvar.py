@@ -1,6 +1,6 @@
 
 from devicemodel import device_model
-from evenbus import event_bus
+from eventbus import event_bus
 from varevent import VarEvent
 
 # Always use getters and setters as they can update device_model and/or trigger events if required

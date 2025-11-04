@@ -347,23 +347,7 @@ class DeviceModel(QObject):
         # pass to locolist to reduce coupling
         return self.locos.get_loco_from_filename (filename)
 
-    def get_variable (self, variable_name):
-        if variable_name in self.other_nodes['Variable']:
-            return self.other_nodes['Variable'][variable_name]
-        else:
-            return None
-        
-    def set_variable (self, variable_name, new_value):
-        self.other_nodes['Variable'][variable_name] = new_value
-        
-    # Increase variable - if variable does not exist or is not a number then replace with 1
-    # Returns new variable
-    def inc_variable (self, variable_name, inc_amount=1):
-        try:
-            self.other_nodes['Variable'][variable_name] += inc_amount
-        except:
-            self.other_nodes['Variable'][variable_name] = 1
-        return 1
+
 
 
 # Singleton for the Device Model

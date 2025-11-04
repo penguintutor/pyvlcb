@@ -3,6 +3,9 @@ from devicemodel import device_model
 from eventbus import event_bus
 
 # Automation rule determines the actions
+
+# Create the entry - normally as an AutomationStep (within AutomationSequence)
+
 # Name is just a user friendly name for the step - does not need to be unique but helpful if it is
 # Eg. Activate point 1, or Set Loco 1 speed 3
 # Type is rule category - that could be
@@ -28,12 +31,15 @@ class AutomationRule:
     
     
     def __init__ (self, rule_name, rule_type, data):
-        self.name = rule_name
-        self.type = rule_type
+        self.rule_name = rule_name
+        self.rule_type = rule_type
         self.data = data
         
         # Create the corresponding event
-        self.event = device_model.event_map[self.type](self.data)
+        if rule_type == "VLCB" or rule_type == "Device" or rule_type == "App":
+            #print (f"Triggering event for {self}")
+            self.event = device_model.event_map[self.rule_type](self.data)
+        
         
         
     # Runs the action
@@ -44,3 +50,5 @@ class AutomationRule:
     def __repr__(self):
         return (f"Rule {self.rule_type}, {self.data}")
     
+    def __str__(self):
+        return (f"Rule {self.rule_type}, {self.data}")

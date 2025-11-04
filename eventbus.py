@@ -10,6 +10,7 @@ from appevent import AppEvent
 from guievent import GuiEvent
 from locoevent import LocoEvent
 from timerevent import TimerEvent
+from varevent import VarEvent
 
 # The serialize_event function must be defined before it is used.
 def serialize_event(obj):
@@ -34,6 +35,7 @@ class EventBus(QObject):
     gui_event_signal = Signal(GuiEvent)
     loco_event_signal = Signal(LocoEvent)
     timer_event_signal = Signal(TimerEvent)
+    var_event_signal = Signal(VarEvent)
     
     # Is automation enabled. If not then don't apply rules.
     # If excessive calls (eg. excessive recursion) then stop automatically
