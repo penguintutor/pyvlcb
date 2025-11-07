@@ -11,6 +11,11 @@ class DeviceEvent (Event):
         self.data = event_data
         self.data["event_type"] = "VLCB"
         
+    # Update with new data
+    def update (self, new_data):
+        self.data = new_data
+        self.data["event_type"] = "VLCB"
+        
     # Uses getters to allow different data (eg. node vs node_id)
     # Node may be friendly name
     # If not node then return node_id instead
@@ -18,7 +23,10 @@ class DeviceEvent (Event):
     def get_node (self):
         if 'node' in self.data:
             return self.data['node']
-        return str(self.data['node_id'])
+        elif 'node_id' in self.data:
+            return str(self.data['node_id'])
+        else:
+            return "No node defined"
     
     # Always node_id number
     def get_node_id (self):
@@ -28,7 +36,10 @@ class DeviceEvent (Event):
     def get_event (self):
         if 'event' in self.data:
             return self.data['event']
-        return str(self.data['event_id'])
+        elif 'event_id' in self.data:
+            return str(self.data['event_id'])
+        else:
+            return ("No event_id defined")
     
     # Always event_id number
     def get_event_id (self):

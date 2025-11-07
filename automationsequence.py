@@ -11,19 +11,50 @@ class AutomationSequence:
         self.title = title
         self.steps = []  # List of AutomationStep objects
         self.settings = settings
-        if "num_locos" in settings:
-            self.num_locos = settings['num_locos'] # 1, 2, or 3 locos required
-        else:
-            self.num_locos = 0
+        self.num_locos = settings.get('num_locos', 0) # 0 to 3 locos required
+        self.vars = settings.get("appvar")
+        # Store the index of any labels to allow jumps (loops)
+        self.labels = {}
         
+        step_num = 0
         for step_data in list_steps:
+            #print (f"Reading step {step_data}")
+            # If it's a label then add to dict of labels
+            if step_data['type'] == "Label":
+                self.labels[step_data["name"]] = step_num
+                #print (f"Adding label {step_data['name']}")
+                #print (f"Labels : {self.labels}")
+            # Include the vars in the step
+            if self.vars != None:
+                step_data['appvar'] = self.vars
             self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
+            step_num += 1
             
     def run (self):
         print ("Starting sequence")
-        for position in range (0, len(self.steps)):
+        position = 0
+        while position < len(self.steps):
             print (f"Step {position}")
-            self.steps[position].run()
+            # If it's a label then ignore
+            if self.steps[position].step_type == "Label":
+                pass
+            elif self.steps[position].step_type == "Jump":
+                # parse the condition and get the result
+                result = self.steps[position].test_condition()
+                # If the result is in the labels then jump to that 
+                if result != None and result == True:
+                    #print ("Test true")
+                    label = self.steps[position].data.get("label")
+                    #print (f"Label {label}")
+                    if label != None and label in self.labels:
+                        #print ("Jump to label")
+                        position = self.labels[label]
+                        continue
+                # otherwise jump is ignored (eg. if loop then until no longer met)
+            else:
+                # Otherwise run it  
+                self.steps[position].run()
+            position += 1
 
     def __repr__(self):
         return f"AutomationSequence (title, steps, settings): {self.title} ({self.num_locos} Locos)"
@@ -46,16 +77,93 @@ class AutomationStep:
         self.step_type = data["type"]
         self.step_name = data["name"]
         self.data = data
+        self.vars = data.get("appvar")
         
         # If the step_type is a rule then create an automation rule
         if self.step_type == "Rule":
             self.rule = AutomationRule(step_name, data['ruletype'], data)
+        #  Variables are not created / updated here - only when run
+
             
-            
+    def parse_var (self):
+        # Copy data dict to run_data - which allows for any variable substitutions
+        run_data = {}
+        var_data = False # If parse a variable then set to True to indicate updated
+        for key, value in self.data.items():           
+            if isinstance(value, str) and value.startswith("${") and value.endswith("}"):
+                var_data = True
+                var_name = value[2:-1]
+                if vars == None:
+                    print ("Variable detected {var_name} but no AppVar created")
+                    continue
+                # If the value doesn't exist then it will be None
+                run_data[key] = self.vars.get_variable(var_name)
+            else:
+                run_data[key] = value
+        # If a substitution has been made then temporarily add it to the dict
+        # so that the calling method knows a substitution has been made
+        if var_data:
+            run_data["var_data"] = True
+        return run_data
+
+    # If any variable tokens are found they are handled in the run        
     def run (self):
+        run_data = self.parse_var()
+        # Now use run_data - which has any variables parsed
         if self.step_type == "Rule":
-            self.rule.run()
+            # check any value fields for variables
+            if ("var_data" in run_data and run_data["var_data"]):
+                # remove it from the dict
+                del run_data['var_data']
+                # If new data (ie. variable) then replace data within the rule object
+                self.rule.run(run_data)
+            else:
+                self.rule.run()
+        # Variable can be "set" (which create or set value)
+        # or "inc" - allows increase without needing to query current value
+        elif self.step_type == "Var":
+            # check we have an appvar
+            if self.vars == None:
+                print ("Warning: Attempt to set a variable with no AppVar configured")
+                return
+            if run_data["action"] == "set":
+                self.vars.set_variable(run_data["varname"], run_data["value"])
+            elif run_data["action"] == "inc":
+                # value is optional for inc - default to 1
+                self.vars.inc_variable(run_data["varname"], run_data.get("value",1))
+
+    # Test condition is used for any check operations eg. 
+    # "test": "equals" "==" or "lessthan" "<" or "greaterthan" ">", or 
+    # "notequal" "!=" or "<=" or ">=" (no long version of those)
+    # Returns True / False
+    def test_condition (self):
+        # first substitute in any variables
+        run_data = self.parse_var()
+        # Now test the condition
+        condition = run_data.get("test")
+        value1 = run_data.get("value1")
+        value2 = run_data.get("value2")
         
+        #print (f"Test {value1} {condition} {value2}")
         
+        # if any of the values are not varlid then return False
+        if (condition == None or value1 == None or value2 == None):
+            return False
+        # Now perform the check
+        if (condition == "equal" or condition == "=="):
+            return (value1 == value2)
+        elif (condition == "notequal" or condition == "!="):
+            return (value1 != value2)
+        elif (condition == "lessthan" or condition == "<"):
+            return (value1 < value2)
+        elif (condition == "greaterthan" or condition == ">"):
+            return (value1 > value2)
+        elif (condition == ">="):
+            return (value1 >= value2)
+        elif (condition == "<="):
+            return (value1 <= value2)
+        else:
+            return False
+
     def __repr__(self):
         return f"Step: {self.step_type}: {self.step_name}"

@@ -5,9 +5,10 @@ from event import Event
 
 class AppEvent (Event):
     def __init__(self, data_dict={}):
-        self.event_type = "App"
+        #self.event_type = "App"
         self.data = data_dict
         self.action = self.data['action']
+        self.data['event_type'] = "App"
         
     def type (self):
         return "App"

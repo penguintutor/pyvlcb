@@ -36,9 +36,11 @@ class AppVar():
             event_type = "new"
         # Use try and if unable to increase value (new or not number) then set to 1
         try:
+            #print (f"Updating {variable_name} adding {inc_amount} to {self.variables[variable_name]}")
             self.variables[variable_name] += inc_amount
         except:
+            #print ("Exception")
             self.variables[variable_name] = 1
-        var_event = VarEvent ({"name":variable_name, "value":new_value, "event_type": event_type})
+        var_event = VarEvent ({"name":variable_name, "value":self.variables[variable_name], "event_type": event_type})
         event_bus.broadcast(var_event)
         return self.variables[variable_name]

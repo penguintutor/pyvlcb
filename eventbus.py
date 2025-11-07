@@ -57,7 +57,8 @@ class EventBus(QObject):
         'Loco': LocoEvent,
         'App': AppEvent,
         'Gui': GuiEvent,
-        'Timer': TimerEvent
+        'Timer': TimerEvent,
+        'Var': VarEvent
         }
 
     _instance = None
@@ -82,7 +83,7 @@ class EventBus(QObject):
     # Broadcast signal
     def broadcast(self, event):
         # Broadcast the event
-        #print ("Broadcast")
+        #print (f"Broadcast {event}")
         if isinstance(event, AppEvent):
             self.app_event_signal.emit(event)
         elif isinstance(event, GuiEvent):
@@ -93,6 +94,8 @@ class EventBus(QObject):
             self.loco_event_signal.emit(event)
         elif isinstance(event, TimerEvent):
             self.timer_event_signal.emit(event)
+        elif isinstance(event, VarEvent):
+            self.var_event_signal.emit(event)
         else:
             print(f"Warning: Unhandled event type published: {type(event)}")
         

@@ -10,9 +10,20 @@ class Event:
         
     # Allow event_type or get_type to allow consistancy
     def event_type(self):
-        return self.data["event_type"]
+        if "event_type" in self.data:
+            return self.data["event_type"]
+        elif hasattr (self, 'event_type'):
+            return self.event_type
+        else:
+            print ("Event does not have an event_type")
     def get_type(self):
-        return self.data["event_type"]
+        # first check for self.data - if not try self.event_type
+        if "event_type" in self.data:
+            return self.data["event_type"]
+        elif hasattr (self, 'event_type'):
+            return self.event_type
+        else:
+            print ("Event does not have an event_type")
 
     
 #     def serialize_event(self):
@@ -32,17 +43,18 @@ class Event:
     def __dict__ (self):
         # Create a dict with event_type added
         return_dict = copy.copy(self.data)
-        return_dict['event_type'] = self.event_type
+        if not 'event_type' in return_dict:
+            return_dict['event_type'] = self.event_type
         return return_dict
 
     # Default string - override in relevant sub classes
     def __str__ (self):
-        return (f"{self.data['event_type']} {self.data}")
+        return (f"{self.get_type()} {self.data}")
 
     def __eq__(self, other):
         # Useful for assertions
         return isinstance(other, type(self)) and self.__dict__() == other.__dict__()
 
     def __repr__(self):
-        return f"{self.__class__.__name__}(value={self.value})"
+        return f"{self.__class__.__name__}(value={self.data.get('value')})"
     

@@ -22,16 +22,19 @@ class GuiEvent(Event):
     def get_node (self):
         if 'node' in self.data:
             return self.data['node']
-        return self.data['name']
+        return "Gui node"
     
     def get_event (self):
         if 'event' in self.data:
-            return self.data['event']
+            return "Gui event"
         else:
             return 0
     
     def get_value (self):
-        return self.data['value']
+        if "value" in self.data:
+            return self.data['value']
+        else:
+            return "None"
     
     def __str__ (self):
         return (f"{self.get_type()} {self.get_node()} {self.get_event()} {self.get_value()}")

@@ -1,4 +1,5 @@
-
+import os
+import copy
 from devicemodel import device_model
 from eventbus import event_bus
 
@@ -39,12 +40,21 @@ class AutomationRule:
         if rule_type == "VLCB" or rule_type == "Device" or rule_type == "App":
             #print (f"Triggering event for {self}")
             self.event = device_model.event_map[self.rule_type](self.data)
+        elif rule_type == "Var":
+            if not event in data:
+                print ("No event find - has AppVar been passed to the sequence?")
+            self.event = data["event"]
         
         
         
     # Runs the action
-    def run (self):
+    def run (self, update=None):
+        # If update has a value then use to replace self.data
+        if update:
+            self.data = copy.copy(update)
+            self.event.update(self.data)
         # Assuming this is an event then broadcast to event_bus
+        print (f"Run event {self.event}")
         event_bus.broadcast(self.event)
     
     def __repr__(self):
