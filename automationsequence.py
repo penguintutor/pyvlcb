@@ -1,12 +1,18 @@
-
+from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThread, QThreadPool
 import time
 from automationrule import AutomationRule
+
+# Helper QObject to hold signals (QRunnable cannot have signals)
+class WorkerSignals(QObject):
+    finished = Signal()
+    error = Signal(tuple)
+    result = Signal(object)
 
 # Automation routine, composed of multiple steps
 # Each step is a rule, command or launch another sequence
 # These are provided as a list with each entry as a dict with the AutomationStep
 # Settings is used to pass the locos, but should also include "appvar" which links to the AppVar class
-class AutomationSequence:
+class AutomationSequence (QRunnable):
     def __init__(self, title, list_steps, settings = {}):
         self.title = title
         self.steps = []  # List of AutomationStep objects
@@ -15,6 +21,8 @@ class AutomationSequence:
         self.vars = settings.get("appvar")
         # Store the index of any labels to allow jumps (loops)
         self.labels = {}
+        self.signals = WorkerSignals()
+        self.active = False		# Set to true when starting, set back to false to stop
         
         step_num = 0
         for step_data in list_steps:
@@ -29,11 +37,16 @@ class AutomationSequence:
                 step_data['appvar'] = self.vars
             self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
             step_num += 1
-            
+         
+    @Slot()
     def run (self):
         print ("Starting sequence")
+        self.active = True
         position = 0
         while position < len(self.steps):
+            # If set to false then stop
+            if self.active == False:
+                break
             print (f"Step {position}")
             # If it's a label then ignore
             if self.steps[position].step_type == "Label":
@@ -55,6 +68,8 @@ class AutomationSequence:
                 # Otherwise run it  
                 self.steps[position].run()
             position += 1
+        # Emit a signal to indicate the thread has finished
+        self.signals.finished.emit()
 
     def __repr__(self):
         return f"AutomationSequence (title, steps, settings): {self.title} ({self.num_locos} Locos)"
