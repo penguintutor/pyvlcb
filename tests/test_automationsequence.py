@@ -134,5 +134,41 @@ class TestAutomationRules(unittest.TestCase):
         self.assertEqual(str(dev_spy.at(1)[0]), "VLCB 301 1 0")
 
                 
+    # Test with a variable
+    def test_sequence_wait (self):
+
+        # Set Signal spy to watch for signal sent to device
+        dev_spy = QSignalSpy(event_bus.device_event_signal)
+        var_spy = QSignalSpy(event_bus.var_event_signal)
+        
+        appvariables = AppVar (event_bus.var_event_signal)
+        
+        # Create a dict for a rule:
+        steps = [
+            {"type": "Var", "name": "Create test var", "varname": "test", "action": "set", "value": 0},
+            {"type": "Rule", "name": "Set point 1 to A", "ruletype": "VLCB", "node_id":301, "event": 1, "value": "${test}"},
+            {"type": "Var", "name": "Increase test variable by 1", "varname": "test", "action": "inc", "value": 1},
+            {"type": "Wait", "name": "Wait 0.5 seconds", "waittype": "delay", "time": 0.5},
+            {"type": "Rule", "name": "Set point 1 to B", "ruletype": "VLCB", "node_id":301, "event": 1, "value": "${test}"}
+            ]
+        
+        # Create a rule - needs values for the Event
+        sequence_1 = AutomationSequence ("Test sequence 1", steps, {"appvar": appvariables})
+        
+        # Run the sequence
+        sequence_1.run()
+        
+        # Test that the event_bus count has increased, that it equals the event we created
+        # and that the values match the expected string
+        self.assertEqual(var_spy.count(), 2)
+        self.assertEqual(dev_spy.count(), 2)
+        self.assertEqual(dev_spy.at(0)[0], sequence_1.steps[1].rule.event)
+        self.assertEqual(str(dev_spy.at(0)[0]), "VLCB 301 1 0")
+        self.assertEqual(dev_spy.at(1)[0], sequence_1.steps[4].rule.event)
+        self.assertEqual(str(dev_spy.at(1)[0]), "VLCB 301 1 1")
+
+
+
+                
 if __name__ == '__main__':
     unittest.main()

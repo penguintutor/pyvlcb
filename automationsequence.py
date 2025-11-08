@@ -1,5 +1,5 @@
 
-
+import time
 from automationrule import AutomationRule
 
 # Automation routine, composed of multiple steps
@@ -131,6 +131,24 @@ class AutomationStep:
             elif run_data["action"] == "inc":
                 # value is optional for inc - default to 1
                 self.vars.inc_variable(run_data["varname"], run_data.get("value",1))
+        elif self.step_type == "Wait":
+            # default 1 second
+            delay_time = self.data.get("time", 1)
+            # If this is a basic wait / delay (which is default) then sleep and continue
+            waittype = self.data.get("waittype", "delay")
+            if waittype == "delay":
+                time.sleep(delay_time)
+            else:
+                loop_num = 0
+                # max_loop 0 means no maximum (keep looping)
+                # this is not subject to variable substitution 
+                max_loop = self.data.get("maxloop", 0)
+                # Create a loop until the condition is met
+                while test_condition():
+                    time.sleep(delay_time)
+                    loop_num += 1
+                    if max_loop > 0 and loop_num > max_loop:
+                        break
 
     # Test condition is used for any check operations eg. 
     # "test": "equals" "==" or "lessthan" "<" or "greaterthan" ">", or 

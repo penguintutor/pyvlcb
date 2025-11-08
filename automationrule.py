@@ -42,7 +42,7 @@ class AutomationRule:
             self.event = device_model.event_map[self.rule_type](self.data)
         elif rule_type == "Var":
             if not event in data:
-                print ("No event find - has AppVar been passed to the sequence?")
+                print ("No var event found - has AppVar been passed to the sequence?")
             self.event = data["event"]
         
         

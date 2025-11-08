@@ -7,16 +7,16 @@ from event import Event
 # Dict should contain "name" "value" and "event_type" is new or change
 class VarEvent(Event):
     def __init__(self, data_dict):
-        self.event_type = "Variable"
+        self.event_type = "Var"
         self.data = data_dict
         if not 'event_type' in self.data:
             self.data['event_type'] = self.event_type
         
     def event_type (self):
-        return "Variable"
+        return "Var"
     
     def get_type (self):
-        return "Variable"
+        return "Var"
     
     def get_variable_name (self):
         return self.data["name"]
