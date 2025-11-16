@@ -56,6 +56,9 @@ class AutomationRule:
         # Assuming this is an event then broadcast to event_bus
         print (f"Run event {self.event}")
         event_bus.broadcast(self.event)
+        
+    def get_name (self):
+        return self.rule_name
     
     def __repr__(self):
         return (f"Rule {self.rule_type}, {self.data}")

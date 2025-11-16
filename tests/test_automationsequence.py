@@ -15,6 +15,7 @@ from devicemodel import device_model
 from appvar import AppVar
 from varevent import VarEvent
 from automationsequence import AutomationSequence, AutomationStep
+from automationstepdialog import AutomationStepDialog
 from automationrule import AutomationRule
 
 # A global QApplication instance is required for signal/slot testing

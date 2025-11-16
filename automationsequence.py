@@ -89,14 +89,16 @@ class AutomationStep:
     # all other parameters are included in settings
     def __init__(self, parent, step_type, step_name, data={}):
         self.parent = parent #parent sequence
-        self.step_type = data["type"]
-        self.step_name = data["name"]
+        #self.step_type = data["type"]
+        self.step_type = step_type
+        #self.step_name = data["name"]
+        self.step_name = step_name
         self.data = data
         self.vars = data.get("appvar")
         
         # If the step_type is a rule then create an automation rule
         if self.step_type == "Rule":
-            self.rule = AutomationRule(step_name, data['ruletype'], data)
+            self.rule = AutomationRule(self.step_name, self.step_type, data)
         #  Variables are not created / updated here - only when run
 
             
@@ -197,6 +199,9 @@ class AutomationStep:
             return (value1 <= value2)
         else:
             return False
+        
+    def get_name (self):
+        return self.step_name
 
     def __repr__(self):
         return f"Step: {self.step_type}: {self.step_name}"

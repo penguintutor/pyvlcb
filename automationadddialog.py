@@ -13,6 +13,7 @@ from automationsequence import AutomationStep, AutomationSequence
 class AutomationAddDialog(QDialog):
     def __init__(self, sequence=None, parent=None):
         super().__init__(parent)
+        print ("Deprecated - replace with AutomationSeqDialog")
         self.setWindowTitle("Create Automation Sequence")
         self.sequence = sequence # For editing, if passed
         self.steps_data = [] # Stores list of AutomationStep objects
@@ -119,7 +120,7 @@ class AutomationAddDialog(QDialog):
             QMessageBox.warning(self, "Error", "The sequence must contain at least one step.")
             return
 
-        self.sequence = AutomationSequence(title, self.steps_data, num_locos)
+        self.sequence = AutomationSequence(title, self.steps_data, {"num_locos": num_locos})
         super().accept()
 
     def get_sequence(self):

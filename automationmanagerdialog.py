@@ -7,7 +7,7 @@ from PySide6.QtWidgets import (
     QListWidget
 )
 from PySide6.QtCore import Qt
-from automationadddialog import AutomationAddDialog
+from automationseqdialog import AutomationSeqDialog
 
 
 class AutomationManagerDialog(QDialog):
@@ -60,7 +60,7 @@ class AutomationManagerDialog(QDialog):
 
     def add_sequence(self):
         """Opens the rule creation dialog."""
-        dialog = AutomationAddDialog(parent=self)
+        dialog = AutomationSeqDialog(parent=self)
         if dialog.exec() == QDialog.Accepted:
             new_sequence = dialog.get_sequence()
             self.sequences.append(new_sequence)

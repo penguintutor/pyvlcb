@@ -154,7 +154,7 @@ class RuleDialog(QDialog):
         self.selection_comboboxes["row1_col1"].clear()
         # Updates the event_combo based on the selected type
         selected_type = self.selection_comboboxes["row0_col1"].currentText()
-        if selected_type == "None" or selected_type == "Select Type":
+        if selected_type == None or selected_type == "Select Type":
             nodes = ["NA"]
         else:
             #node_type = device_model.name_to_key(selected_type)
@@ -175,7 +175,7 @@ class RuleDialog(QDialog):
         self.selection_comboboxes["row1_col0"].clear()
         # Updates the event_combo based on the selected type
         selected_type = self.selection_comboboxes["row0_col0"].currentText()
-        if selected_type == "None" or selected_type == "Select Type":
+        if selected_type == None or selected_type == "Select Type":
             nodes = ["NA"]
         else:
             #node_type = device_model.name_to_key(selected_type)
@@ -195,7 +195,7 @@ class RuleDialog(QDialog):
         # First get the type (so we can lookup the node)
         selected_type = self.selection_comboboxes["row0_col0"].currentText()
         # Should always have a type if this has an option, but check anyway
-        if selected_type == "None" or selected_type == "Select Type":
+        if selected_type == None or selected_type == "Select Type":
             return
         else:
             #node_type = device_model.name_to_key(selected_type)
@@ -206,7 +206,7 @@ class RuleDialog(QDialog):
         self.selection_comboboxes["row2_col0"].clear()
         # Updates the event_combo based on the selected node.
         selected_node = self.selection_comboboxes["row1_col0"].currentText()
-        if selected_node == "None" or selected_node == "Select Node" or selected_node == "NA":
+        if selected_node == None or selected_node == "Select Node" or selected_node == "NA":
             events = ["NA"]
         else:
             # convert to node_key
@@ -236,7 +236,7 @@ class RuleDialog(QDialog):
         # First get the type (so we can lookup the node)
         selected_type = self.selection_comboboxes["row0_col1"].currentText()
         # Should always have a type if this has an option, but check anyway
-        if selected_type == "None" or selected_type == "Select Type":
+        if selected_type == None or selected_type == "Select Type":
             return
         else:
             #node_type = device_model.name_to_key(selected_type)
@@ -247,7 +247,7 @@ class RuleDialog(QDialog):
         self.selection_comboboxes["row2_col1"].clear()
         # Updates the event_combo based on the selected node.
         selected_node = self.selection_comboboxes["row1_col1"].currentText()
-        if selected_node == "None" or selected_node == "Select Node" or selected_node == "NA":
+        if selected_node == None or selected_node == "Select Node" or selected_node == "NA":
             events = ["NA"]
         else:
             # convert to node_key
