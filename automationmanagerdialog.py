@@ -12,11 +12,11 @@ from automationseqdialog import AutomationSeqDialog
 
 class AutomationManagerDialog(QDialog):
     
-    def __init__(self, sequences: list, parent=None):
+    def __init__(self, parent, sequences: list):
         super().__init__(parent)
         self.setWindowTitle("Automation Rule Manager")
         self.sequences = sequences
-        self.parent_window = parent
+        self.mainwindow = parent
 
         self._setup_ui()
         self._update_list()
@@ -73,7 +73,7 @@ class AutomationManagerDialog(QDialog):
         if selected_row >= 0:
             selected_sequence = self.sequences[selected_row]
             # Pass to the main window for execution
-            self.parent_window.run_automation_sequence(selected_sequence)
+            self.mainwindow.run_automation_sequence(selected_sequence)
             self.accept() # Close manager after starting execution
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a rule sequence to run.")

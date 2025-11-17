@@ -15,8 +15,10 @@ from devicemodel import device_model
 
 # Dialog for creating automation step (eg. rule)
 class AutomationStepDialog(QDialog):
-    def __init__(self, num_locos_req, step: AutomationStep = None, parent=None):
+    def __init__(self, parent, num_locos_req, step: AutomationStep = None):
         super().__init__(parent)
+        self.parent = parent
+        self.mainwindow = self.parent.mainwindow
         self.setWindowTitle("Configure Rule")
         self.num_locos_req = num_locos_req
         self.step = step
@@ -193,6 +195,7 @@ class AutomationStepDialog(QDialog):
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['event']} - {data_dict['value']}"
             
             # Step parent, step_type, step_name, data={}
+            data_dict["appvars"] = self.mainwindow.appvariables
             self.step = AutomationStep(None, rule_type, self.name, data_dict)
             
             

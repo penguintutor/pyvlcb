@@ -29,6 +29,7 @@ from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
 from imageexistdialog import ImageExistDialog
 from automationmanagerdialog import AutomationManagerDialog
+from appvar import AppVar
 
 # Layout Display is from the loader to interact use
 # self.ui.layoutDisplayLabel
@@ -69,6 +70,8 @@ class MainWindowUI(QMainWindow):
     
     # Whenever settings change - request save
     save_settings_signal = Signal()
+    
+    var_signal = Signal()
     
     # files_dirs are passed from app - file structure is fixed
     # Are all relative to basedir
@@ -131,6 +134,7 @@ class MainWindowUI(QMainWindow):
         # should be set using the following methods (in mainwindow.appvariables) so that they are also reflected here
         # and can also trigger events.
         # get_variable(variable_name), set_variable(variable_name, new_value), inc_variable(variable_name, inc_amount)
+        self.appvariables = AppVar(self.var_signal)
         
         
         # Load the settings file here
@@ -300,7 +304,7 @@ class MainWindowUI(QMainWindow):
         
     # Launch the automation manager dialog
     def automation_manager (self):
-        dialog = AutomationManagerDialog([])
+        dialog = AutomationManagerDialog(self, [])
         dialog.exec()
     
     # Edit settings

@@ -12,8 +12,10 @@ from automationsequence import AutomationStep, AutomationSequence
 from automationstepdialog import AutomationStepDialog
 
 class AutomationSeqDialog(QDialog):
-    def __init__(self, sequence=None, parent=None):
+    def __init__(self, parent, sequence=None):
         super().__init__(parent)
+        self.parent = parent
+        self.mainwindow = self.parent.mainwindow
         self.setWindowTitle("Automation Sequence")
         self.sequence = sequence # For editing, if passed
         self.steps = [] # Stores list of AutomationStep objects
@@ -89,7 +91,7 @@ class AutomationSeqDialog(QDialog):
             current_step = self.steps_data[current_index]
 
         # Use a sub-dialog (StepCreationDialog) for complexity of rule building
-        dialog = AutomationStepDialog(self.num_locos_spinbox.value(), current_step, self)
+        dialog = AutomationStepDialog(self, self.num_locos_spinbox.value(), current_step)
         if dialog.exec() == QDialog.Accepted:
             new_step = dialog.get_step()
             if edit:
