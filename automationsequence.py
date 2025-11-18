@@ -10,36 +10,35 @@ class WorkerSignals(QObject):
 
 # Automation routine, composed of multiple steps
 # Each step is a rule, command or launch another sequence
-# These are provided as a list with each entry as a dict with the AutomationStep
-# Settings is used to pass the locos, but should also include "appvar" which links to the AppVar class
+# These are provided as a list with each entry as a dict with the AutomationStep created in the init
+# Settings is used to pass the locos,
 class AutomationSequence (QRunnable):
-    def __init__(self, title, list_steps, settings = {}):
+    def __init__(self, mainwindow, title, list_steps, settings = {}):
+        self.mainwindow = mainwindow
         self.title = title
-        self.steps = list_steps  # List of AutomationStep objects
+        self.steps = []  # List of AutomationStep objects
         self.settings = settings
         self.num_locos = settings.get('num_locos', 0) # 0 to 3 locos required
         #self.vars = settings.get("appvar", {})
+        self.vars = self.mainwindow.appvariables
         # Store the index of any labels to allow jumps (loops)
         # If order changes then labels needs to be updated
         self.labels = {}
         self.signals = WorkerSignals()
         self.active = False		# Set to true when starting, set back to false to stop
         
-#         step_num = 0
-#         for step in self.steps:
-#             step_data = {}
-#             #print (f"Reading step {step_data}")
-#             # If it's a label then add to dict of labels
-#             if step.get_type() == "Label":
-#                 self.labels[step.get_name()] = step_num
-#                 #print (f"Adding label {step_data['name']}")
-#                 #print (f"Labels : {self.labels}")
-#             # Include the vars in the step
-#             # Vars are accessed from the parent, so no need to pass 
-#             #if self.vars != None:
-#             #    step_data['appvar'] = self.vars
-#             self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
-#             step_num += 1
+        # Each step contains self.step = {"step_type": rule_type, "step_name": step_name, data : data_dict}
+        for i, step_data in enumerate(list_steps):
+            # If it's a label then add to dict of labels
+            if step_data['type'] == "Label":
+                self.labels[step_data['name']] = i
+                #print (f"Adding label {step_data['name']}")
+                #print (f"Labels : {self.labels}")
+            # Include the vars in the step
+            # Vars are accessed from the parent, so no need to pass 
+            #if self.vars != None:
+            #    step_data['appvar'] = self.vars
+            self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
          
     @Slot()
     def run (self):
@@ -91,17 +90,21 @@ class AutomationStep:
     # name is the name passed to the rule, or in the case of the label is the actual label
     # all other parameters are included in settings
     def __init__(self, parent, step_type, step_name, data={}):
+        #print (f"Creating step with {data}")
         self.parent = parent #parent sequence
+        self.mainwindow = self.parent.mainwindow
         #self.step_type = data["type"]
         self.step_type = step_type
         #self.step_name = data["name"]
         self.step_name = step_name
         self.data = data
-        self.vars = data['appvars']
+        #self.vars = data['appvars']
+        self.vars = self.mainwindow.appvariables
         
         # If the step_type is a rule then create an automation rule
         if self.step_type == "Rule":
-            self.rule = AutomationRule(self.step_name, self.step_type, data)
+            #self.rule = AutomationRule(self.step_name, self.step_type, self.data)
+            self.rule = AutomationRule(self.step_name, self.data["ruletype"], self.data)
         #  Variables are not created / updated here - only when run
 
             

@@ -44,6 +44,8 @@ class AutomationRule:
             if not event in data:
                 print ("No var event found - has AppVar been passed to the sequence?")
             self.event = data["event"]
+        else:
+            print (f"Unsupported AutomationRule type {rule_type}")
         
         
         

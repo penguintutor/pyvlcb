@@ -123,7 +123,7 @@ class AutomationSeqDialog(QDialog):
             QMessageBox.warning(self, "Error", "The sequence must contain at least one step.")
             return
 
-        self.sequence = AutomationSequence(title, self.steps, {'num_locos': num_locos})
+        self.sequence = AutomationSequence(self.mainwindow, title, self.steps, {'num_locos': num_locos})
         super().accept()
 
     def get_sequence(self):

@@ -25,6 +25,8 @@ app = QApplication.instance() or QApplication(sys.argv)
 # We specifically import the module-level singleton instance
 from eventbus import EventBus, serialize_event, deserialize_event, event_bus
 
+class MockWindow:
+    pass
 
 ## Test creation of rules, including importing and handling recursion
 class TestAutomationRules(unittest.TestCase):
@@ -41,6 +43,12 @@ class TestAutomationRules(unittest.TestCase):
         dev_spy = QSignalSpy(event_bus.device_event_signal)
         app_spy = QSignalSpy(event_bus.app_event_signal)
         
+        # Need to have a fake mainwindow for testing
+        # For testing AutomationSequence / AutomationStep then this only needs to house a link to
+        # appvariable
+        mainwindow = MockWindow()
+        mainwindow.appvariables = AppVar(event_bus.var_event_signal)
+        
         steps = []
         
         # Create a dict for a rule: 
@@ -55,7 +63,7 @@ class TestAutomationRules(unittest.TestCase):
         steps.append(rule2)
         
         # Create a rule - needs values for the Event
-        sequence_1 = AutomationSequence ("Test sequence 1", steps, {})
+        sequence_1 = AutomationSequence (mainwindow, "Test sequence 1", steps, {})
         
         # Run the sequence
         sequence_1.run()
@@ -73,7 +81,11 @@ class TestAutomationRules(unittest.TestCase):
         dev_spy = QSignalSpy(event_bus.device_event_signal)
         var_spy = QSignalSpy(event_bus.var_event_signal)
         
-        appvariables = AppVar (event_bus.var_event_signal)
+        # Need to have a fake mainwindow for testing
+        # For testing AutomationSequence / AutomationStep then this only needs to house a link to
+        # appvariable
+        mainwindow = MockWindow()
+        mainwindow.appvariables = AppVar(event_bus.var_event_signal)
         
         # Create a dict for a rule:
         steps = [
@@ -84,7 +96,7 @@ class TestAutomationRules(unittest.TestCase):
             ]
         
         # Create a rule - needs values for the Event
-        sequence_1 = AutomationSequence ("Test sequence 1", steps, {"appvar": appvariables})
+        sequence_1 = AutomationSequence (mainwindow, "Test sequence 1", steps, {})
         
         # Run the sequence
         sequence_1.run()
@@ -106,7 +118,11 @@ class TestAutomationRules(unittest.TestCase):
         dev_spy = QSignalSpy(event_bus.device_event_signal)
         var_spy = QSignalSpy(event_bus.var_event_signal)
         
-        appvariables = AppVar (event_bus.var_event_signal)
+        # Need to have a fake mainwindow for testing
+        # For testing AutomationSequence / AutomationStep then this only needs to house a link to
+        # appvariable
+        mainwindow = MockWindow()
+        mainwindow.appvariables = AppVar(event_bus.var_event_signal)
         
         # Create a dict for a rule:
         steps = [
@@ -120,7 +136,7 @@ class TestAutomationRules(unittest.TestCase):
         
         
         # Create a rule - needs values for the Event
-        sequence_1 = AutomationSequence ("Test sequence 1", steps, {"appvar": appvariables})
+        sequence_1 = AutomationSequence (mainwindow, "Test sequence 1", steps, {})
         
         # Run the sequence
         sequence_1.run()
@@ -142,7 +158,11 @@ class TestAutomationRules(unittest.TestCase):
         dev_spy = QSignalSpy(event_bus.device_event_signal)
         var_spy = QSignalSpy(event_bus.var_event_signal)
         
-        appvariables = AppVar (event_bus.var_event_signal)
+        # Need to have a fake mainwindow for testing
+        # For testing AutomationSequence / AutomationStep then this only needs to house a link to
+        # appvariable
+        mainwindow = MockWindow()
+        mainwindow.appvariables = AppVar(event_bus.var_event_signal)
         
         # Create a dict for a rule:
         steps = [
@@ -154,7 +174,7 @@ class TestAutomationRules(unittest.TestCase):
             ]
         
         # Create a rule - needs values for the Event
-        sequence_1 = AutomationSequence ("Test sequence 1", steps, {"appvar": appvariables})
+        sequence_1 = AutomationSequence (mainwindow, "Test sequence 1", steps, {})
         
         # Run the sequence
         sequence_1.run()
