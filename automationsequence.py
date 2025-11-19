@@ -1,5 +1,6 @@
 from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThread, QThreadPool
 import time
+import json
 from automationrule import AutomationRule
 
 # Helper QObject to hold signals (QRunnable cannot have signals)
@@ -20,7 +21,10 @@ class AutomationSequence (QRunnable):
         self.settings = settings
         self.num_locos = settings.get('num_locos', 0) # 0 to 3 locos required
         #self.vars = settings.get("appvar", {})
-        self.vars = self.mainwindow.appvariables
+        if mainwindow != None:
+            self.vars = self.mainwindow.appvariables
+        else:
+            self.vars = None
         # Store the index of any labels to allow jumps (loops)
         # If order changes then labels needs to be updated
         self.labels = {}
@@ -29,6 +33,7 @@ class AutomationSequence (QRunnable):
         
         # Each step contains self.step = {"step_type": rule_type, "step_name": step_name, data : data_dict}
         for i, step_data in enumerate(list_steps):
+            #print (f"{step_data}")
             # If it's a label then add to dict of labels
             if step_data['type'] == "Label":
                 self.labels[step_data['name']] = i
@@ -38,6 +43,8 @@ class AutomationSequence (QRunnable):
             # Vars are accessed from the parent, so no need to pass 
             #if self.vars != None:
             #    step_data['appvar'] = self.vars
+            #print (f"Step data {step_data}")
+            #print (f"Name {step_data['name']}")
             self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
          
     @Slot()
@@ -73,6 +80,39 @@ class AutomationSequence (QRunnable):
         # Emit a signal to indicate the thread has finished
         self.signals.finished.emit()
 
+    def to_dict(self) -> dict:
+        """Convert AutomationSequence to dict."""
+        return {
+            "title": self.title,
+            "settings": self.settings,
+            "steps": [step.to_dict() for step in self.steps]
+        }
+
+    def to_json(self) -> str:
+        """Serialize AutomationSequence to JSON string."""
+        return json.dumps(self.to_dict(), indent=4)
+
+    @classmethod
+    def from_dict(cls, d: dict, mainwindow=None):
+        """Create AutomationSequence from dict."""
+        #steps = [AutomationStep.from_dict(s, self) for s in d.get("steps", [])]
+        steps = d.get("steps", [])
+        return cls(
+            mainwindow=mainwindow,
+            title=d.get("title", ""),
+            list_steps=steps,
+            settings=d.get("settings", {}),
+            
+        )
+
+    #def __init__(self, mainwindow, title, list_steps, settings = {}):
+    # from json also needs mainwindow - pass as optional argument
+    @classmethod
+    def from_json(cls, json_str: str, mainwindow=None):
+        """Deserialize JSON string to AutomationSequence."""
+        d = json.loads(json_str)
+        return cls.from_dict(d, mainwindow)
+
     def __repr__(self):
         return f"AutomationSequence (title, steps, settings): {self.title} ({self.num_locos} Locos)"
     
@@ -89,7 +129,9 @@ class AutomationStep:
     # type is Rule, Var (plus operation), Label, Loop, Sequence
     # name is the name passed to the rule, or in the case of the label is the actual label
     # all other parameters are included in settings
-    def __init__(self, parent, step_type, step_name, data={}):
+    # rule is not normally provided - unless loading from json
+    # Only used if this has an instance of AutomationRule
+    def __init__(self, parent, step_type, step_name, data={}, rule=None):
         #print (f"Creating step with {data}")
         self.parent = parent #parent sequence
         self.mainwindow = self.parent.mainwindow
@@ -100,11 +142,17 @@ class AutomationStep:
         self.data = data
         #self.vars = data['appvars']
         self.vars = self.mainwindow.appvariables
+        self.rule = rule # Only used if this has an instance of AutomationRule
         
         # If the step_type is a rule then create an automation rule
-        if self.step_type == "Rule":
+        if self.rule == None and self.step_type == "Rule":
             #self.rule = AutomationRule(self.step_name, self.step_type, self.data)
-            self.rule = AutomationRule(self.step_name, self.data["ruletype"], self.data)
+            # If ruletype not in the step then look in step.data['data']
+            ruletype = self.data.get('ruletype', '')
+            if ruletype == "":
+                #print (f"* Rule {self.data}")
+                ruletype = self.data['data'].get('ruletype', '')
+            self.rule = AutomationRule(self.step_name, ruletype, self.data)
         #  Variables are not created / updated here - only when run
 
             
@@ -214,3 +262,37 @@ class AutomationStep:
 
     def __repr__(self):
         return f"Step: {self.step_type}: {self.step_name}"
+    
+    
+
+    def to_dict(self) -> dict:
+        """Convert the object to a dictionary, excluding 'appvar' from data."""
+        filtered_data = {k: v for k, v in self.data.items() if k != 'appvar'}
+        return {
+            "type": self.step_type,
+            "name": self.step_name,
+            "data": filtered_data,
+            "rule": self.rule.to_dict() if self.rule else None
+        }
+
+    # Json created at Sequence
+    #def to_json(self) -> str:
+    #    """Serialize the object to a JSON string."""
+    #    return json.dumps(self.to_dict(), indent=4)
+
+    @classmethod
+    def from_dict(cls, d: dict, parent = None):
+        """Create an object from a dictionary."""
+        return cls(
+            parent=parent,
+            step_type=d.get("step_type", ""),
+            step_name=d.get("step_name", ""),
+            data=d.get("data", {}),
+            rule=d.get("rule", None)
+        )
+
+    @classmethod
+    def from_json(cls, json_str: str, parent = None):
+        """Deserialize from JSON string to object."""
+        d = json.loads(json_str)
+        return cls.from_dict(d, parent)

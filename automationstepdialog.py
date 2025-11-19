@@ -199,7 +199,7 @@ class AutomationStepDialog(QDialog):
             ####
             #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step
-            self.step = {"type": rule_type, "name": step_name, data : data_dict}
+            self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
             
             
         # Todo need to implement all rule types so this doesn't happen

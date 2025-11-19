@@ -76,8 +76,8 @@ class AutomationSeqDialog(QDialog):
         for i, step in enumerate(self.steps):
             #rule_count = len(step.rules)
             #mode = step.execution_mode.capitalize()
-            print (f"Step {step}")
-            self.steps_list.addItem(f"Step {i+1} ({step.get_name()})")
+            #print (f"Step {step}")
+            self.steps_list.addItem(f"Step {i+1} ({step['name']})")
 
     # Opens a sub-dialog to create or edit an AutomationStep.
     def add_edit_step(self, edit=False):

@@ -62,6 +62,24 @@ class AutomationRule:
     def get_name (self):
         return self.rule_name
     
+    
+    def to_dict(self) -> dict:
+        return {
+            "rulename": self.rule_name,
+            "ruletype": self.rule_type,
+            "data": self.data
+        }
+
+    @classmethod
+    def from_dict(cls, d: dict):
+        return cls(
+            rule_type=d.get("rule_type", ""),
+            conditions=d.get("conditions", {})
+        )    
+    
+    
+    
+    
     def __repr__(self):
         return (f"Rule {self.rule_type}, {self.data}")
     

@@ -102,6 +102,10 @@ class MainWindowUI(QMainWindow):
         for key, value in dirs.items():
             self.dirs[key] = os.path.join(self.data_dir, value)
         
+        # Set automation name and file
+        self.automation = "Default"
+        self.automation_file = os.path.join(self.dirs['automation'], "default.json")
+        
         self.threadpool = QThreadPool()
         self.update_in_progress = False
         

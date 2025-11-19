@@ -189,6 +189,39 @@ class TestAutomationRules(unittest.TestCase):
         self.assertEqual(str(dev_spy.at(1)[0]), "VLCB 301 1 1")
 
 
+    def test_sequence_save (self):
+        # Set Signal spy to watch for signal sent to device
+        #dev_spy = QSignalSpy(event_bus.device_event_signal)
+        #var_spy = QSignalSpy(event_bus.var_event_signal)
+        
+        # Need to have a fake mainwindow for testing
+        # For testing AutomationSequence / AutomationStep then this only needs to house a link to
+        # appvariable
+        mainwindow = MockWindow()
+        mainwindow.appvariables = AppVar(event_bus.var_event_signal)
+        
+        # Create a dict for a rule:
+        steps = [
+            {"type": "Var", "name": "Create test var", "varname": "test", "action": "set", "value": 0},
+            {"type": "Label", "name": ":loopstart"},
+            {"type": "Rule", "name": "Set point 1 to A", "ruletype": "VLCB", "node_id":301, "event": 1, "value": 1},
+            {"type": "Var", "name": "Increase test variable by 1", "varname": "test", "action": "inc", "value": 1},
+            {"type": "Rule", "name": "Set point 1 to B", "ruletype": "VLCB", "node_id":301, "event": 1, "value": 0},
+            {"type": "Jump", "name": "Until loop end (if value1 <= value2 jump)", "test": "<=", "value1": "${test}", "value2": 10, "label": ":loopstart"}
+            ]
+        
+        
+        # Create a rule - needs values for the Event
+        sequence_1 = AutomationSequence (mainwindow, "Test save seq", steps, {})
+             
+        json_data = sequence_1.to_json()
+        new_sequence = AutomationSequence.from_json(json_data, mainwindow)
+        
+        
+        self.assertEqual(sequence_1.title, "Test save seq")
+        self.assertEqual(new_sequence.title, "Test save seq")
+
+
 
                 
 if __name__ == '__main__':

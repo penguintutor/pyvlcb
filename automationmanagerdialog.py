@@ -64,6 +64,7 @@ class AutomationManagerDialog(QDialog):
         if dialog.exec() == QDialog.Accepted:
             new_sequence = dialog.get_sequence()
             self.sequences.append(new_sequence)
+            self.save_sequences()
             self._update_list()
             QMessageBox.information(self, "Success", f"Sequence '{new_sequence.title}' created.")
 
@@ -77,3 +78,8 @@ class AutomationManagerDialog(QDialog):
             self.accept() # Close manager after starting execution
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a rule sequence to run.")
+            
+            
+    def save_sequences(self):
+        print ("Todo save me")
+        print (f"{self.mainwindow.automation_file}")

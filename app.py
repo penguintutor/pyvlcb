@@ -13,7 +13,8 @@ from locodialog import LocoDialog
 dirs = {
     'locos': 'locos/',
     'layouts': 'layouts/',
-    'rules': 'rules/'
+    'rules': 'rules/',
+    'automation': 'automation/'
      }
 
 files = {
