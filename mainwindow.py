@@ -28,6 +28,7 @@ from layoutobject import LayoutObject
 from layoutbutton import LayoutButton
 from layoutlabel import LayoutLabel
 from imageexistdialog import ImageExistDialog
+from automationmanager import AutomationManager
 from automationmanagerdialog import AutomationManagerDialog
 from appvar import AppVar
 
@@ -101,10 +102,10 @@ class MainWindowUI(QMainWindow):
         # Update all the dirs to add data_dir
         for key, value in dirs.items():
             self.dirs[key] = os.path.join(self.data_dir, value)
-        
-        # Set automation name and file
-        self.automation = "Default"
-        self.automation_file = os.path.join(self.dirs['automation'], "default.json")
+
+        #self.automation = "Default"
+        #self.automation_file = os.path.join(self.dirs['automation'], "default.json")
+        #self.automation_sequences = []
         
         self.threadpool = QThreadPool()
         self.update_in_progress = False
@@ -167,6 +168,9 @@ class MainWindowUI(QMainWindow):
         # Now set enabled locos from settings
         if 'enabledlocos' in self.settings.settings:
             device_model.enable_locos (self.settings.settings['enabledlocos'])
+            
+        # Automation Manager class used to load / store the sequences
+        self.automation = AutomationManager(self.appvariables, self.dirs['automation'], "Default")
 
         
         # Signals
@@ -196,7 +200,7 @@ class MainWindowUI(QMainWindow):
         # Tools Menu        
         self.ui.actionLocoManager.triggered.connect(self.loco_manager)
         self.ui.actionRules.triggered.connect(self.rules_edit)
-        self.ui.actionAutomationMgr.triggered.connect(self.automation_manager)
+        self.ui.actionAutomationMgr.triggered.connect(self.automation_manager_dialog)
         self.ui.actionShowConsole.triggered.connect(self.show_console)
         self.ui.actionLayoutEdit.triggered.connect(self.layout_edit)
         self.ui.actionSettings.triggered.connect(self.settings_edit)
@@ -307,8 +311,8 @@ class MainWindowUI(QMainWindow):
         self.rules_window.display()
         
     # Launch the automation manager dialog
-    def automation_manager (self):
-        dialog = AutomationManagerDialog(self, [])
+    def automation_manager_dialog (self):
+        dialog = AutomationManagerDialog(self, self.automation)
         dialog.exec()
     
     # Edit settings

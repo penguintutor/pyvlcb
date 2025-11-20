@@ -8,14 +8,20 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from automationseqdialog import AutomationSeqDialog
+from automationmanager import AutomationManager
 
 
 class AutomationManagerDialog(QDialog):
     
-    def __init__(self, parent, sequences: list):
+    def __init__(self, parent, manager: AutomationManager):
         super().__init__(parent)
         self.setWindowTitle("Automation Rule Manager")
-        self.sequences = sequences
+        self.manager = manager
+        
+        # Todo remove sequences - instead let the manager create the sequences
+        self.sequences = self.manager.sequences
+        
+        
         self.mainwindow = parent
 
         self._setup_ui()
@@ -63,10 +69,14 @@ class AutomationManagerDialog(QDialog):
         dialog = AutomationSeqDialog(parent=self)
         if dialog.exec() == QDialog.Accepted:
             new_sequence = dialog.get_sequence()
-            self.sequences.append(new_sequence)
-            self.save_sequences()
+            self.manager.add_sequence(new_sequence)
+            result = self.manager.save()
+            if result == "Save successful":
+                QMessageBox.information(self, "Success", f"Sequence '{new_sequence.title}' created.")
+            else:
+                QMessageBox.information(self, "Save Error", result)    
             self._update_list()
-            QMessageBox.information(self, "Success", f"Sequence '{new_sequence.title}' created.")
+            
 
     def run_selected_sequence(self):
         """Triggers the run process in the main window."""
@@ -79,7 +89,4 @@ class AutomationManagerDialog(QDialog):
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a rule sequence to run.")
             
-            
-    def save_sequences(self):
-        print ("Todo save me")
-        print (f"{self.mainwindow.automation_file}")
+

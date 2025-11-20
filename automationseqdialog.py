@@ -18,6 +18,7 @@ class AutomationSeqDialog(QDialog):
         self.mainwindow = self.parent.mainwindow
         self.setWindowTitle("Automation Sequence")
         self.sequence = sequence # For editing, if passed
+        self.seq_data = {}
         self.steps = [] # Stores list of AutomationStep objects
         
         self._setup_ui()
@@ -123,8 +124,9 @@ class AutomationSeqDialog(QDialog):
             QMessageBox.warning(self, "Error", "The sequence must contain at least one step.")
             return
 
-        self.sequence = AutomationSequence(self.mainwindow, title, self.steps, {'num_locos': num_locos})
+        self.seq_data = {"title": title, "steps": self.steps, "settings": {'num_locos': num_locos}}
         super().accept()
 
+    # Returns a dict with seq_data
     def get_sequence(self):
-        return self.sequence
+        return self.seq_data

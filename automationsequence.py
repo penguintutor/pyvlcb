@@ -2,6 +2,7 @@ from PySide6.QtCore import QRunnable, Slot, Signal, QObject, QThread, QThreadPoo
 import time
 import json
 from automationrule import AutomationRule
+from appvar import AppVar
 
 # Helper QObject to hold signals (QRunnable cannot have signals)
 class WorkerSignals(QObject):
@@ -14,17 +15,20 @@ class WorkerSignals(QObject):
 # These are provided as a list with each entry as a dict with the AutomationStep created in the init
 # Settings is used to pass the locos,
 class AutomationSequence (QRunnable):
-    def __init__(self, mainwindow, title, list_steps, settings = {}):
-        self.mainwindow = mainwindow
+    def __init__(self, appvariables, title, steps, settings = {}):
+        # steps are provided as a list so save as list_steps, but then use self.steps when AutomationStep object created
+        list_steps = steps
+        #self.mainwindow = mainwindow
+        self.vars = appvariables
         self.title = title
         self.steps = []  # List of AutomationStep objects
         self.settings = settings
         self.num_locos = settings.get('num_locos', 0) # 0 to 3 locos required
         #self.vars = settings.get("appvar", {})
-        if mainwindow != None:
-            self.vars = self.mainwindow.appvariables
-        else:
-            self.vars = None
+        #if mainwindow != None:
+        #    self.vars = self.mainwindow.appvariables
+        #else:
+        #    self.vars = None
         # Store the index of any labels to allow jumps (loops)
         # If order changes then labels needs to be updated
         self.labels = {}
@@ -45,7 +49,7 @@ class AutomationSequence (QRunnable):
             #    step_data['appvar'] = self.vars
             #print (f"Step data {step_data}")
             #print (f"Name {step_data['name']}")
-            self.steps.append(AutomationStep(self, step_data['type'], step_data['name'], step_data))
+            self.steps.append(AutomationStep(self.vars, step_data['type'], step_data['name'], step_data))
          
     @Slot()
     def run (self):
@@ -93,14 +97,14 @@ class AutomationSequence (QRunnable):
         return json.dumps(self.to_dict(), indent=4)
 
     @classmethod
-    def from_dict(cls, d: dict, mainwindow=None):
+    def from_dict(cls, d: dict, appvariables=None):
         """Create AutomationSequence from dict."""
         #steps = [AutomationStep.from_dict(s, self) for s in d.get("steps", [])]
         steps = d.get("steps", [])
         return cls(
-            mainwindow=mainwindow,
+            appvariables=appvariables,
             title=d.get("title", ""),
-            list_steps=steps,
+            steps=steps,
             settings=d.get("settings", {}),
             
         )
@@ -131,17 +135,18 @@ class AutomationStep:
     # all other parameters are included in settings
     # rule is not normally provided - unless loading from json
     # Only used if this has an instance of AutomationRule
-    def __init__(self, parent, step_type, step_name, data={}, rule=None):
+    def __init__(self, appvariables, step_type, step_name, data={}, rule=None):
         #print (f"Creating step with {data}")
-        self.parent = parent #parent sequence
-        self.mainwindow = self.parent.mainwindow
+        #self.parent = parent #parent sequence
+        #self.mainwindow = self.parent.mainwindow
         #self.step_type = data["type"]
         self.step_type = step_type
         #self.step_name = data["name"]
         self.step_name = step_name
         self.data = data
         #self.vars = data['appvars']
-        self.vars = self.mainwindow.appvariables
+        #self.vars = self.mainwindow.appvariables
+        self.vars = appvariables
         self.rule = rule # Only used if this has an instance of AutomationRule
         
         # If the step_type is a rule then create an automation rule
