@@ -19,7 +19,7 @@ class AutomationManagerDialog(QDialog):
         self.manager = manager
         
         # Todo remove sequences - instead let the manager create the sequences
-        self.sequences = self.manager.sequences
+        #self.sequences = self.manager.sequences
         
         
         self.mainwindow = parent
@@ -60,8 +60,8 @@ class AutomationManagerDialog(QDialog):
     def _update_list(self):
         """Refreshes the list widget with current sequences."""
         self.rule_list.clear()
-        for seq in self.sequences:
-            self.rule_list.addItem(f"{seq.title} ({seq.num_locos} Locos)")
+        for seq_string in self.manager.get_sequence_strings():
+            self.rule_list.addItem(seq_string)
         self.rule_list.setCurrentRow(0)
 
     def add_sequence(self):
@@ -72,7 +72,7 @@ class AutomationManagerDialog(QDialog):
             self.manager.add_sequence(new_sequence)
             result = self.manager.save()
             if result == "Save successful":
-                QMessageBox.information(self, "Success", f"Sequence '{new_sequence.title}' created.")
+                QMessageBox.information(self, "Success", f"Sequence '{new_sequence['title']}' created.")
             else:
                 QMessageBox.information(self, "Save Error", result)    
             self._update_list()

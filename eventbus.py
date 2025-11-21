@@ -19,6 +19,7 @@ def serialize_event(obj):
     if isinstance(obj, Event):
         #print ("Is instance")
         return obj.__dict__()
+    print ("Trying to serialize from EvenBus")
     raise TypeError(f'Object of type {obj.__class__.__name__} is not JSON serializable')
 
 def deserialize_event(data):

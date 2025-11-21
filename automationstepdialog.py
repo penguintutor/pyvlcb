@@ -194,8 +194,9 @@ class AutomationStepDialog(QDialog):
             if self.name == "":
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['event']} - {data_dict['value']}"
             
+            # appvars should not longer be included in the step (added directly in AutomationSequence)
             # Step parent, step_type, step_name, data={}
-            data_dict["appvars"] = self.mainwindow.appvariables
+            #data_dict["appvars"] = self.mainwindow.appvariables
             ####
             #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step

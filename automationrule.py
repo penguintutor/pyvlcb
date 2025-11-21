@@ -64,6 +64,7 @@ class AutomationRule:
     
     
     def to_dict(self) -> dict:
+        #print ("Converting AutomationRule to dict")
         return {
             "rulename": self.rule_name,
             "ruletype": self.rule_type,

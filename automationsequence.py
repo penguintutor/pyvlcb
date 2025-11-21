@@ -25,10 +25,6 @@ class AutomationSequence (QRunnable):
         self.settings = settings
         self.num_locos = settings.get('num_locos', 0) # 0 to 3 locos required
         #self.vars = settings.get("appvar", {})
-        #if mainwindow != None:
-        #    self.vars = self.mainwindow.appvariables
-        #else:
-        #    self.vars = None
         # Store the index of any labels to allow jumps (loops)
         # If order changes then labels needs to be updated
         self.labels = {}
@@ -41,12 +37,6 @@ class AutomationSequence (QRunnable):
             # If it's a label then add to dict of labels
             if step_data['type'] == "Label":
                 self.labels[step_data['name']] = i
-                #print (f"Adding label {step_data['name']}")
-                #print (f"Labels : {self.labels}")
-            # Include the vars in the step
-            # Vars are accessed from the parent, so no need to pass 
-            #if self.vars != None:
-            #    step_data['appvar'] = self.vars
             #print (f"Step data {step_data}")
             #print (f"Name {step_data['name']}")
             self.steps.append(AutomationStep(self.vars, step_data['type'], step_data['name'], step_data))
@@ -86,6 +76,7 @@ class AutomationSequence (QRunnable):
 
     def to_dict(self) -> dict:
         """Convert AutomationSequence to dict."""
+        #print ("Creating AutomationSequence dict")
         return {
             "title": self.title,
             "settings": self.settings,
@@ -112,17 +103,17 @@ class AutomationSequence (QRunnable):
     #def __init__(self, mainwindow, title, list_steps, settings = {}):
     # from json also needs mainwindow - pass as optional argument
     @classmethod
-    def from_json(cls, json_str: str, mainwindow=None):
+    def from_json(cls, json_str: str, appvariables=None):
         """Deserialize JSON string to AutomationSequence."""
         d = json.loads(json_str)
-        return cls.from_dict(d, mainwindow)
+        return cls.from_dict(d, appvariables)
 
     def __repr__(self):
         return f"AutomationSequence (title, steps, settings): {self.title} ({self.num_locos} Locos)"
     
 
     def __str__(self):
-        return f"Sequence: {self.title} ({self.num_locos} Locos)"
+        return f"{self.title} ({self.num_locos} Locos)"
     
     
     
@@ -141,11 +132,8 @@ class AutomationStep:
         #self.mainwindow = self.parent.mainwindow
         #self.step_type = data["type"]
         self.step_type = step_type
-        #self.step_name = data["name"]
         self.step_name = step_name
         self.data = data
-        #self.vars = data['appvars']
-        #self.vars = self.mainwindow.appvariables
         self.vars = appvariables
         self.rule = rule # Only used if this has an instance of AutomationRule
         
@@ -272,11 +260,13 @@ class AutomationStep:
 
     def to_dict(self) -> dict:
         """Convert the object to a dictionary, excluding 'appvar' from data."""
-        filtered_data = {k: v for k, v in self.data.items() if k != 'appvar'}
+        #filtered_data = {k: v for k, v in self.data.items() if k != 'appvars'}
+        #print ("Converting Step to Dict")
+        #print (f"Filtered data {filtered_data}")
         return {
             "type": self.step_type,
             "name": self.step_name,
-            "data": filtered_data,
+            "data": self.data,
             "rule": self.rule.to_dict() if self.rule else None
         }
 

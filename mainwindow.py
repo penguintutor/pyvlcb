@@ -171,6 +171,8 @@ class MainWindowUI(QMainWindow):
             
         # Automation Manager class used to load / store the sequences
         self.automation = AutomationManager(self.appvariables, self.dirs['automation'], "Default")
+        # Load the default automation
+        self.automation.load()
 
         
         # Signals
