@@ -43,7 +43,7 @@ class AutomationSequence (QRunnable):
          
     @Slot()
     def run (self):
-        print ("Starting sequence")
+        print (f"Starting sequence {self.title}")
         self.active = True
         position = 0
         while position < len(self.steps):

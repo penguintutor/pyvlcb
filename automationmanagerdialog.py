@@ -82,9 +82,13 @@ class AutomationManagerDialog(QDialog):
         """Triggers the run process in the main window."""
         selected_row = self.rule_list.currentRow()
         if selected_row >= 0:
-            selected_sequence = self.sequences[selected_row]
+            
+            ## Here
+            self.manager.run_sequence(selected_row)
+            
+            #selected_sequence = self.sequences[selected_row]
             # Pass to the main window for execution
-            self.mainwindow.run_automation_sequence(selected_sequence)
+            #self.mainwindow.run_automation_sequence(selected_sequence)
             self.accept() # Close manager after starting execution
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a rule sequence to run.")

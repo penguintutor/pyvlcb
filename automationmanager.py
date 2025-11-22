@@ -1,10 +1,12 @@
 # AutomationManager is used to store and manage the AutomationSequence objects
 import os
 import json
+from PySide6.QtCore import Qt, QTimer, QObject, QThreadPool, QRunnable
+from worker import Worker
 from automationsequence import AutomationSequence
 
 
-class AutomationManager:
+class AutomationManager (QObject):
     
     # Map of automation to filenames
     automation_files = {
@@ -14,7 +16,8 @@ class AutomationManager:
     # Pass the directory to the init as in future may allow different files
     # Automation name is the name of the overall collection of sequences (ie. which file to load)
     
-    def __init__ (self, appvariables, directory, automation_name="Default"):
+    def __init__ (self, threadpool: QThreadPool, appvariables, directory, automation_name="Default"):
+        self.threadpool = threadpool
         self.dir = directory
         self.name = automation_name
         self.description = ""	# Description for the automation - loaded from file
@@ -106,3 +109,16 @@ class AutomationManager:
             print("Error: The provided class lacks a 'from_json' method.")
         except Exception as e:
             print(f"An error occurred while loading: {e}")
+            
+    def thread_start (self, seq_num):
+        if seq_num < len(self.sequences):
+            self.sequences[seq_num].run()
+            
+    def run_sequence(self, seq_num):
+        # Only allow one check_responses thread to run at a time
+               
+        worker = Worker(self.thread_start, seq_num)
+        self.threadpool.start(worker)
+        return
+    
+    

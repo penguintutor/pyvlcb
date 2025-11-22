@@ -170,7 +170,7 @@ class MainWindowUI(QMainWindow):
             device_model.enable_locos (self.settings.settings['enabledlocos'])
             
         # Automation Manager class used to load / store the sequences
-        self.automation = AutomationManager(self.appvariables, self.dirs['automation'], "Default")
+        self.automation = AutomationManager(self.threadpool, self.appvariables, self.dirs['automation'], "Default")
         # Load the default automation
         self.automation.load()
 
