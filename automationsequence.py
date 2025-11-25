@@ -50,7 +50,7 @@ class AutomationSequence (QRunnable):
             # If set to false then stop
             if self.active == False:
                 break
-            print (f"Step {position}")
+            #print (f"Step {position}")
             # If it's a label then ignore
             if self.steps[position].step_type == "Label":
                 pass
@@ -73,6 +73,16 @@ class AutomationSequence (QRunnable):
             position += 1
         # Emit a signal to indicate the thread has finished
         self.signals.finished.emit()
+        
+    # return info about the sequence in the form of a dict
+    # does not include steps (see get_steps)
+    def get_info(self):
+        #title, numlocos
+        return {"title": self.title, "numlocos": self.num_locos} 
+        
+    # Return the steps from the sequence
+    def get_steps(self):
+        return self.steps
 
     def to_dict(self) -> dict:
         """Convert AutomationSequence to dict."""
@@ -269,6 +279,7 @@ class AutomationStep:
             "data": self.data,
             "rule": self.rule.to_dict() if self.rule else None
         }
+        
 
     # Json created at Sequence
     #def to_json(self) -> str:

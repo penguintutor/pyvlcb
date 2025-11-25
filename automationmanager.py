@@ -27,6 +27,10 @@ class AutomationManager (QObject):
 
     def add_sequence(self, sequence_data):
         self.sequences.append(AutomationSequence(self.vars, **sequence_data))
+        
+    # Return sequence based on sequence number (index in list)
+    def get_sequence(self, seq_num):
+        return self.sequences[seq_num]
 
 
     def get_sequence_strings(self):

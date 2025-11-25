@@ -16,6 +16,7 @@ class AutomationManagerDialog(QDialog):
     def __init__(self, parent, manager: AutomationManager):
         super().__init__(parent)
         self.setWindowTitle("Automation Rule Manager")
+        self.resize(500, 400)
         self.manager = manager
         
         # Todo remove sequences - instead let the manager create the sequences
@@ -53,6 +54,7 @@ class AutomationManagerDialog(QDialog):
 
         # Connections
         self.add_button.clicked.connect(self.add_sequence)
+        self.edit_button.clicked.connect(self.edit_sequence)
         self.run_button.clicked.connect(self.run_selected_sequence)
         self.close_button.clicked.connect(self.accept)
         # Note: Edit/Delete connections would be similar to add, updating self.sequences and re-running _update_list
@@ -76,6 +78,18 @@ class AutomationManagerDialog(QDialog):
             else:
                 QMessageBox.information(self, "Save Error", result)    
             self._update_list()
+            
+    def edit_sequence(self):
+        # Todo setup edit of sequence
+        # Get the selected sequence
+        # indexFromItem
+        row_num = self.rule_list.currentRow()
+        sequence = self.manager.get_sequence(row_num)
+        dialog = AutomationSeqDialog(self, sequence)
+        if dialog.exec() == QDialog.Accepted:
+            # todo Edit here
+            pass
+        pass
             
 
     def run_selected_sequence(self):
