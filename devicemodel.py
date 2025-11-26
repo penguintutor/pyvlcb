@@ -186,7 +186,8 @@ class DeviceModel(QObject):
                 
     # Get list of nodes by names
     # Default return All types - including VLCB & Gui etc.
-    def get_nodes_names(self, type="all"):
+    # null_events determines whether to check if the nodes must have events
+    def get_nodes_names(self, type="all", null_events=True):
         #print (f"Getting node names {type}")
         #print (f"Nodes {self.nodes}")
         #print (f"Keys {self.nodes.keys()}")
@@ -194,7 +195,13 @@ class DeviceModel(QObject):
         # VLCB devices
         if type=="all" or type=="VLCB":
             for key in self.nodes.keys():
-                node_list.append(self.nodes[key].name)
+                # If null_events is false and node has no events then skip
+                # Only check for null_events on VLCB - could do for other devices is preferred
+                if null_events == False:
+                    if self.nodes[key].numev > 0:
+                        node_list.append(self.nodes[key].name)
+                else:
+                    node_list.append(self.nodes[key].name)
         # Gui devices
         if type=="all" or type=="Gui":
             for node in self.other_nodes['Gui']:

@@ -11,6 +11,7 @@ from automationrule import AutomationRule
 from automationsequence import AutomationStep, AutomationSequence
 
 from devicemodel import device_model
+from locoevent import LocoEvent
 
 
 # Dialog for creating automation step (eg. rule)
@@ -224,10 +225,10 @@ class AutomationStepDialog(QDialog):
                 selected_type = "Gui"
             # If this type is one of the device_nodes then get from device_model
             if selected_type == "Gui" or selected_type == "VLCB":
-                nodes = device_model.get_nodes_names(selected_type)
+                nodes = device_model.get_nodes_names(selected_type, null_events=False)
             elif selected_type == "Loco":
                 if self.num_locos_req > 0:
-                    nodes = [f"ID {i}" for i in range (0, self.num_locos_req + 1)]
+                    nodes = [f"ID {i}" for i in range (1, self.num_locos_req + 1)]
                 else:
                     nodes = []
                 nodes.append("Use DCC ID")
@@ -285,18 +286,43 @@ class AutomationStepDialog(QDialog):
     
     def update_value_combo(self):
         self.value_combo.clear()
-        # For this just check that there is an event
-        # If it's not "" or "NA" then it should have an on or off status
-        # Default to on events
-        selected_event = self.event_combo.currentText()
-        if selected_event == "NA" or selected_event == "":
-            self.value_combo.addItem("NA")
-        else:
-            self.value_combo.addItem("on")
-            self.value_combo.addItem("off")
+        selected_type = self.rule_type_combo.currentText()
+        if selected_type == None or selected_type == "Select Type":
+            values = ["NA"]
+        elif selected_type == "VLCB" or selected_type == "Gui":
+            # For this just check that there is an event
+            # If it's not "" or "NA" then it should have an on or off status
+            # Default to on events
+            selected_event = self.event_combo.currentText()
+            if selected_event == "NA" or selected_event == "":
+                self.value_combo.addItem("NA")
+            else:
+                self.value_combo.addItem("on")
+                self.value_combo.addItem("off")
+        elif selected_type == "Loco":
+            self.value_combo.addItems(LocoEvent.event_types)
+            
+        # For loco then uses LocoEvent.event_types list to create actions
 
     def update_value2_combo(self):
-        self.value2_combo.clear()
+        selected_type = self.rule_type_combo.currentText()
+        if selected_type == None or selected_type == "Select Type":
+            nodes = ["NA"]
+        else:
+            self.value2_combo.clear()
+            # If Loco then look at value1 (action) and set list here
+            if selected_type == "Loco":
+                # now look at action from value1
+                loco_action = self.value_combo.currentText()
+                if loco_action == "Set Speed":
+                    # change for spinbox
+                    pass
+                elif loco_action == "Set Direction":
+                    self.value2_combo.addItems(["Forward", "Reverse", "Toggle"])
+                # Others don't need another value - eg. Stop
+                else:
+                    self.value2_combo.addItem("NA")
+        
         # For this just check that there is an event
         # If it's not "" or "NA" then it should have an on or off status
         # Default to on events
