@@ -11,12 +11,9 @@ class LocoEvent:
         # Function includes sound etc. In the Loco view these are mapped based on the loco, but in
         # automation then the Loco may be changed and function may differ
         "Function",		# In menu this may be remapped to F1 / F2 etc. - perhaps spinbox
-        "All Stop"		# Special case if using CBUS controller which has all stop
+        "All Stop"		# Special case if using CBUS controller which has all stop - still need to have a session with a loco first
         ]
         
-        
-        
-    
     def __init__(self, event_type, event_data):
         self.event_type = event_type
         self.data = event_data # dict

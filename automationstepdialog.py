@@ -77,8 +77,27 @@ class AutomationStepDialog(QDialog):
         # Hide if not used
         self.value2_combo = QComboBox()
         self.value2_combo.addItem("NA", None)
+        # Can sometimes swap out combo for spinbox - eg. loco speed
+        self.value2_spinbox = QSpinBox()
+        self.value2_spinbox.setRange(0,128)
+        self.value2_spinbox.setValue(0)
         self.value2_label = QLabel("Value:")
         self.layout().addRow(self.value2_label, self.value2_combo)
+        # Or swap for a dual spinbox & combo using a Horizontal Layout
+        self.value2_inner_widget = QWidget()
+        self.value2_inner_layout = QHBoxLayout(self.value2_inner_widget)
+        # Set margins to 0 to make it look clean inside the QFormLayout row
+        self.value2_inner_layout.setContentsMargins(0, 0, 0, 0)
+        self.value2_inner_spinbox = QSpinBox()
+        self.value2_inner_spinbox.setRange(1, 18)
+        self.value2_inner_spinbox.setValue(1)
+        self.value2_inner_combo = QComboBox()
+        self.value2_inner_combo.addItems(["On", "Off"])
+        
+        # 5. Add widgets to the QHBoxLayout
+        self.value2_inner_layout.addWidget(self.value2_inner_spinbox)
+        #self.value2_inner_layout.addWidget(QLabel("Units:")) # Adding a small label for context
+        self.value2_inner_layout.addWidget(self.value2_inner_combo)
 
         # Spacer
         spacer_widget = QWidget()
@@ -141,26 +160,23 @@ class AutomationStepDialog(QDialog):
             # Loco uses self.event_edit rather than combo - swap back here
             #self.replace_edit_type(self.event_label, self.event_combo)
             self.event_edit.setVisible(False)
-            self.event_combo.setVisible(True)
-            result = self.layout().replaceWidget(self.event_edit, self.event_combo)
-            self.event_combo.setVisible(True)
+            self.swap_field_widget(self.event_label, self.event_combo)
             self.event_label.setText("Event:")
             self.value_combo.setVisible(True)
             self.value_label.setText("Value:")
             self.value2_combo.setVisible(False)
+            self.value2_inner_widget.hide()
             self.value2_label.setText("")
+            
         elif form_type == "Loco":
             # Loco No is the dynamic locos (eg. 1 to 3 and option for DCC ID)
             self.node_combo.setVisible(True)
             self.node_label.setText("Loco No.:")
             # DCC ID is if tied to a specific loco (only if selected from above)
-            self.event_edit.setVisible(True)
-            self.event_combo.setVisible(False)
-            self.layout().replaceWidget(self.event_combo, self.event_edit)
-            self.event_edit.setVisible(True)
+            #self.event_edit.setVisible(True)
+            self.swap_field_widget(self.event_label, self.event_edit)
             self.event_label.setText("DCC ID:")
             # Loco uses self.event_edit rather than combo
-            #self.replace_edit_type(self.event_label, self.event_edit)
             # Action (uses value field)
             self.value_combo.setVisible(True)
             self.value_label.setText("Action:")
@@ -181,30 +197,6 @@ class AutomationStepDialog(QDialog):
         self.event_combo.blockSignals(False)
         self.value_combo.blockSignals(False)
             
-    # Replace one row widget (eg QComboBox) with a different widget
-    # whilst preserving row position and label
-    # Label is how we find the row, new_widget replaces the widget
-    # Does not update the text of the label, that should be done elsewhere
-    def replace_edit_type(self, old_widget, new_widget):
-        form_layout = self.layout()
-        
-        #self.layout().replaceWidget(old_widget, new_widget)
-        
-        # Get row 
-        row_index = form_layout.indexOf(label)
-
-        if row_index == -1:
-            print("Error: Row not found")
-            return
-        
-        # Remove the entire row (including the old QComboBox)
-        form_layout.removeRow(row_index) 
-
-        # Insert the new row at the exact same index
-        # We use the existing self.node_label reference!
-        form_layout.insertRow(row_index, label, new_widget)
-
-        
 
     def update_node_combo(self, update_form = True):
         # First set appropriate form widgets / labels
@@ -271,10 +263,15 @@ class AutomationStepDialog(QDialog):
             # For Loco then the event_combo has been replaced with event_edit
             # If the node is DCC ID then this is enabled (if not it's NA)
             if selected_node == "Use DCC ID":
-                self.event_edit.setReadOnly(False)
+                #self.event_edit.setReadOnly(False)
+                #self.event_edit.show
+                self.swap_field_widget(self.event_label, self.event_edit)
+                self.event_label.setText("DCC ID:")
             else:
+                self.event_label.setText("")
                 self.event_edit.setText("")
-                self.event_edit.setReadOnly(True)
+                #self.event_edit.setReadOnly(True)
+                self.event_edit.hide()
                 
         else:
             events = ["NA"]
@@ -315,13 +312,24 @@ class AutomationStepDialog(QDialog):
                 # now look at action from value1
                 loco_action = self.value_combo.currentText()
                 if loco_action == "Set Speed":
+                    self.value2_label.setText ("Speed:")
                     # change for spinbox
-                    pass
+                    self.swap_field_widget(self.value2_label, self.value2_spinbox)
                 elif loco_action == "Set Direction":
+                    self.swap_field_widget(self.value2_label, self.value2_combo)
                     self.value2_combo.addItems(["Forward", "Reverse", "Toggle"])
+                    self.value2_label.setText ("Direction:")
+                elif loco_action == "Function":
+                    # Function replaces value with both a spinbox and a combo
+                    self.swap_field_widget(self.value2_label, self.value2_inner_widget)
+                    self.value2_label.setText("Function setting:")
                 # Others don't need another value - eg. Stop
+                # So hide value2 - hide both spinbox and combo
                 else:
-                    self.value2_combo.addItem("NA")
+                    self.value2_label.setText("")
+                    self.value2_combo.hide()
+                    self.value2_spinbox.hide()
+                    self.value2_inner_widget.hide()
         
         # For this just check that there is an event
         # If it's not "" or "NA" then it should have an on or off status
@@ -407,3 +415,38 @@ class AutomationStepDialog(QDialog):
         
     def get_step(self):
         return self.step
+    
+    
+    # Swaps the widget specified (eg. combobox with lineedit or spinbox)
+    # Uses label_widget to find the row
+    # New widget is the one to insert
+    # defaults to hiding the old widget & showing the new
+    def swap_field_widget(self, label_widget: QWidget, new_widget: QWidget, hide_old: bool = True):
+        form_layout = self.layout()
+        # Find the row and role of the label
+        row, role = form_layout.getWidgetPosition(label_widget)
+        if row == -1:
+            raise ValueError("Label widget not found in the layout.")
+
+        # Get the current field widget
+        field_item = form_layout.itemAt(row, QFormLayout.FieldRole)
+        if field_item is None:
+            raise ValueError("No field widget found in the same row as the label.")
+
+        old_widget = field_item.widget()
+        
+        # Set the new_widget visible
+        new_widget.show()
+        
+        # Check if already set to the new_widget
+        if old_widget == new_widget:
+            return None	# No swap needed
+
+        # Replace the widget
+        form_layout.replaceWidget(old_widget, new_widget)
+
+        # Optionally hide or delete the old widget
+        if hide_old:
+            old_widget.hide()
+
+
