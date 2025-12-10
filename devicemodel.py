@@ -173,7 +173,7 @@ class DeviceModel(QObject):
         # Check it's been initialised (not None)
         if self.locos != None:
             for loco in self.locos:
-                if this_loco.name == node_name:
+                if loco.name == node_name:
                     return "Loco"
         # Now included in tests
         for key in self.other_nodes.keys():

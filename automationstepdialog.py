@@ -16,13 +16,14 @@ from locoevent import LocoEvent
 
 # Dialog for creating automation step (eg. rule)
 class AutomationStepDialog(QDialog):
-    def __init__(self, parent, num_locos_req, step: AutomationStep = None):
+    def __init__(self, parent, num_locos, step: AutomationStep = None):
         super().__init__(parent)
         self.parent = parent
         self.mainwindow = self.parent.mainwindow
         self.setWindowTitle("Configure Rule")
         self.resize(350, 250)
-        self.num_locos_req = num_locos_req
+        # Always show 1 more loco in case a new one is required
+        self.num_locos_req = num_locos + 1
         self.step = step
         self.params = {}
 
@@ -39,7 +40,7 @@ class AutomationStepDialog(QDialog):
         # Rule Type Selector
         self.rule_type_combo = QComboBox()
         #RuleType = [AutomationRule("Rule1", "loco", {}), AutomationRule("Rule2", "point", {}), AutomationRule("Rule3", "sensor", {})]
-        self.rule_type_combo.addItems(["Select type", "VLCB", "Loco", "App", "Gui"])
+        self.rule_type_combo.addItems(["Select Type", "VLCB", "Loco", "App", "Gui"])
         self.rule_type_label = QLabel("Step Type:")
         self.layout().addRow(self.rule_type_label, self.rule_type_combo)
         
@@ -144,10 +145,54 @@ class AutomationStepDialog(QDialog):
         self.node_combo.currentTextChanged.connect(self.update_event_combo)
         self.event_combo.currentTextChanged.connect(self.update_value_combo)
         self.value_combo.currentTextChanged.connect(self.update_value2_combo)
+
+    def show_hide_row (self, row, show=True, label=None):
+        """Set visibility for the widgets in the specified form row.
+
+        Keeps the label visible at all times. When hiding a row we set the
+        label's text to an empty string (but keep it visible to preserve
+        spacing). When restoring if label is provided then that is used
+        as the text.
+        
+        Handles both single widgets and nested layouts in the FieldRole.
+        """
+        #print (f"Show/hide row {row} show={show} label={label}")
+
+        form_layout = self.layout()
+
+        label_item = form_layout.itemAt(row, QFormLayout.LabelRole).widget()
+        field_item = form_layout.itemAt(row, QFormLayout.FieldRole)
+
+        if show == False:
+            label_item.setText("")
+        elif label is not None:
+            label_item.setText(label)
+        
+        # Handle field_item: it could be a widget or a nested layout
+        if field_item is None:
+            return
+        
+        field_widget = field_item.widget()
+        if field_widget is not None:
+            # It's a single widget (e.g., QComboBox, QLineEdit)
+            field_widget.setVisible(show)
+        else:
+            # It's a layout (e.g., QHBoxLayout)
+            field_layout = field_item.layout()
+            if field_layout is not None:
+                # Hide/show all child widgets in the layout
+                for idx in range(field_layout.count()):
+                    child_item = field_layout.itemAt(idx)
+                    if child_item is None:
+                        continue
+                    child_widget = child_item.widget()
+                    if child_widget is not None:
+                        child_widget.setVisible(show)
         
     # Updates the form, including the labels and input fields according to type
     # Does not set any values - just the form type and calls the generator of the combo if appropriate
     def set_form_type (self):
+        #print ("Set form type")
         # Block signals whilst updating - then manually call update and then reenable signals
         self.node_combo.blockSignals(True)
         self.event_combo.blockSignals(True)
@@ -155,18 +200,23 @@ class AutomationStepDialog(QDialog):
         
         form_type = self.rule_type_combo.currentText()
         if form_type == "VLCB":
-            self.node_combo.setVisible(True)
+            #self.node_combo.setVisible(True)
             self.node_label.setText("Node:")
             # Loco uses self.event_edit rather than combo - swap back here
             #self.replace_edit_type(self.event_label, self.event_combo)
-            self.event_edit.setVisible(False)
+            #self.event_edit.setVisible(False)
             self.swap_field_widget(self.event_label, self.event_combo)
             self.event_label.setText("Event:")
-            self.value_combo.setVisible(True)
+            #self.value_combo.setVisible(True)
             self.value_label.setText("Value:")
-            self.value2_combo.setVisible(False)
-            self.value2_inner_widget.hide()
+            #self.value2_combo.setVisible(False)
+            #self.value2_inner_widget.hide()
             self.value2_label.setText("")
+            # show / hide comes after updating fields
+            self.show_hide_row(2, True)     # Show node row
+            self.show_hide_row(3, False)    # Hide event row (show if node selected)
+            self.show_hide_row(4, False)    # Hide value row
+            self.show_hide_row(5, False)    # Hide value2 row
             
         elif form_type == "Loco":
             # Loco No is the dynamic locos (eg. 1 to 3 and option for DCC ID)
@@ -184,9 +234,14 @@ class AutomationStepDialog(QDialog):
             self.value2_combo.setVisible(True)
             self.value2_label.setText("Value:")
         # If not recognised then set as non selected
+        # This is default for a new step
         else:
-            print ("Not a valid type")
+            #print ("Not a valid type")
             self.node_label.setText("N/A")
+            self.show_hide_row(2, False)    # Hide node row
+            self.show_hide_row(3, False)    # Hide event row (show if node selected)
+            self.show_hide_row(4, False)    # Hide value row
+            self.show_hide_row(5, False)    # Hide value2 row
         # Update each of the combo with their values
         self.update_node_combo(update_form = False)
         self.update_event_combo()
@@ -199,19 +254,28 @@ class AutomationStepDialog(QDialog):
             
 
     def update_node_combo(self, update_form = True):
+        #print ("Update node combo")
         # First set appropriate form widgets / labels
         # if update_form is set to false then don't call set_form_type
         # this is required if called from set_form_type to avoid recursive calls
         if update_form != False:
             self.set_form_type ()
+
+        nodes = []
         
         self.node_combo.clear()
         # Updates the event_combo based on the selected type
         selected_type = self.rule_type_combo.currentText()
+        #print (f"Selected type {selected_type}")
         if selected_type == None or selected_type == "Select Type":
             nodes = ["NA"]
+            # Hide remaining rows - eg. if previously selected details but now node unselected
+            self.show_hide_row(2, False)    # Hide node row
+            self.show_hide_row(3, False)    # Hide event row (show if node selected)
+            self.show_hide_row(4, False)    # Hide value row
+            self.show_hide_row(5, False)    # Hide value2 row
+            return
         else:
-            #node_type = device_model.name_to_key(selected_type)
             # If User Interface - convert to Gui
             if selected_type == "User Interface":
                 selected_type = "Gui"
@@ -232,9 +296,12 @@ class AutomationStepDialog(QDialog):
         if nodes != ["NA"]:
             self.node_combo.addItem("Select Node")
         self.node_combo.addItems(nodes)
+        # show the node row
+        self.show_hide_row(2, True, "Node:")    # Show node row
 
 
     def update_event_combo(self):
+        #print ("Update event combo")
         # First get the type (so we can lookup the node)
         # The event combo sometimes gets swapped for a line edit
         # Swap is done on set_form_type - but here need to use appropriate
@@ -242,6 +309,7 @@ class AutomationStepDialog(QDialog):
         events = []
         # Should always have a type if this has an option, but check anyway
         if selected_type == None or selected_type == "Select Type":
+            self.show_hide_row(2, False)
             return
         elif selected_type == "User Interface":
             selected_type = "Gui"
@@ -251,6 +319,9 @@ class AutomationStepDialog(QDialog):
         selected_node = self.node_combo.currentText()
         if selected_node == None or selected_node == "Select Node" or selected_node == "NA":
             events = ["NA"]
+            self.show_hide_row(3, False)
+            #print ("Hiding event row as no node selected")
+            return
         elif selected_type == "Gui" or selected_type == "VLCB":
             # convert to node_key
             node_key = device_model.name_to_key(selected_node, selected_type)
@@ -259,6 +330,8 @@ class AutomationStepDialog(QDialog):
             #print (f"Events {events}")
             if events == []:
                 events = ["NA"]
+            # Show the event field
+            self.show_hide_row(3, True, "Event:") 
         elif selected_type == "Loco":
             # For Loco then the event_combo has been replaced with event_edit
             # If the node is DCC ID then this is enabled (if not it's NA)
@@ -282,18 +355,22 @@ class AutomationStepDialog(QDialog):
         
     
     def update_value_combo(self):
+        #print ("update value combo")
         self.value_combo.clear()
         selected_type = self.rule_type_combo.currentText()
         if selected_type == None or selected_type == "Select Type":
+            self.show_hide_row(4, False) 
             values = ["NA"]
         elif selected_type == "VLCB" or selected_type == "Gui":
             # For this just check that there is an event
             # If it's not "" or "NA" then it should have an on or off status
             # Default to on events
             selected_event = self.event_combo.currentText()
-            if selected_event == "NA" or selected_event == "":
+            if selected_event == "NA" or selected_event == "" or selected_event == "Select Event":
+                self.show_hide_row(4, False) 
                 self.value_combo.addItem("NA")
             else:
+                self.show_hide_row(4, True, "Value:") 
                 self.value_combo.addItem("on")
                 self.value_combo.addItem("off")
         elif selected_type == "Loco":
@@ -302,8 +379,10 @@ class AutomationStepDialog(QDialog):
         # For loco then uses LocoEvent.event_types list to create actions
 
     def update_value2_combo(self):
+        #print ("Update value2 combo")
         selected_type = self.rule_type_combo.currentText()
         if selected_type == None or selected_type == "Select Type":
+            self.show_hide_row(5, False) 
             nodes = ["NA"]
         else:
             self.value2_combo.clear()
@@ -330,16 +409,19 @@ class AutomationStepDialog(QDialog):
                     self.value2_combo.hide()
                     self.value2_spinbox.hide()
                     self.value2_inner_widget.hide()
-        
-        # For this just check that there is an event
-        # If it's not "" or "NA" then it should have an on or off status
-        # Default to on events
-        selected_event = self.event_combo.currentText()
-        if selected_event == "NA" or selected_event == "":
-            self.value2_combo.addItem("NA")
-        else:
-            self.value2_combo.addItem("on")
-            self.value2_combo.addItem("off")
+            else:
+                self.show_hide_row(5, False) 
+        # # For this just check that there is an event
+        # # If it's not "" or "NA" then it should have an on or off status
+        # # Default to on events
+        # selected_event = self.event_combo.currentText()
+        # if selected_event == "NA" or selected_event == "":
+        #     self.show_hide_row(5, False) 
+        #     self.value2_combo.addItem("NA")
+        # else:
+        #     self.show_hide_row(5, True, "Value:") 
+        #     self.value2_combo.addItem("on")
+        #     self.value2_combo.addItem("off")
 
 
 
@@ -353,25 +435,21 @@ class AutomationStepDialog(QDialog):
             else:
                 self._clear_layout(item.layout()) # Handle nested layouts
 
-    def _update_params_ui(self, rule_name):
-        """Dynamically adds input fields based on the selected RuleType."""
-        self._clear_layout(self.params_layout)
-        print ("Deprecated - see new methods")
 
-
+    # Gets data if valid and returns as a dict
     def save_step(self):
-        """Gathers data and creates the AutomationRule object."""
         rule_type = self.rule_type_combo.currentText()
         #loco_index = self.loco_combo.currentData()
         
         # All steps needed a name - but if empty can be created automatically
         self.name = self.name_lineedit.text()
-        
+
+        # Get additional data and place in a dict
+        data_dict = {}        
+
         # If this matches the device model keys then it's an automation rule
-        if rule_type in device_model.event_map.keys():
-            
-            # Get additional data and place in a dict
-            data_dict = {}
+        #if rule_type in device_model.event_map.keys():
+        if rule_type == "VLCB" or rule_type == "Gui":
             
             # If it's vlcb then convert node to node_id
             node = self.node_combo.currentText()
@@ -403,7 +481,63 @@ class AutomationStepDialog(QDialog):
             #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
+        elif rule_type == "Loco":
+            # Loco step - so get loco number and DCC ID
+            loco_no = self.node_combo.currentText()
+            if loco_no == None or loco_no == "Select Node" or loco_no == "NA":
+                print ("Invalid loco number")
+                return
+            else:
+                data_dict["locoid"] = loco_no
+                # If DCC ID then also get DCC ID value
+                if loco_no == "Use DCC ID":        
+                    dcc_id = self.event_edit.text()
+                    try:
+                        data_dict["dcc"] = int(dcc_id)
+                        if not (1 <= dcc_id <= 9999):
+                            print("DCC ID must be between 1 and 9999")
+                            return
+                    except ValueError:
+                        print("DCC ID must be an integer")
+                        return
             
+            # Get the action and value
+            action = self.value_combo.currentText()
+            if action == None or action == "NA":
+                print ("Invalid action")
+                return
+            else: 
+                data_dict["action"] = action
+            
+            # If speed then use spinbox, else use combo
+            if action == "Set Speed":
+                speed = self.value2_spinbox.value()
+                data_dict["speed"] = speed
+            elif action == "Set Direction":
+                data_dict["direction"] = self.value2_combo.currentText()
+            elif action == "Function":
+                data_dict["function"] = self.value2_inner_spinbox.value()
+                data_dict["function_action"] = self.value2_inner_combo.currentText()
+            else:
+                # This shouldn't happen
+                print ("Unknown command / value 2")
+            
+            # If no name given then can replace with a user friendly
+            if self.name == "":
+                self.name = f"Loco {loco_no} - {action}"
+            
+            # # Step parent, step_type, step_name, data={}
+            # data_dict = {
+            #     'loco_no': loco_no,
+            #     'dcc_id': dcc_id,
+            #     'action': action,
+            #     'value': value
+            #     }
+            
+            #self.step = AutomationStep(None, rule_type, self.name, data_dict)
+            # Return as a dict - let Automation Sequence convert into an Automation Step
+            self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
+
             
         # Todo need to implement all rule types so this doesn't happen
         else:

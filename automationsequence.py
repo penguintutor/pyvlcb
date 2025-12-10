@@ -218,7 +218,7 @@ class AutomationStep:
                 # this is not subject to variable substitution 
                 max_loop = self.data.get("maxloop", 0)
                 # Create a loop until the condition is met
-                while test_condition():
+                while self.test_condition():
                     time.sleep(delay_time)
                     loop_num += 1
                     if max_loop > 0 and loop_num > max_loop:

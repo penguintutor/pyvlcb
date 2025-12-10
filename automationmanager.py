@@ -27,6 +27,15 @@ class AutomationManager (QObject):
 
     def add_sequence(self, sequence_data):
         self.sequences.append(AutomationSequence(self.vars, **sequence_data))
+
+    def update_sequence(self, seq_num, sequence_data):
+        if seq_num >= len(self.sequences):
+            print ("Error invalid sequence number in update_sequence")
+            return
+        # Just replace with new sequence
+        # Could create before replace if concern about errors
+        self.sequences[seq_num] = AutomationSequence(self.vars, **sequence_data)
+        
         
     # Return sequence based on sequence number (index in list)
     def get_sequence(self, seq_num):

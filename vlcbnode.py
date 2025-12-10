@@ -80,8 +80,8 @@ class VLCBNode():
         # Only add if new - otherwise try update
         if ev_id in self.ev.keys():
             self.ev[ev_id].update_en (en)
-            return
-        self.ev[ev_id]=VLCBEv(self, ev_id, en)
+        else:
+            self.ev[ev_id]=VLCBEv(self, ev_id, en)
         return self.ev[ev_id]
 
         # Add Row left to the caller as that can access gui thread

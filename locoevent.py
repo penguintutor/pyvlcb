@@ -20,3 +20,16 @@ class LocoEvent:
 
     def type (self):
         return "Loco"
+    
+
+    def get_action(self):
+        return self.data["action"]
+    
+    def get_value(self):
+        value = self.data.get("value", 0)
+    
+    def matches (self, event):
+        if self.get_type() == event.get_type():
+            if self.get_action() == event.get_action() and self.get_value() == event.get_value():
+                return True
+        return False

@@ -41,9 +41,11 @@ class AutomationRule:
             #print (f"Triggering event for {self}")
             self.event = device_model.event_map[self.rule_type](self.data)
         elif rule_type == "Var":
-            if not event in data:
+            if not "event" in data:
                 print ("No var event found - has AppVar been passed to the sequence?")
             self.event = data["event"]
+        elif rule_type == "Loco":
+            pass #Not yet implemented
         else:
             print (f"Unsupported AutomationRule type {rule_type}")
         

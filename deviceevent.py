@@ -11,10 +11,6 @@ class DeviceEvent (Event):
         self.data = event_data
         self.data["event_type"] = "VLCB"
         
-    # Update with new data
-    def update (self, new_data):
-        self.data = new_data
-        self.data["event_type"] = "VLCB"
         
     # Uses getters to allow different data (eg. node vs node_id)
     # Node may be friendly name

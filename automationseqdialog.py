@@ -21,7 +21,7 @@ class AutomationSeqDialog(QDialog):
         self.resize(400, 350)
         self.sequence = sequence # For editing, if passed
         self.seq_data = {}
-        self.steps = [] # Stores list of AutomationSteps (as dicts)
+        self.steps = [] # Stores list of AutomationSteps (as dicts) - When turned into sequence these become objects
         
         self._setup_ui()
         if sequence != None:
@@ -33,11 +33,12 @@ class AutomationSeqDialog(QDialog):
         # Title and Loco Count
         title_layout = QFormLayout()
         self.title_input = QLineEdit()
-        self.num_locos_spinbox = QSpinBox()
-        self.num_locos_spinbox.setRange(0, 3)
-        self.num_locos_spinbox.setValue(0)
+# Num Locos removed from sequence. Instead take  from steps
+#        self.num_locos_spinbox = QSpinBox()
+#        self.num_locos_spinbox.setRange(0, 3)
+#        self.num_locos_spinbox.setValue(0)
         title_layout.addRow("Sequence Title:", self.title_input)
-        title_layout.addRow("Locos Required:", self.num_locos_spinbox)
+#        title_layout.addRow("Locos Required:", self.num_locos_spinbox)
         main_layout.addLayout(title_layout)
 
         main_layout.addWidget(QLabel("Automation Steps"))
@@ -87,7 +88,7 @@ class AutomationSeqDialog(QDialog):
         self.steps = []
         # title, numlocos
         self.title_input.setText(info["title"])
-        self.num_locos_spinbox.setValue(info["numlocos"])
+        #self.num_locos_spinbox.setValue(info["numlocos"])
         # Use a deep copy of the steps so as not to update if cancel is pressed
         #self.steps = copy.deepcopy(sequence.get_steps())
         #print (f"Steps now contains {self.steps}")
@@ -113,8 +114,10 @@ class AutomationSeqDialog(QDialog):
                 return
             current_step = self.steps[current_index]
 
-        # Use a sub-dialog (StepCreationDialog) for complexity of rule building
-        dialog = AutomationStepDialog(self, self.num_locos_spinbox.value(), current_step)
+        num_locos = self._calc_locos()
+
+        # Use a sub-dialog (StepCreationDialog) for rule building
+        dialog = AutomationStepDialog(self, num_locos, current_step)
         if dialog.exec() == QDialog.Accepted:
             new_step = dialog.get_step()
             if edit:
@@ -136,7 +139,7 @@ class AutomationSeqDialog(QDialog):
     def save_sequence(self):
         """Finalizes the sequence creation and accepts the dialog."""
         title = self.title_input.text().strip()
-        num_locos = self.num_locos_spinbox.value()
+        #num_locos = self.num_locos_spinbox.value()
 
         if not title:
             QMessageBox.warning(self, "Error", "Please enter a sequence title.")
@@ -145,6 +148,8 @@ class AutomationSeqDialog(QDialog):
         if not self.steps:
             QMessageBox.warning(self, "Error", "The sequence must contain at least one step.")
             return
+        
+        num_locos = self._calc_locos()
 
         self.seq_data = {"title": title, "steps": self.steps, "settings": {'num_locos': num_locos}}
         super().accept()
@@ -152,3 +157,16 @@ class AutomationSeqDialog(QDialog):
     # Returns a dict with seq_data
     def get_sequence(self):
         return self.seq_data
+    
+    def _calc_locos(self):
+        """Calculates the number of locos required based on the steps."""
+        num_locos = 0
+        for step in self.steps:
+            for rule in step.get("rules", []):
+                if rule.get("rule_type") == "Loco":
+                    # Look for highest non DCC ID loco_id used
+                    loco_id = rule.get("data", {}).get("loco_id")
+                    if loco_id > num_locos:
+                        num_locos  = loco_id - 1 # loco_id is 1 based
+        return num_locos
+        

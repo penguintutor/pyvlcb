@@ -8,6 +8,7 @@ from mainwindow import MainWindowUI
 from locowindow import LocoWindow
 from locodialog import LocoDialog
 
+
 # filenames are relative to data directory
 # by default that is basedir/data/
 dirs = {

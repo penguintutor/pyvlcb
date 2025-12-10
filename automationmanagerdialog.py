@@ -19,9 +19,6 @@ class AutomationManagerDialog(QDialog):
         self.resize(500, 400)
         self.manager = manager
         
-        # Todo remove sequences - instead let the manager create the sequences
-        #self.sequences = self.manager.sequences
-        
         
         self.mainwindow = parent
 
@@ -87,9 +84,14 @@ class AutomationManagerDialog(QDialog):
         sequence = self.manager.get_sequence(row_num)
         dialog = AutomationSeqDialog(self, sequence)
         if dialog.exec() == QDialog.Accepted:
-            # todo Edit here
-            pass
-        pass
+            new_sequence = dialog.get_sequence()
+            self.manager.update_sequence(row_num, new_sequence)
+            result = self.manager.save()
+            if result == "Save successful":
+                QMessageBox.information(self, "Success", f"Sequence '{new_sequence['title']}' updated.")
+            else:
+                QMessageBox.information(self, "Save Error", result)    
+        self._update_list()
             
 
     def run_selected_sequence(self):

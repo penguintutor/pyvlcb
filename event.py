@@ -7,6 +7,10 @@ class Event:
         # Set here but override in sub class
         if not hasattr(self, 'data'):
             self.data = {"event_type":"unknown"}
+
+    # Update with new data
+    def update (self, new_data):
+        self.data = new_data
         
     # Allow event_type or get_type to allow consistancy
     def event_type(self):
@@ -16,6 +20,7 @@ class Event:
             return self.event_type
         else:
             print ("Event does not have an event_type")
+
     def get_type(self):
         # first check for self.data - if not try self.event_type
         if "event_type" in self.data:
