@@ -65,17 +65,8 @@ class AutomationManagerDialog(QDialog):
 
     def add_sequence(self):
         """Opens the rule creation dialog."""
-        dialog = AutomationSeqDialog(parent=self)
-        if dialog.exec() == QDialog.Accepted:
-            new_sequence = dialog.get_sequence()
-            self.manager.add_sequence(new_sequence)
-            result = self.manager.save()
-            if result == "Save successful":
-                QMessageBox.information(self, "Success", f"Sequence '{new_sequence['title']}' created.")
-            else:
-                QMessageBox.information(self, "Save Error", result)    
-            self._update_list()
-            
+        self.open_sequence_dialog(None)
+
     def edit_sequence(self):
         # Todo setup edit of sequence
         # Get the selected sequence
@@ -93,6 +84,19 @@ class AutomationManagerDialog(QDialog):
                 QMessageBox.information(self, "Save Error", result)    
         self._update_list()
             
+        # Todo setup edit of sequence
+        # Get the selected sequence
+        # indexFromItem
+        row_num = self.rule_list.currentRow()
+        sequence = self.manager.get_sequence(row_num)
+        dialog = AutomationSeqDialog(self, sequence)
+        if dialog.exec() == QDialog.Accepted:
+            # todo Edit here
+            pass
+        pass
+            
+        row = self.rule_list.currentRow()
+        self.open_sequence_dialog(row)
 
     def run_selected_sequence(self):
         """Triggers the run process in the main window."""
@@ -108,5 +112,34 @@ class AutomationManagerDialog(QDialog):
             self.accept() # Close manager after starting execution
         else:
             QMessageBox.warning(self, "Selection Error", "Please select a rule sequence to run.")
-            
+
+    def open_sequence_dialog(self, row: int | None = None):
+        """Open the AutomationSeqDialog for add (row=None) or edit (row=index)."""
+        # If editing, validate selection
+        if row is not None:
+            if row < 0:
+                QMessageBox.warning(self, "Selection Error", "Please select a sequence to edit.")
+                return
+            existing = self.manager.get_sequence(row)
+            dialog = AutomationSeqDialog(self, existing)
+        else:
+            dialog = AutomationSeqDialog(self)
+
+        if dialog.exec() == QDialog.Accepted:
+            new_sequence = dialog.get_sequence()
+            if row is None:
+                self.manager.add_sequence(new_sequence)
+                verb = "created"
+            else:
+                self.manager.update_sequence(row, new_sequence)
+                verb = "updated"
+
+            result = self.manager.save()
+            if result == "Save successful":
+                QMessageBox.information(self, "Success", f"Sequence '{new_sequence.get('title','')}' {verb}.")
+            else:
+                QMessageBox.information(self, "Save Error", result)
+
+            self._update_list()
+
 
