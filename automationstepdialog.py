@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (
     QListWidget, QFormLayout, QLineEdit, QSpinBox, QSizePolicy
 )
 from PySide6.QtCore import Qt
+from PySide6.QtGui import QIntValidator
 from automationrule import AutomationRule
 from automationsequence import AutomationStep, AutomationSequence
 
@@ -66,6 +67,10 @@ class AutomationStepDialog(QDialog):
         self.layout().addRow(self.event_label, self.event_combo)
         # swap event_combo for lineedit if required
         self.event_edit = QLineEdit()
+        # Add validator to accept only integers 1-9999
+        self.event_edit.setValidator(QIntValidator(1, 9999, self.event_edit))
+        # Add label if loco id selected
+        self.event_alt_label = QLabel("Allocated when run")
 
         # Value Selector
         self.value_combo = QComboBox()
@@ -203,14 +208,9 @@ class AutomationStepDialog(QDialog):
             #self.node_combo.setVisible(True)
             self.node_label.setText("Node:")
             # Loco uses self.event_edit rather than combo - swap back here
-            #self.replace_edit_type(self.event_label, self.event_combo)
-            #self.event_edit.setVisible(False)
             self.swap_field_widget(self.event_label, self.event_combo)
             self.event_label.setText("Event:")
-            #self.value_combo.setVisible(True)
             self.value_label.setText("Value:")
-            #self.value2_combo.setVisible(False)
-            #self.value2_inner_widget.hide()
             self.value2_label.setText("")
             # show / hide comes after updating fields
             self.show_hide_row(2, True)     # Show node row
@@ -223,7 +223,6 @@ class AutomationStepDialog(QDialog):
             self.node_combo.setVisible(True)
             self.node_label.setText("Loco No.:")
             # DCC ID is if tied to a specific loco (only if selected from above)
-            #self.event_edit.setVisible(True)
             self.swap_field_widget(self.event_label, self.event_edit)
             self.event_label.setText("DCC ID:")
             # Loco uses self.event_edit rather than combo
@@ -274,7 +273,7 @@ class AutomationStepDialog(QDialog):
             self.show_hide_row(3, False)    # Hide event row (show if node selected)
             self.show_hide_row(4, False)    # Hide value row
             self.show_hide_row(5, False)    # Hide value2 row
-            return
+        #    return
         else:
             # If User Interface - convert to Gui
             if selected_type == "User Interface":
@@ -283,12 +282,17 @@ class AutomationStepDialog(QDialog):
             if selected_type == "Gui" or selected_type == "VLCB":
                 nodes = device_model.get_nodes_names(selected_type, null_events=False)
             elif selected_type == "Loco":
+                # Loco does ont use "node" reference so create list of loco numbers
+                # then add to GUI and return 
+                nodes = ["Select Loco"]
                 if self.num_locos_req > 0:
                     nodes = [f"ID {i}" for i in range (1, self.num_locos_req + 1)]
                 else:
                     nodes = []
                 nodes.append("Use DCC ID")
-                    
+                self.node_combo.addItems(nodes)
+                self.show_hide_row(2, True, "Loco:")    # Show node row (called loco)
+                return    
             # If there are no devices of this type
             if nodes == []:
                 nodes = ["NA"]
@@ -334,17 +338,18 @@ class AutomationStepDialog(QDialog):
             self.show_hide_row(3, True, "Event:") 
         elif selected_type == "Loco":
             # For Loco then the event_combo has been replaced with event_edit
-            # If the node is DCC ID then this is enabled (if not it's NA)
+            # If the node is DCC ID then this is enabled (if not replace with label)
+            self.event_label.setText("DCC ID:")
             if selected_node == "Use DCC ID":
                 #self.event_edit.setReadOnly(False)
                 #self.event_edit.show
                 self.swap_field_widget(self.event_label, self.event_edit)
-                self.event_label.setText("DCC ID:")
             else:
-                self.event_label.setText("")
+                # Clear previous entry if applicable
                 self.event_edit.setText("")
                 #self.event_edit.setReadOnly(True)
-                self.event_edit.hide()
+                # shows text that allocated on run
+                self.swap_field_widget(self.event_label, self.event_alt_label)
                 
         else:
             events = ["NA"]
