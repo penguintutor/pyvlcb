@@ -129,6 +129,7 @@ class LocoList:
         try:
             with open(locos_file, 'r') as data_file:
                 loco_filenames = json.load(data_file)
+                #print (f"Loaded locos {loco_filenames} from {locos_file}")
         except Exception as e:
             print (f"No locos found, add new locos {e}")
             return

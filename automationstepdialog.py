@@ -379,6 +379,7 @@ class AutomationStepDialog(QDialog):
                 self.value_combo.addItem("on")
                 self.value_combo.addItem("off")
         elif selected_type == "Loco":
+            self.value_combo.addItem("Select Action")
             self.value_combo.addItems(LocoEvent.event_types)
             
         # For loco then uses LocoEvent.event_types list to create actions
@@ -395,25 +396,32 @@ class AutomationStepDialog(QDialog):
             if selected_type == "Loco":
                 # now look at action from value1
                 loco_action = self.value_combo.currentText()
+                if loco_action == None or loco_action == "NA" or loco_action == "Select Action":
+                    self.show_hide_row(5, False) 
+                    return
                 if loco_action == "Set Speed":
-                    self.value2_label.setText ("Speed:")
+                    self.show_hide_row(5, True, "Speed:") 
+                    #self.value2_label.setText ("Speed:")
                     # change for spinbox
                     self.swap_field_widget(self.value2_label, self.value2_spinbox)
                 elif loco_action == "Set Direction":
+                    self.show_hide_row(5, True, "Direction:") 
                     self.swap_field_widget(self.value2_label, self.value2_combo)
                     self.value2_combo.addItems(["Forward", "Reverse", "Toggle"])
-                    self.value2_label.setText ("Direction:")
+                    #self.value2_label.setText ("Direction:")
                 elif loco_action == "Function":
+                    self.show_hide_row(5, True, "Function setting:")
                     # Function replaces value with both a spinbox and a combo
                     self.swap_field_widget(self.value2_label, self.value2_inner_widget)
-                    self.value2_label.setText("Function setting:")
+                    #self.value2_label.setText("Function setting:")
                 # Others don't need another value - eg. Stop
                 # So hide value2 - hide both spinbox and combo
                 else:
-                    self.value2_label.setText("")
-                    self.value2_combo.hide()
-                    self.value2_spinbox.hide()
-                    self.value2_inner_widget.hide()
+                    self.show_hide_row(5, False) 
+                    #self.value2_label.setText("")
+                    #self.value2_combo.hide()
+                    #self.value2_spinbox.hide()
+                    #self.value2_inner_widget.hide()
             else:
                 self.show_hide_row(5, False) 
         # # For this just check that there is an event

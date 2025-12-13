@@ -152,6 +152,7 @@ class DeviceModel(QObject):
         # If locos not initialised yet return empty list
         if self.locos == None:
             return []
+        #print (f"Returning enabled locos {self.locos.get_enabled_locos()}")
         return self.locos.get_enabled_locos()
                 
 
