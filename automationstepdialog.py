@@ -4,7 +4,7 @@ import sys
 from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget, QMessageBox,
-    QListWidget, QFormLayout, QLineEdit, QSpinBox, QSizePolicy
+    QListWidget, QFormLayout, QLineEdit, QSpinBox, QSizePolicy, QSpacerItem
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -45,7 +45,7 @@ class AutomationStepDialog(QDialog):
         self.rule_type_label = QLabel("Step Type:")
         self.layout().addRow(self.rule_type_label, self.rule_type_combo)
         
-        #Node, Event, Value
+        #Node, Event, Value, Value2
         # These are maintained even if the type of rule uses a different name
         # This avoids swapping out the combobox if it just needs different values
 
@@ -168,6 +168,34 @@ class AutomationStepDialog(QDialog):
         label_item = form_layout.itemAt(row, QFormLayout.LabelRole).widget()
         field_item = form_layout.itemAt(row, QFormLayout.FieldRole)
 
+        #print (f"Label item: {label_item}, Field item: {field_item}")
+
+        if field_item is None:
+            print("No item in FieldRole for row", row)
+        else:
+            w = field_item.widget()
+            if w is not None:
+                # Python class name and Qt/C++ class name
+                #print("Widget:", w.__class__.__name__, "/", w.metaObject().className())
+                # Use isinstance checks to branch
+                if isinstance(w, QComboBox):
+                    #print("It's a QComboBox")
+                    pass
+                elif isinstance(w, QLineEdit):
+                    #print("It's a QLineEdit")
+                    pass
+                else:
+                    #print("Other widget type")
+                    l = w.layout()
+                    if l is not None:
+                        #print("Layout:", l.__class__.__name__)
+                        # You can inspect children
+                        for i in range(l.count()):
+                            ci = l.itemAt(i)
+                            cw = ci.widget()
+                            print(" child:", (cw.__class__.__name__ if cw else None))
+
+
         if show == False:
             label_item.setText("")
         elif label is not None:
@@ -180,20 +208,27 @@ class AutomationStepDialog(QDialog):
         field_widget = field_item.widget()
         if field_widget is not None:
             # It's a single widget (e.g., QComboBox, QLineEdit)
-            field_widget.setVisible(show)
-        else:
-            # It's a layout (e.g., QHBoxLayout)
-            field_layout = field_item.layout()
+            #field_widget.setVisible(show)
+            # Also check if it's a layout in which case hide / show all
+            field_layout = field_widget.layout()
             if field_layout is not None:
+                #print (f"Field layout for {row}, {field_layout}, {show}")
                 # Hide/show all child widgets in the layout
                 for idx in range(field_layout.count()):
                     child_item = field_layout.itemAt(idx)
+                    #print (f"Child is {child_item}")
                     if child_item is None:
                         continue
                     child_widget = child_item.widget()
+                    print (f"Child widget is {child_widget}")
                     if child_widget is not None:
                         child_widget.setVisible(show)
-        
+            # Make the widget hidden / visible
+            field_widget.setVisible(show)
+        # special case if row 5 then may need to hide the combo as well
+        if row == 5 and show == False:
+            self.value2_combo.setVisible(False)
+
     # Updates the form, including the labels and input fields according to type
     # Does not set any values - just the form type and calls the generator of the combo if appropriate
     def set_form_type (self):
@@ -336,6 +371,8 @@ class AutomationStepDialog(QDialog):
                 events = ["NA"]
             # Show the event field
             self.show_hide_row(3, True, "Event:") 
+            # Also hide value 2 - not used for vlcb/gui
+            self.show_hide_row(5, False) 
         elif selected_type == "Loco":
             # For Loco then the event_combo has been replaced with event_edit
             # If the node is DCC ID then this is enabled (if not replace with label)
@@ -396,12 +433,25 @@ class AutomationStepDialog(QDialog):
             if selected_type == "Loco":
                 # now look at action from value1
                 loco_action = self.value_combo.currentText()
+<<<<<<< HEAD
                 if loco_action == None or loco_action == "NA" or loco_action == "Select Action":
                     self.show_hide_row(5, False) 
                     return
                 if loco_action == "Set Speed":
                     self.show_hide_row(5, True, "Speed:") 
                     #self.value2_label.setText ("Speed:")
+||||||| parent of 1a373a1 (Add loco selection to automation step dialog)
+                if loco_action == "Set Speed":
+                    self.value2_label.setText ("Speed:")
+=======
+                #print (f"Loco action is {loco_action}")
+                if loco_action == None or loco_action == "NA" or loco_action == "Select Action":
+                    self.show_hide_row(5, False) 
+                    #return
+                elif loco_action == "Set Speed":
+                    self.show_hide_row(5, True, "Speed:") 
+                    #self.value2_label.setText ("Speed:")
+>>>>>>> 1a373a1 (Add loco selection to automation step dialog)
                     # change for spinbox
                     self.swap_field_widget(self.value2_label, self.value2_spinbox)
                 elif loco_action == "Set Direction":
@@ -424,18 +474,6 @@ class AutomationStepDialog(QDialog):
                     #self.value2_inner_widget.hide()
             else:
                 self.show_hide_row(5, False) 
-        # # For this just check that there is an event
-        # # If it's not "" or "NA" then it should have an on or off status
-        # # Default to on events
-        # selected_event = self.event_combo.currentText()
-        # if selected_event == "NA" or selected_event == "":
-        #     self.show_hide_row(5, False) 
-        #     self.value2_combo.addItem("NA")
-        # else:
-        #     self.show_hide_row(5, True, "Value:") 
-        #     self.value2_combo.addItem("on")
-        #     self.value2_combo.addItem("off")
-
 
 
     def _clear_layout(self, layout):
@@ -595,5 +633,13 @@ class AutomationStepDialog(QDialog):
         # Optionally hide or delete the old widget
         if hide_old:
             old_widget.hide()
+            # l = old_widget.layout()
+            # # also check for layout / child widgets
+            # if l is not None:
+            #     for i in range(l.count()):
+            #         ci = l.itemAt(i)
+            #         cw = ci.widget()
+            #         cw.hide()
+                
 
 

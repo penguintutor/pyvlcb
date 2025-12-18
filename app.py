@@ -18,6 +18,7 @@ dirs = {
     'automation': 'automation/'
      }
 
+
 files = {
     'settings': 'settings.json',
     'locos': 'locos.json',
