@@ -242,7 +242,10 @@ class DeviceModel(QObject):
         if type == "VLCB":
             if node in self.nodes.keys():
                 return self.nodes[node].get_ev_names()
-        # Todo add Gui here
+        elif type == "Gui" or type == "User Interface":
+            #A Gui has actions (rather than events) - currently hard coded
+            # could add others if required
+            return ["Toggle", "Set"]
         elif type in self.other_nodes.keys() and node in self.other_nodes[type]:
             #print (f"Checking for EVs {self.other_nodes[type]}")
             return self.other_nodes[type][node].get_ev_names()

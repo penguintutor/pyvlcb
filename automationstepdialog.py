@@ -41,7 +41,9 @@ class AutomationStepDialog(QDialog):
         # Rule Type Selector
         self.rule_type_combo = QComboBox()
         #RuleType = [AutomationRule("Rule1", "loco", {}), AutomationRule("Rule2", "point", {}), AutomationRule("Rule3", "sensor", {})]
-        self.rule_type_combo.addItems(["Select Type", "VLCB", "Loco", "App", "Gui"])
+        # App not yet implemented
+        # User Interface known as GUI when saved
+        self.rule_type_combo.addItems(["Select Type", "VLCB", "Loco", "App", "User Interface"])
         self.rule_type_label = QLabel("Step Type:")
         self.layout().addRow(self.rule_type_label, self.rule_type_combo)
         
@@ -267,6 +269,18 @@ class AutomationStepDialog(QDialog):
             # Value (eg. speed)
             self.value2_combo.setVisible(True)
             self.value2_label.setText("Value:")
+        elif form_type == "User Interface": # GUI Event
+            self.node_combo.setVisible(True)
+            self.node_label.setText("Node:")
+            # Loco uses self.event_edit rather than combo - swap back here
+            self.swap_field_widget(self.event_label, self.event_combo)
+            self.event_label.setText("Action:")
+            # value only shown if action is not toggle
+            self.value_combo.setVisible(False)
+            #self.value_label.setText("Value:")
+            # Value (eg. speed)
+            self.value2_combo.setVisible(False)
+            #self.value2_label.setText("Value:")
         # If not recognised then set as non selected
         # This is default for a new step
         else:
@@ -310,12 +324,12 @@ class AutomationStepDialog(QDialog):
             self.show_hide_row(5, False)    # Hide value2 row
         #    return
         else:
-            # If User Interface - convert to Gui
-            if selected_type == "User Interface":
-                selected_type = "Gui"
             # If this type is one of the device_nodes then get from device_model
-            if selected_type == "Gui" or selected_type == "VLCB":
+            if selected_type == "VLCB":
                 nodes = device_model.get_nodes_names(selected_type, null_events=False)
+            elif selected_type == "User Interface":
+                nodes = device_model.get_nodes_names("Gui", null_events=False)
+                #print (f"GUI Nodes {nodes}")
             elif selected_type == "Loco":
                 # Loco does ont use "node" reference so create list of loco numbers
                 # then add to GUI and return 
@@ -325,7 +339,7 @@ class AutomationStepDialog(QDialog):
                     nodes += [f"ID {i}" for i in range(1, self.num_locos_req + 1)]
                 # Always offer option to use a DCC ID directly
                 nodes.append("Use DCC ID")
-                self.node_combo.addItems(nodes)
+            self.node_combo.addItems(nodes)
         # show the node row
         self.show_hide_row(2, True, "Node:")    # Show node row
 
@@ -341,8 +355,6 @@ class AutomationStepDialog(QDialog):
         if selected_type == None or selected_type == "Select Type":
             self.show_hide_row(2, False)
             return
-        elif selected_type == "User Interface":
-            selected_type = "Gui"
         #print (f"Updating event combo {index}")
         self.event_combo.clear()
         # Updates the event_combo based on the selected node.
@@ -352,7 +364,7 @@ class AutomationStepDialog(QDialog):
             self.show_hide_row(3, False)
             #print ("Hiding event row as no node selected")
             return
-        elif selected_type == "Gui" or selected_type == "VLCB":
+        elif selected_type == "VLCB":
             # convert to node_key
             node_key = device_model.name_to_key(selected_node, selected_type)
             #print (f"Type {selected_type} Node {selected_node} key {node_key}")
@@ -362,6 +374,17 @@ class AutomationStepDialog(QDialog):
                 events = ["NA"]
             # Show the event field
             self.show_hide_row(3, True, "Event:") 
+            # Also hide value 2 - not used for vlcb/gui
+            self.show_hide_row(5, False) 
+        elif selected_type == "User Interface":
+            # convert to node_key
+            node_key = device_model.name_to_key("Gui", selected_type)
+            events = device_model.get_events(node_key, selected_type)
+            # Shouldn't get a blank response - but check anyway
+            if events == []:
+                events = ["NA"]
+            # Show the event field
+            self.show_hide_row(3, True, "Action:") 
             # Also hide value 2 - not used for vlcb/gui
             self.show_hide_row(5, False) 
         elif selected_type == "Loco":
@@ -395,15 +418,17 @@ class AutomationStepDialog(QDialog):
         if selected_type == None or selected_type == "Select Type":
             self.show_hide_row(4, False) 
             values = ["NA"]
-        elif selected_type == "VLCB" or selected_type == "Gui":
+        elif selected_type == "VLCB" or selected_type == "User Interface":
             # For this just check that there is an event
             # If it's not "" or "NA" then it should have an on or off status
             # Default to on events
             selected_event = self.event_combo.currentText()
-            if selected_event == "NA" or selected_event == "" or selected_event == "Select Event":
+            if selected_event == "NA" or selected_event == "" or selected_event == "Select Event" or selected_event== "Toggle":
                 self.show_hide_row(4, False) 
                 self.value_combo.addItem("NA")
             else:
+                # May want to add other values for Gui type in future
+                # eg. Set with a specific value
                 self.show_hide_row(4, True, "Value:") 
                 self.value_combo.addItem("on")
                 self.value_combo.addItem("off")
