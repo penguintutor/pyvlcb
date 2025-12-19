@@ -505,7 +505,7 @@ class AutomationStepDialog(QDialog):
 
         # If this matches the device model keys then it's an automation rule
         #if rule_type in device_model.event_map.keys():
-        if rule_type == "VLCB" or rule_type == "Gui":
+        if rule_type == "VLCB":
             
             # If it's vlcb then convert node to node_id
             node = self.node_combo.currentText()
@@ -537,6 +537,38 @@ class AutomationStepDialog(QDialog):
             #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
+        elif rule_type == "User Interface":
+            
+            node = self.node_combo.currentText()
+            if node == None or node == "Select Node" or node == "NA":
+                # todo replace with qmessage - also see other print messages
+                print ("Invalid node")
+                return
+            data_dict['node_id'] = device_model.name_to_key(node, type="Gui")
+            event = self.event_combo.currentText()
+            if event == None or event == "Select Action" or event == "NA":
+                print ("Invalid event")
+                return
+            data_dict['action'] = event
+
+            if data_dict['action'] != "Toggle":
+
+                # Value should not return an invalid value but check anyway
+                value = self.value_combo.currentText()
+                if value == None or value == "NA":
+                    print ("Invalid value")
+                    return
+                data_dict['value'] = value
+            else:
+                value = ""            
+            # If no name given then can replace with a user friendly
+            if self.name == "":
+                self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['action']}"
+                if value != "":
+                    self.name += f" - {value}"
+            
+            # Return as a dict - let Automation Sequence convert into an Automation Step
+            self.step = {"type": "Gui", "name": self.name, "data" : data_dict}
         elif rule_type == "Loco":
             # Loco step - so get loco number and DCC ID
             loco_no = self.node_combo.currentText()

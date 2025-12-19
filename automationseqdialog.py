@@ -121,6 +121,7 @@ class AutomationSeqDialog(QDialog):
         dialog = AutomationStepDialog(self, num_locos, current_step)
         if dialog.exec() == QDialog.Accepted:
             new_step = dialog.get_step()
+            #print (f"New/Edited step: {new_step}")
             if edit:
                 self.steps[current_index] = new_step
             else:
