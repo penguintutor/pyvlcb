@@ -320,21 +320,12 @@ class AutomationStepDialog(QDialog):
                 # Loco does ont use "node" reference so create list of loco numbers
                 # then add to GUI and return 
                 nodes = ["Select Loco"]
+                # Add available IDs if required
                 if self.num_locos_req > 0:
-                    nodes = [f"ID {i}" for i in range (1, self.num_locos_req + 1)]
-                else:
-                    nodes = []
+                    nodes += [f"ID {i}" for i in range(1, self.num_locos_req + 1)]
+                # Always offer option to use a DCC ID directly
                 nodes.append("Use DCC ID")
                 self.node_combo.addItems(nodes)
-                self.show_hide_row(2, True, "Loco:")    # Show node row (called loco)
-                return    
-            # If there are no devices of this type
-            if nodes == []:
-                nodes = ["NA"]
-        # Don't say select if there are none to select
-        if nodes != ["NA"]:
-            self.node_combo.addItem("Select Node")
-        self.node_combo.addItems(nodes)
         # show the node row
         self.show_hide_row(2, True, "Node:")    # Show node row
 
@@ -387,7 +378,8 @@ class AutomationStepDialog(QDialog):
                 #self.event_edit.setReadOnly(True)
                 # shows text that allocated on run
                 self.swap_field_widget(self.event_label, self.event_alt_label)
-                
+            # Hide value 2 (next field is action)
+            self.show_hide_row(5, False)    # Hide value2 row
         else:
             events = ["NA"]
             
@@ -433,17 +425,6 @@ class AutomationStepDialog(QDialog):
             if selected_type == "Loco":
                 # now look at action from value1
                 loco_action = self.value_combo.currentText()
-<<<<<<< HEAD
-                if loco_action == None or loco_action == "NA" or loco_action == "Select Action":
-                    self.show_hide_row(5, False) 
-                    return
-                if loco_action == "Set Speed":
-                    self.show_hide_row(5, True, "Speed:") 
-                    #self.value2_label.setText ("Speed:")
-||||||| parent of 1a373a1 (Add loco selection to automation step dialog)
-                if loco_action == "Set Speed":
-                    self.value2_label.setText ("Speed:")
-=======
                 #print (f"Loco action is {loco_action}")
                 if loco_action == None or loco_action == "NA" or loco_action == "Select Action":
                     self.show_hide_row(5, False) 
@@ -451,7 +432,6 @@ class AutomationStepDialog(QDialog):
                 elif loco_action == "Set Speed":
                     self.show_hide_row(5, True, "Speed:") 
                     #self.value2_label.setText ("Speed:")
->>>>>>> 1a373a1 (Add loco selection to automation step dialog)
                     # change for spinbox
                     self.swap_field_widget(self.value2_label, self.value2_spinbox)
                 elif loco_action == "Set Direction":
@@ -545,7 +525,7 @@ class AutomationStepDialog(QDialog):
                     dcc_id = self.event_edit.text()
                     try:
                         data_dict["dcc"] = int(dcc_id)
-                        if not (1 <= dcc_id <= 9999):
+                        if not (1 <= data_dict["dcc"] <= 9999):
                             print("DCC ID must be between 1 and 9999")
                             return
                     except ValueError:
@@ -554,8 +534,8 @@ class AutomationStepDialog(QDialog):
             
             # Get the action and value
             action = self.value_combo.currentText()
-            if action == None or action == "NA":
-                print ("Invalid action")
+            if action == None or action == "NA" or action == "Select Action":
+                print ("Action, not selected")
                 return
             else: 
                 data_dict["action"] = action
@@ -572,6 +552,7 @@ class AutomationStepDialog(QDialog):
             else:
                 # This shouldn't happen
                 print ("Unknown command / value 2")
+                return
             
             # If no name given then can replace with a user friendly
             if self.name == "":

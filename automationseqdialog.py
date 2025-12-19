@@ -2,6 +2,7 @@
 
 import sys
 import copy
+import re
 from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget, QMessageBox,
@@ -159,14 +160,20 @@ class AutomationSeqDialog(QDialog):
         return self.seq_data
     
     def _calc_locos(self):
-        """Calculates the number of locos required based on the steps."""
         num_locos = 0
         for step in self.steps:
-            for rule in step.get("rules", []):
-                if rule.get("rule_type") == "Loco":
-                    # Look for highest non DCC ID loco_id used
-                    loco_id = rule.get("data", {}).get("loco_id")
-                    if loco_id > num_locos:
-                        num_locos  = loco_id - 1 # loco_id is 1 based
+            if step.get("type") == "Loco":
+                loco_id_str = step.get("data", {}).get("locoid", "")
+                
+                # Regex looks for "ID " followed by one or more digits (\d+)
+                match = re.match(r"ID (\d+)", str(loco_id_str))
+                
+                if match:
+                    loco_id = int(match.group(1))
+                else:
+                    continue
+
+                if loco_id > num_locos:
+                    num_locos = loco_id 
         return num_locos
         
