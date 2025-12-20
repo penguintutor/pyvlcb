@@ -281,6 +281,17 @@ class AutomationStepDialog(QDialog):
             # Value (eg. speed)
             self.value2_combo.setVisible(False)
             #self.value2_label.setText("Value:")
+        elif form_type == "App": # App Event eg wait
+            self.node_combo.setVisible(True)
+            self.node_label.setText("Command:")
+            # Use self.event_edit rather than combo
+            self.swap_field_widget(self.event_label, self.event_edit)
+            self.event_label.setText("Arguments:")
+            # value / value 2 not required
+            self.value_combo.setVisible(False)
+            #self.value_label.setText("Value:")
+            # Value (eg. speed)
+            self.value2_combo.setVisible(False)
         # If not recognised then set as non selected
         # This is default for a new step
         else:
@@ -339,7 +350,15 @@ class AutomationStepDialog(QDialog):
                     nodes += [f"ID {i}" for i in range(1, self.num_locos_req + 1)]
                 # Always offer option to use a DCC ID directly
                 nodes.append("Use DCC ID")
+            elif selected_type == "App":
+                # For app then just hard code some options for now
+                nodes = ["Select Command", "Wait", "Set Variable"]
+                # Could add others in future
+                # Eg. Log Message
+                # Does not include label or jump (handled as separate types)
+
             self.node_combo.addItems(nodes)
+            
         # show the node row
         self.show_hide_row(2, True, "Node:")    # Show node row
 
@@ -402,6 +421,27 @@ class AutomationStepDialog(QDialog):
                 # shows text that allocated on run
                 self.swap_field_widget(self.event_label, self.event_alt_label)
             # Hide value 2 (next field is action)
+            self.show_hide_row(5, False)    # Hide value2 row
+        elif selected_type == "App":
+            # For App then event_edit is used for arguments
+            # Event field (and optional value) depends upon value of node
+            if selected_node == "Select Command":
+                events = ["NA"]
+                self.show_hide_row(3, False)    # Hide event row
+            else:
+                if selected_node == "Wait":
+                    self.event_label.setText("Delay:")
+                    # For wait then event is time in seconds (as text)
+                    self.swap_field_widget(self.event_label, self.event_edit)
+                elif selected_node == "Set Variable":
+                    self.event_label.setText("Variable name:")
+                    # For set variable then event is variable name from combo
+                    self.swap_field_widget(self.event_label, self.event_combo)
+                    variables = device_model.get_variable_names()
+                    variables.append("New Variable")
+                    self.event_combo.addItems(variables)
+                    
+            # Hide value 2 (not used)
             self.show_hide_row(5, False)    # Hide value2 row
         else:
             events = ["NA"]

@@ -244,7 +244,7 @@ class DeviceModel(QObject):
                 return self.nodes[node].get_ev_names()
         elif type == "Gui" or type == "User Interface":
             #A Gui has actions (rather than events) - currently hard coded
-            # could add others if required
+            # could add others if required based on actual Gui object
             return ["Toggle", "Set"]
         elif type in self.other_nodes.keys() and node in self.other_nodes[type]:
             #print (f"Checking for EVs {self.other_nodes[type]}")
@@ -357,6 +357,9 @@ class DeviceModel(QObject):
     def get_loco_from_filename (self, filename):
         # pass to locolist to reduce coupling
         return self.locos.get_loco_from_filename (filename)
+
+    def get_variable_names (self):
+        return self.other_nodes['Variable']
 
 
 
