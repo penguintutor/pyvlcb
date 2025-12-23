@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
 from automationrule import AutomationRule
 from automationsequence import AutomationStep, AutomationSequence
-
+from automationdialogrows import AutomationDialogRows
 from devicemodel import device_model
 from locoevent import LocoEvent
 
@@ -28,99 +28,23 @@ class AutomationStepDialog(QDialog):
         self.step = step
         self.params = {}
 
-        self._setup_ui()
-        
-    def _setup_ui(self):
+        # Used to track if loading a new dialog and whether type has changed
+        # If current type equals new selected type then no need to reload combos
+        self.current_type = "New"
+        # same for current node (row 2)
+        self.current_row2 = "New"
+        # current event (row 3)
+        self.current_row3 = "New"
+        # current value (row 4)
+        self.current_row4 = "New"
+        # current value2 (row 5)
+        self.current_row5 = "New"
+
         self.setLayout(QFormLayout())
 
-        # Request name of rule
-        self.name_lineedit = QLineEdit()
-        self.name_label = QLabel("Step Name:")
-        self.layout().addRow(self.name_label, self.name_lineedit)
-
-        # Rule Type Selector
-        self.rule_type_combo = QComboBox()
-        #RuleType = [AutomationRule("Rule1", "loco", {}), AutomationRule("Rule2", "point", {}), AutomationRule("Rule3", "sensor", {})]
-        # App not yet implemented
-        # User Interface known as GUI when saved
-        self.rule_type_combo.addItems(["Select Type", "VLCB", "Loco", "App", "User Interface"])
-        self.rule_type_label = QLabel("Step Type:")
-        self.layout().addRow(self.rule_type_label, self.rule_type_combo)
+        self.rows = AutomationDialogRows(self, self.layout())
         
-        #Node, Event, Value, Value2
-        # These are maintained even if the type of rule uses a different name
-        # This avoids swapping out the combobox if it just needs different values
-
-        # Node Selector
-        # Note that the QComboBox may be replaced (eg. spinbox for Loco)
-        # but the node_label reference must be maintained (even if not a node) to be able to identify the row
-        # the text of node_label can of course be changed
-        self.node_combo = QComboBox()
-        self.node_combo.addItem("NA", None)	# Change to Select Node if VLCB
-        # Nodes to be added if VLCB selected
-        self.node_label = QLabel("Node:")
-        self.layout().addRow(self.node_label, self.node_combo)
-                
-        # Event Selector
-        self.event_combo = QComboBox()
-        self.event_combo.addItem("NA", None) # Change to Select Event if VLCB
-        # Events to be added if VLCB selected
-        self.event_label = QLabel("Event:")
-        self.layout().addRow(self.event_label, self.event_combo)
-        # swap event_combo for lineedit if required
-        self.event_edit = QLineEdit()
-        # Add validator to accept only integers 1-9999
-        self.event_edit.setValidator(QIntValidator(1, 9999, self.event_edit))
-        # Add label if loco id selected
-        self.event_alt_label = QLabel("Allocated when run")
-
-        # Value Selector
-        self.value_combo = QComboBox()
-        self.value_combo.addItem("NA", None) # Change to value
-        # Values to be added
-        self.value_label = QLabel("Value:")
-        self.layout().addRow(self.value_label, self.value_combo)
         
-        # Value 2 (used by certain options - eg. DCC)
-        # Hide if not used
-        self.value2_combo = QComboBox()
-        self.value2_combo.addItem("NA", None)
-        # Can sometimes swap out combo for spinbox - eg. loco speed
-        self.value2_spinbox = QSpinBox()
-        self.value2_spinbox.setRange(0,128)
-        self.value2_spinbox.setValue(0)
-        self.value2_label = QLabel("Value:")
-        self.layout().addRow(self.value2_label, self.value2_combo)
-        # Or swap for a dual spinbox & combo using a Horizontal Layout
-        self.value2_inner_widget = QWidget()
-        self.value2_inner_layout = QHBoxLayout(self.value2_inner_widget)
-        # Set margins to 0 to make it look clean inside the QFormLayout row
-        self.value2_inner_layout.setContentsMargins(0, 0, 0, 0)
-        self.value2_inner_spinbox = QSpinBox()
-        self.value2_inner_spinbox.setRange(1, 18)
-        self.value2_inner_spinbox.setValue(1)
-        self.value2_inner_combo = QComboBox()
-        self.value2_inner_combo.addItems(["On", "Off"])
-        
-        # 5. Add widgets to the QHBoxLayout
-        self.value2_inner_layout.addWidget(self.value2_inner_spinbox)
-        #self.value2_inner_layout.addWidget(QLabel("Units:")) # Adding a small label for context
-        self.value2_inner_layout.addWidget(self.value2_inner_combo)
-
-        # Spacer
-        spacer_widget = QWidget()
-        spacer_widget.setFixedHeight(30) # Set a fixed height for the gap
-        self.layout().addRow(spacer_widget)
-        
-        # Set a minimum height for all the widgets to ensure spacing if set to ""
-        min_row_height = 30
-        self.name_label.setMinimumSize(0, min_row_height)
-        self.rule_type_label.setMinimumSize(0, min_row_height)
-        self.node_label.setMinimumSize(0, min_row_height)
-        self.event_label.setMinimumSize(0, min_row_height)
-        self.value_label.setMinimumSize(0, min_row_height)
-        self.value2_label.setMinimumSize(0, min_row_height)
-
         # Buttons
         button_box = QHBoxLayout()
         save_button = QPushButton("OK")
@@ -130,116 +54,150 @@ class AutomationStepDialog(QDialog):
         button_box.addWidget(save_button)
         button_box.addWidget(cancel_button)
         self.layout().addRow(button_box)
-        
-        # Initial call to set up the parameters based on the default selected rule
-        #self._update_params_ui(self.rule_type_combo.currentText())
-        if self.step != None:
-            #print (f"Step details {self.step}")
-            # Check if the type is valid and if so then set it 
-            index = self.rule_type_combo.findText(self.step['type'])
-
-            if index >= 0:
-                self.rule_type_combo.setCurrentIndex(index)
-            else:
-                print(f"Warning: '{self.step['type']}' not found in combo box options.")
-                
-        # Update the form type
-        self.set_form_type ()
+               
+        # Update the rows
+        self.update_rows ()
             
-        
-        # Don't connect to the change events until after initial setup
-        self.rule_type_combo.currentTextChanged.connect(self.update_node_combo)
-        self.node_combo.currentTextChanged.connect(self.update_event_combo)
-        self.event_combo.currentTextChanged.connect(self.update_value_combo)
-        self.value_combo.currentTextChanged.connect(self.update_value2_combo)
 
-    def show_hide_row (self, row, show=True, label=None):
-        """Set visibility for the widgets in the specified form row.
+    def update_rows (self):
+        # disable signals - prevents multiple calls during update
+        self.rows.enable_combo_signals(False)
 
-        Keeps the label visible at all times. When hiding a row we set the
-        label's text to an empty string (but keep it visible to preserve
-        spacing). When restoring if label is provided then that is used
-        as the text.
-        
-        Handles both single widgets and nested layouts in the FieldRole.
-        """
-        #print (f"Show/hide row {row} show={show} label={label}")
+        # If initial open and step is not None then set current title and type
+        if self.current_type == "New" and self.step != None:
+            self.rows.set_lineedit_text(0, self.step.get('name'))
+            self.rows.set_combo_text(1, self.step.get('type'))
 
-        form_layout = self.layout()
-
-        label_item = form_layout.itemAt(row, QFormLayout.LabelRole).widget()
-        field_item = form_layout.itemAt(row, QFormLayout.FieldRole)
-
-        #print (f"Label item: {label_item}, Field item: {field_item}")
-
-        if field_item is None:
-            print("No item in FieldRole for row", row)
+        # Get form type and call appropriate method to set up the form
+        form_type = self.rows.get_type_text()
+        if form_type == None:
+            self.form_selected_none()
+        elif form_type == "VLCB":
+            self.form_selected_vlcb()
+        elif form_type == "Loco":
+            self.form_selected_loco()
+        elif form_type == "User Interface":
+            self.form_selected_gui()
+        elif form_type == "App":
+            self.form_selected_app()
         else:
-            w = field_item.widget()
-            if w is not None:
-                # Python class name and Qt/C++ class name
-                #print("Widget:", w.__class__.__name__, "/", w.metaObject().className())
-                # Use isinstance checks to branch
-                if isinstance(w, QComboBox):
-                    #print("It's a QComboBox")
-                    pass
-                elif isinstance(w, QLineEdit):
-                    #print("It's a QLineEdit")
-                    pass
-                else:
-                    #print("Other widget type")
-                    l = w.layout()
-                    if l is not None:
-                        #print("Layout:", l.__class__.__name__)
-                        # You can inspect children
-                        for i in range(l.count()):
-                            ci = l.itemAt(i)
-                            cw = ci.widget()
-                            print(" child:", (cw.__class__.__name__ if cw else None))
+            self.form_selected_none()
 
+        # enable signals
+        self.rows.enable_combo_signals(True)
 
-        if show == False:
-            label_item.setText("")
-        elif label is not None:
-            label_item.setText(label)
-        
-        # Handle field_item: it could be a widget or a nested layout
-        if field_item is None:
+    def _hide_rows (self, row_index ):
+        # Hide all rows from row_index to 5
+        for i in range (row_index, 6):
+            self.rows.show_hide_row(i, False) 
+
+    def _reset_row_currents (self, from_row, type="VLCB"): 
+        # used to reset current row trackers if prev combo has changed  
+        if from_row <= 2:
+            self.current_row2 = "Select Node"
+        if from_row <= 3:
+            if type == "Loco":
+                self.current_row3 = "Select Loco"
+            else:
+                self.current_row3 = "Select Event"
+        if from_row <= 4:
+            if type == "Loco":
+                self.current_row4 = "Select Action"
+            else:
+                self.current_row4 = "default"
+        if from_row <= 5:
+            self.current_row5 = "default"
+
+    def form_selected_none (self):
+        self._hide_rows(2)
+
+    def form_selected_vlcb (self):
+        self.rows.show_hide_row(2, True, "Node:")    # Show node row
+        # Hide remaining rows (can re-enable later if required)
+        self._hide_rows(3)    # Hide remaining rows (from event onwards)
+        # if  current type has changed then generate node list
+        if self.current_type != "VLCB":
+            node_items = ["Select Node"] + device_model.get_nodes_names("VLCB", null_events=False)
+            # if no nodes then just show NA
+            if node_items == ["Select Node"]:
+                node_items = ["NA"]
+            self.rows.combo_add_items(2, node_items)
+            if self.current_type == "New" and self.step != None:
+                # Set based on loaded step
+                self.rows.set_combo_text(2, device_model.key_to_name(self.step['data']['node_id'], "VLCB"))
+            else:
+                #  If VLCB is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(2, type="VLCB")    # Reset from node onwards
+                #self._hide_rows(3)    # Hide remaining rows (from event onwards)
+                self.current_type = "VLCB"
+                return
+        # Reach here then VLCB was already selected or we have attempted to load from step
+        self.current_type = "VLCB"
+        # Node selection is already populated - check for a value
+        selected_node = device_model.name_to_key(self.rows.get_combo_text(2), "VLCB")
+        # If this was new and not loaded or moved back to "Select Node" then return here - need to select node first
+        if selected_node == None:
+            self.current_row2 = "Select Node"
             return
+        #print (f"selected node {selected_node} curr {self.current_row2}")
+        # Set Event to visible
+        self.rows.show_hide_row(3, True, "Event:")
+        if self.current_row2 == "New" or selected_node != self.current_row2:
+            # node is different to current - so update event list
+            event_items = ["Select Event"] + device_model.get_events(selected_node, "VLCB")    
+            if event_items == ["Select Event"]:
+                event_items = ["NA"]
+            self.rows.combo_add_items(3, event_items)
+            
+            # Hide remaining - can re-enable later if selected
+            self._hide_rows(4)    # Hide remaining rows (from value onwards)
+            if self.current_row3 == "New" and self.step != None:
+                # Set based on loaded step
+                #print (f"Raw event {self.step['data']['event']}, as name {device_model.key_to_name(self.step['data']['event'], 'VLCB')}")
+                self.rows.set_combo_text(3, device_model.key_to_name(self.step['data']['event'], "VLCB"))
+            else:
+                # If node is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(3, type="VLCB")    # Reset from event onwards
+                #self._hide_rows(4)    # Hide remaining rows (from value onwards)
+                self.current_row2 = selected_node
+                return
+        self.current_row2 = selected_node
+        # Reach here then event was already selected or we have attempted to load from step
+        # Read in row 3 (event) and check for change
+        selected_event = self.rows.get_combo_text(3)
+        if selected_event == None or selected_event == "Select Event":
+            self._hide_rows(4)    # Hide remaining rows (from value onwards)
+            self.current_row3 = "Select Event"
+            return
+        # show value field
+        self.rows.show_hide_row(4, True, "Value:")
+        #print (f"selected event {selected_event} curr {self.current_row3}")
+        if self.current_row3 == "New" or selected_event != self.current_row3:
+            # event is different to current - so update value list
+            # For vlcb then value is on / off depending on event (no select default to on)
+            value_items = ["on", "off"]
+            self.rows.combo_add_items(4, value_items)
+            
+            if self.current_row4 == "New" and self.step != None:
+                # Set based on loaded step
+                self.rows.set_combo_text(4, self.step['data']['value'])
+            # value 2 not used - set defaults and hide value 2
+            self._reset_row_currents(4, type="VLCB")    # Reset from value onwards
+            #self._hide_rows(5)    # Hide remaining rows (from value2 onwards)
+        self.current_row3 = selected_event
+        # Don't need to check value as there are no fields below it
         
-        field_widget = field_item.widget()
-        if field_widget is not None:
-            # It's a single widget (e.g., QComboBox, QLineEdit)
-            #field_widget.setVisible(show)
-            # Also check if it's a layout in which case hide / show all
-            field_layout = field_widget.layout()
-            if field_layout is not None:
-                #print (f"Field layout for {row}, {field_layout}, {show}")
-                # Hide/show all child widgets in the layout
-                for idx in range(field_layout.count()):
-                    child_item = field_layout.itemAt(idx)
-                    #print (f"Child is {child_item}")
-                    if child_item is None:
-                        continue
-                    child_widget = child_item.widget()
-                    print (f"Child widget is {child_widget}")
-                    if child_widget is not None:
-                        child_widget.setVisible(show)
-            # Make the widget hidden / visible
-            field_widget.setVisible(show)
-        # special case if row 5 then may need to hide the combo as well
-        if row == 5 and show == False:
-            self.value2_combo.setVisible(False)
 
-    # Updates the form, including the labels and input fields according to type
-    # Does not set any values - just the form type and calls the generator of the combo if appropriate
-    def set_form_type (self):
-        #print ("Set form type")
-        # Block signals whilst updating - then manually call update and then reenable signals
-        self.node_combo.blockSignals(True)
-        self.event_combo.blockSignals(True)
-        self.value_combo.blockSignals(True)
+    def form_selected_loco (self):
+        pass
+
+    def form_selected_gui (self):
+        pass
+
+    def form_selected_app (self):
+        pass 
         
+    def old (self):
         form_type = self.rule_type_combo.currentText()
         if form_type == "VLCB":
             #self.node_combo.setVisible(True)
@@ -534,35 +492,32 @@ class AutomationStepDialog(QDialog):
 
     # Gets data if valid and returns as a dict
     def save_step(self):
-        rule_type = self.rule_type_combo.currentText()
-        #loco_index = self.loco_combo.currentData()
-        
+        rule_type = self.rows.get_combo_text(1)
+        if rule_type == None or rule_type == "Select Type":
+            QMessageBox.warning(self, "Invalid Type", "Please select a valid rule type.")
+            return
         # All steps needed a name - but if empty can be created automatically
-        self.name = self.name_lineedit.text()
+        self.name = self.rows.get_linedit_text(0).strip()
 
         # Get additional data and place in a dict
         data_dict = {}        
 
-        # If this matches the device model keys then it's an automation rule
-        #if rule_type in device_model.event_map.keys():
-        if rule_type == "VLCB":
-            
+        if rule_type == "VLCB":          
             # If it's vlcb then convert node to node_id
-            node = self.node_combo.currentText()
+            node = self.rows.get_combo_text(2)
             if node == None or node == "Select Node" or node == "NA":
-                # todo replace with qmessage - also see other print messages
-                print ("Invalid node")
+                QMessageBox.warning(self, "Invalid Node", "Please select a valid node.")
                 return
             data_dict['node_id'] = device_model.name_to_key(node)
-            event = self.event_combo.currentText()
+            event = self.rows.get_combo_text(3) 
             if event == None or event == "Select Event" or event == "NA":
-                print ("Invalid event")
+                QMessageBox.warning(self, "Invalid Event", "Please select a valid event.")
                 return
             data_dict['event'] = event
             # Value should not return an invalid value but check anyway
-            value = self.value_combo.currentText()
+            value = self.rows.get_combo_text(4)
             if value == None or value == "NA":
-                print ("Invalid value")
+                QMessageBox.warning(self, "Invalid Value", "Please select a valid value.")
                 return
             data_dict['value'] = value
             
@@ -570,11 +525,6 @@ class AutomationStepDialog(QDialog):
             if self.name == "":
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['event']} - {data_dict['value']}"
             
-            # appvars should not longer be included in the step (added directly in AutomationSequence)
-            # Step parent, step_type, step_name, data={}
-            #data_dict["appvars"] = self.mainwindow.appvariables
-            ####
-            #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
         elif rule_type == "User Interface":
@@ -655,15 +605,6 @@ class AutomationStepDialog(QDialog):
             if self.name == "":
                 self.name = f"Loco {loco_no} - {action}"
             
-            # # Step parent, step_type, step_name, data={}
-            # data_dict = {
-            #     'loco_no': loco_no,
-            #     'dcc_id': dcc_id,
-            #     'action': action,
-            #     'value': value
-            #     }
-            
-            #self.step = AutomationStep(None, rule_type, self.name, data_dict)
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
 
@@ -711,13 +652,7 @@ class AutomationStepDialog(QDialog):
         # Optionally hide or delete the old widget
         if hide_old:
             old_widget.hide()
-            # l = old_widget.layout()
-            # # also check for layout / child widgets
-            # if l is not None:
-            #     for i in range(l.count()):
-            #         ci = l.itemAt(i)
-            #         cw = ci.widget()
-            #         cw.hide()
+
                 
 
 
