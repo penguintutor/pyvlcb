@@ -120,7 +120,7 @@ class AutomationDialogRows:
         label_item = self.labels[row]
         field_item = self.layout.itemAt(row, QFormLayout.FieldRole)
 
-        print (f"Show / Hide Label item: {label_item}, Field item: {field_item} for row {row} show {show}")
+        #print (f"Show / Hide Label item: {label_item}, Field item: {field_item} for row {row} show {show}")
 
         if field_item is None:
             print("No item in FieldRole for row", row)
@@ -150,7 +150,7 @@ class AutomationDialogRows:
             label_item.setText(label)
         
         # Make the widget hidden / visible
-        print (f"Hiding /showing row {row} field widget {widget} to {show}")
+        #print (f"Hiding /showing row {row} field widget {widget} to {show}")
         widget.setVisible(show)
 
     def get_type_text (self):
@@ -192,7 +192,7 @@ class AutomationDialogRows:
                     self.layout.replaceWidget(existing_widget, self.combos[row])
                     self.combos[row].setVisible(True)
                 elif field_type == 'lineedit':
-                    print (f"Swappling in lineedit for row {row} existing {existing_widget}, new {self.lineedits[row]}")
+                    #print (f"Swapping in lineedit for row {row} existing {existing_widget}, new {self.lineedits[row]}")
                     self.layout.replaceWidget(existing_widget, self.lineedits[row])
                     self.lineedits[row].setVisible(True)
                 elif field_type == 'fieldlabel':

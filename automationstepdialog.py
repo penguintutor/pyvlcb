@@ -206,7 +206,7 @@ class AutomationStepDialog(QDialog):
         
 
     def form_selected_loco (self):
-        print (f"Loco selected action current row4 {self.current_row4}")
+        #print (f"Loco selected action current row4 {self.current_row4}")
         self._set_input_types(type="Loco")
         self.rows.show_hide_row(2, True, "Loco No.:")    # Show loco row
         # Hide remaining rows (can re-enable later if required)
@@ -220,7 +220,9 @@ class AutomationStepDialog(QDialog):
                 # Set based on loaded step
                 locoid = self.step['data'].get('locoid')
                 if locoid is not None:
-                    self.rows.set_combo_text(2, device_model.key_to_name(locoid, "Loco"))
+                    # Locid is already as a string
+                    # self.rows.set_combo_text(2, device_model.key_to_name(locoid, "Loco"))
+                    self.rows.set_combo_text(2, locoid)
                 # There should be only one of locoid and dccid if both then locoid takes precedence
                 # If dccid then set to Use DCC ID which will load if appropriate
                 elif self.step['data'].get('dccid') is not None:
@@ -239,7 +241,7 @@ class AutomationStepDialog(QDialog):
         selected_loco = self.rows.get_combo_text(2)
         if selected_loco == None or selected_loco == "Select Loco":
             self.current_row2 = "Select Loco"
-            print ("Hiding rows from 3")
+            
             self._hide_rows(3)    # Hide remaining rows (from DCC ID onwards)
             return
         # If DCC ID then attempt to load
@@ -266,7 +268,7 @@ class AutomationStepDialog(QDialog):
 
         ## Now add Action field (row  as dccid is row 3)
         self.rows.show_hide_row(4, True, "Action:")
-        print (f"Loco action current row4 {self.current_row4}")
+        #print (f"Loco action current row4 {self.current_row4}")
         # Actions aren't dependent on loco so just add when new
         if self.current_row4 == "New":
             

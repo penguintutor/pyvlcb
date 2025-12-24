@@ -23,7 +23,7 @@ class LocoEvent:
     
     @classmethod
     def get_action_names(cls):
-        print (f"Returning Loco actions {cls.event_types}")
+        #print (f"Returning Loco actions {cls.event_types}")
         return cls.event_types
     
 
