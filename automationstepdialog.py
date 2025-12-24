@@ -108,10 +108,27 @@ class AutomationStepDialog(QDialog):
         if from_row <= 5:
             self.current_row5 = "default"
 
+    def _set_input_types (self, type="default", mode="default"):
+        """Set the input types based on type."""
+        # Type is the main type (VLCB, Loco, GUI, App)
+        # Mode is if special setting (eg. Loco has "non-dccid" for loco no)
+        # Used in single method so all updates can be made here and relected in the other types
+        #if type == "Loco" and mode == "non-dccid":
+        #    self.rows.set_field_type(3, "fieldlabel")  # Event is label
+        #elif type == "Loco":
+        #    self.rows.set_field_type(3, "lineedit")  # Event is lineedit for DCC ID
+        # For loco manage within selection - for others set row 3 back to combo
+        if type == "Loco":
+            pass
+        # Default for all others
+        else:
+            self.rows.set_field_type(3, "combo")  # Event is combobox
+
     def form_selected_none (self):
         self._hide_rows(2)
 
     def form_selected_vlcb (self):
+        self._set_input_types(type="VLCB")
         self.rows.show_hide_row(2, True, "Node:")    # Show node row
         # Hide remaining rows (can re-enable later if required)
         self._hide_rows(3)    # Hide remaining rows (from event onwards)
@@ -189,7 +206,107 @@ class AutomationStepDialog(QDialog):
         
 
     def form_selected_loco (self):
-        pass
+        print (f"Loco selected action current row4 {self.current_row4}")
+        self._set_input_types(type="Loco")
+        self.rows.show_hide_row(2, True, "Loco No.:")    # Show loco row
+        # Hide remaining rows (can re-enable later if required)
+        self._hide_rows(3)    # Hide remaining rows (from DCC ID onwards)
+        # if  current type has changed then generate node list
+        if self.current_type != "Loco":
+            #node_items = ["Select Loco"] + [f"ID {i}" for i in range(1, self.num_locos_req + 1)] + ["Use DCC ID"]
+            node_items = ["Select Loco"] + [device_model.key_to_name(i, "Loco") for i in range(1, self.num_locos_req + 1)] + ["Use DCC ID"]
+            self.rows.combo_add_items(2, node_items)
+            if self.current_type == "New" and self.step != None:
+                # Set based on loaded step
+                locoid = self.step['data'].get('locoid')
+                if locoid is not None:
+                    self.rows.set_combo_text(2, device_model.key_to_name(locoid, "Loco"))
+                # There should be only one of locoid and dccid if both then locoid takes precedence
+                # If dccid then set to Use DCC ID which will load if appropriate
+                elif self.step['data'].get('dccid') is not None:
+                    self.rows.set_combo_text(2, "Use DCC ID")
+            else:
+                #  If Loco is just selected and it's not loading existing step then set all other items to default
+                if self.current_type != "New":
+                    self._reset_row_currents(2, type="Loco")    # Reset from node onwards if not new
+                self.current_type = "Loco"
+                return
+        self.current_type = "Loco"
+        # Reach here then Loco was already selected or we have attempted to load from step
+        # or if DCC ID still need to attempt to load
+
+        # Loco selection is already populated - check for a value
+        selected_loco = self.rows.get_combo_text(2)
+        if selected_loco == None or selected_loco == "Select Loco":
+            self.current_row2 = "Select Loco"
+            print ("Hiding rows from 3")
+            self._hide_rows(3)    # Hide remaining rows (from DCC ID onwards)
+            return
+        # If DCC ID then attempt to load
+        elif selected_loco == "Use DCC ID":
+            self.rows.set_field_type(3, "lineedit")  # Event is lineedit for DCC ID
+            self.rows.show_hide_row(3, True, "DCC ID:")
+            # Set edit field (show label later)
+            # If loading from step then set DCC ID if present
+            if self.current_row2 == "New" and self.step != None:
+                dccid = self.step['data'].get('dccid')
+                if dccid is not None:
+                    self.rows.set_lineedit_text(3, device_model.key_to_name(dccid, "Loco"))
+            # Continue later regardless of value as only verify on save
+        else:
+            # A Loco ID is selected so show field label 
+            # These says allocated at run time
+            self.rows.show_hide_row(3, True, "DCC ID:")
+            self.rows.set_field_type(3, "fieldlabel")  # Event is label
+        self.current_row2 = selected_loco
+        # note curent_row3 is not used as row2 has the same meaning
+        
+        # Don't need to check further rows as doesn't affect other fields
+        #loco_id = device_model.name_to_key(self.rows.get_combo_text(2), "Loco")
+
+        ## Now add Action field (row  as dccid is row 3)
+        self.rows.show_hide_row(4, True, "Action:")
+        print (f"Loco action current row4 {self.current_row4}")
+        # Actions aren't dependent on loco so just add when new
+        if self.current_row4 == "New":
+            
+            action_items = ["Select Action"] + LocoEvent.get_action_names()
+            self.rows.combo_add_items(4, action_items)
+            
+            # Hide remaining - can re-enable later if selected
+            self._hide_rows(5)    # Hide remaining rows (from value2 onwards)
+            if self.current_row4 == "New" and self.step != None:
+                self.rows.set_combo_text(4, self.step['data']['action'])
+            else:
+                # If node is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(4, type="Loco")    # Reset from event onwards
+                self._hide_rows(5)    # Hide remaining rows (from value onwards)
+                self.current_row4 = "Select Action"
+                return
+        selected_action = self.rows.get_combo_text(4)
+        
+        if selected_action == None or selected_action == "Select Action":
+            self.current_row4 = "Select Action"
+            self._hide_rows(5)    # Hide remaining rows (from value2 onwards)
+            return
+        # show value field
+        self.rows.show_hide_row(5, True, "Value:")
+
+        if self.current_row5 == "New" or selected_action != self.current_row4:
+            # action is different to current - so update value list
+            # Options depends upon action - due to number of options
+            # this is moved into AutomationDialogRows
+            # if it's new then send the value to the setup
+            if self.current_row5 == "New" and self.step != None:
+                data = self.step.get('data')
+                self.rows.loco_action_setup(selected_action, data)
+            else:
+                self.rows.loco_action_setup(selected_action)
+            
+        self.current_row4 = selected_action
+        # row5 value doesn't matter as long as set to not New
+        self.current_row5 = "Select Value"
+        
 
     def form_selected_gui (self):
         pass

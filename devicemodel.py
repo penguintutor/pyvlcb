@@ -220,11 +220,28 @@ class DeviceModel(QObject):
                 if self.nodes[key].name == name or str(self.nodes[key]) == name:
                     #print (f"name match {name}, key {key}")
                     return key
+        elif type == "Loco":
+            # Convert ID {num} to int num
+            # very basic assumes fixed format (as used in combo)
+            return int(name.split(" ")[1])
         elif type in self.other_nodes.keys():
             for i in range(len(self.other_nodes[type])):
                 if self.other_nodes[type][i].name == name:
                     return i
         return None
+
+    def key_to_name (self, key, type="VLCB"):
+        if type == "VLCB":
+            if key in self.nodes.keys():
+                return self.nodes[key].name
+        elif type == "Loco":
+            # key is loco ID
+            return f"ID {key}"
+        elif type in self.other_nodes.keys():
+            if key < len(self.other_nodes[type]):
+                return self.other_nodes[type][key].name
+        # if no name found then name equals key
+        return key
 
     # Based on node_id and evnaame get event_id
     def evname_to_evid (self, node_id, evname):
@@ -249,7 +266,7 @@ class DeviceModel(QObject):
         elif type in self.other_nodes.keys() and node in self.other_nodes[type]:
             #print (f"Checking for EVs {self.other_nodes[type]}")
             return self.other_nodes[type][node].get_ev_names()
-        return ""
+        return []
         
     # set layout from mainwindow
     def set_layout (self, layout):

@@ -36,11 +36,16 @@ class AutomationDialogRows:
         self.lineedits = [
                 QLineEdit(),    # Step Name
                 None,           # Rule Type
-                None,           # Node
-                QLineEdit(),    # Event
-                QLineEdit(),    # Value
+                None,           # Node / Loco ID
+                QLineEdit(),    # Event / DCC ID
+                QLineEdit(),    # Value / Action
                 QLineEdit()     # Value2
                 ]
+        # Special setup for Loco - if use these for other types would need to adjust
+        # Only allow numbers for DCC ID (1 to 9999)
+        self.lineedits[3].setValidator(QIntValidator(1, 9999, self.lineedits[3]))
+        self.fieldlabels = [QLabel() for i in range (6)]
+        self.fieldlabels[3].setText("Allocated when run")  # Event alternative label if DCC not selected
         # Can sometimes swap out combo for spinbox - eg. loco speed
         self.row5_spinbox = QSpinBox()
         self.row5_spinbox.setRange(0,128)
@@ -115,63 +120,38 @@ class AutomationDialogRows:
         label_item = self.labels[row]
         field_item = self.layout.itemAt(row, QFormLayout.FieldRole)
 
-
-        #print (f"Label item: {label_item}, Field item: {field_item}")
+        print (f"Show / Hide Label item: {label_item}, Field item: {field_item} for row {row} show {show}")
 
         if field_item is None:
             print("No item in FieldRole for row", row)
-        else:
-            w = field_item.widget()
-            if w is not None:
-                # Python class name and Qt/C++ class name
-                #print("Widget:", w.__class__.__name__, "/", w.metaObject().className())
-                # Use isinstance checks to branch
-                if isinstance(w, QComboBox):
-                    #print("It's a QComboBox")
-                    pass
-                elif isinstance(w, QLineEdit):
-                    #print("It's a QLineEdit")
-                    pass
-                else:
-                    #print("Other widget type")
-                    l = w.layout()
-                    if l is not None:
-                        #print("Layout:", l.__class__.__name__)
-                        # You can inspect children
-                        for i in range(l.count()):
-                            ci = l.itemAt(i)
-                            cw = ci.widget()
-                            print(" child:", (cw.__class__.__name__ if cw else None))
+            return
+
+        widget = field_item.widget()
+        if widget is None:
+            print (f"field item is not a widget for {row}")
+            return
+
+
+        # If the widget has a layout then handle children
+        l = widget.layout()
+        if l is not None:
+            #print("Layout:", l.__class__.__name__)
+            # You can inspect children
+            for i in range(l.count()):
+                ci = l.itemAt(i)
+                cw = ci.widget()
+                print(" child:", (cw.__class__.__name__ if cw else None))
+                if cw is not None:
+                    cw.setVisible(show)
 
         if show == False:
             label_item.setText("")
         elif label is not None:
             label_item.setText(label)
         
-        # Handle field_item: it could be a widget or a nested layout
-        if field_item is None:
-            return
-        
-        field_widget = field_item.widget()
-        if field_widget is not None:
-            # It's a single widget (e.g., QComboBox, QLineEdit)
-            #field_widget.setVisible(show)
-            # Also check if it's a layout in which case hide / show all
-            field_layout = field_widget.layout()
-            if field_layout is not None:
-                #print (f"Field layout for {row}, {field_layout}, {show}")
-                # Hide/show all child widgets in the layout
-                for idx in range(field_layout.count()):
-                    child_item = field_layout.itemAt(idx)
-                    #print (f"Child is {child_item}")
-                    if child_item is None:
-                        continue
-                    child_widget = child_item.widget()
-                    print (f"Child widget is {child_widget}")
-                    if child_widget is not None:
-                        child_widget.setVisible(show)
-            # Make the widget hidden / visible
-            field_widget.setVisible(show)
+        # Make the widget hidden / visible
+        print (f"Hiding /showing row {row} field widget {widget} to {show}")
+        widget.setVisible(show)
 
     def get_type_text (self):
         # Determine form type based on Rule Type combo selection
@@ -189,36 +169,51 @@ class AutomationDialogRows:
         return ""
 
     def set_field_type (self, row, field_type):
-        """Set the widget type in the specified row: 'combo', 'lineedit', or 'spinbox'."""
+        """Set the widget type in the specified row: 'combo', 'lineedit', 'fieldlabel, or 'spinbox'."""
         # If already this type then ignore
         current_type = self.get_field_type(row)
         if current_type == field_type:
             return
-        elif current_type == "custom":
-            # If current is custom then need to remove nested layout first
-            self.remove_custom_widgets (row)
-        else:
-            # Remove existing widget
-            field_item = self.layout.itemAt(row, QFormLayout.FieldRole)
-            if field_item is not None:
-                existing_widget = field_item.widget()
-                if existing_widget is not None:
-                    self.layout.removeWidget(existing_widget)
-                    existing_widget.setParent(None)  # Remove from layout
+        #if current_type == "custom":
+        #    # If current is custom then need to remove nested layout first
+        #    self.remove_custom_widgets (row)
+        # Remove existing widget
+        field_item = self.layout.itemAt(row, QFormLayout.FieldRole)
+        if field_item is not None:
+            existing_widget = field_item.widget()
+            if existing_widget is not None:
+                #self.layout.removeWidget(existing_widget)
+                #existing_widget.setParent(None)  # Remove from layout
+                # Set existing widget hidden
+                existing_widget.setVisible(False)
 
-        # Add new widget based on field_type
-        if field_type == 'combo':
-            self.layout.addWidget(self.combos[row], row, 1)
-        elif field_type == 'lineedit':
-            self.layout.addWidget(self.lineedits[row], row, 1)
-        elif field_type == 'spinbox':
-            # currently custom - may add later
-            print(f"Spinbox not defined for row {row}")
-        elif field_type == 'custom':
-            # custom needs to be added separately
-            pass
-        else:
-            print(f"Unknown field type '{field_type}' for row {row}")
+                # Swap to new widget based on field_type
+                if field_type == 'combo':
+                    self.layout.replaceWidget(existing_widget, self.combos[row])
+                    self.combos[row].setVisible(True)
+                elif field_type == 'lineedit':
+                    print (f"Swappling in lineedit for row {row} existing {existing_widget}, new {self.lineedits[row]}")
+                    self.layout.replaceWidget(existing_widget, self.lineedits[row])
+                    self.lineedits[row].setVisible(True)
+                elif field_type == 'fieldlabel':
+                    self.layout.replaceWidget(existing_widget, self.fieldlabels[row])
+                    self.fieldlabels[row].setVisible(True)
+                elif field_type == 'spinbox':
+                    # Only available for row 5 (loco speed select)
+                    if row == 5:
+                        self.layout.replaceWidget(existing_widget, self.row5_spinbox)
+                        self.row5_spinbox.setVisible(True)
+                    else:
+                        # may add later
+                        print(f"Spinbox not defined for row {row}")
+                elif field_type == 'custom':
+                    # custom needs to be added separately
+                    self.layout.replaceWidget(existing_widget, self.row5_inner_widget)
+                    # set inner items visible
+                    self.row5_inner_spinbox.setVisible(True)
+                    self.row5_inner_combo.setVisible(True)
+                else:
+                    print(f"Unknown field type '{field_type}' for row {row}")
 
     def remove_custom_widgets (self, row):
         """Remove custom nested widgets from the specified row."""
@@ -288,9 +283,28 @@ class AutomationDialogRows:
             return lineedit.text()
         return ""
 
-    # ToDo
-    # To add to event selection for DCC ID
-    # Add validator to accept only integers 1-9999
-    #    self.event_edit.setValidator(QIntValidator(1, 9999, self.event_edit))
-    #    # Add label if loco id selected
-    #    self.event_alt_label = QLabel("Allocated when run")
+    #Loco specific methods
+    def loco_action_setup (self, action, data=None):
+        """Setup the action combo for loco actions and return the list of items."""
+        # Data is a dict as different fields use different keys
+        action_items = []
+        if action == "Set Speed":
+            self.show_hide_row(5, True, "Speed:")
+            self.set_field_type(5, 'spinbox')
+            if data and "speed" in data:
+                self.row5_spinbox.setValue(data["speed"])
+        elif action == "Set Direction":
+            self.show_hide_row(5, True, "Direction:")
+            self.set_field_type(5, 'combo')
+            self.combo_add_items(5, ["Forward", "Reverse"])
+            if data and "direction" in data:
+                direction = data["direction"]
+                self.set_combo_text(5, direction)
+        elif action == "Function":
+            self.show_hide_row(5, True, "Function:")
+            self.set_field_type(5, 'custom')
+            # Todo load existing
+            #action_items = [f"F{i}" for i in range(1, 19)]  # F1 to F18
+        # Others don't need a value - eg. stop and all stop
+        else:
+            self.show_hide_row(5, False)

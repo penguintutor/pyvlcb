@@ -21,6 +21,11 @@ class LocoEvent:
     def type (self):
         return "Loco"
     
+    @classmethod
+    def get_action_names(cls):
+        print (f"Returning Loco actions {cls.event_types}")
+        return cls.event_types
+    
 
     def get_action(self):
         return self.data["action"]
