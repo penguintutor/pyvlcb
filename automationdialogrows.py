@@ -168,6 +168,27 @@ class AutomationDialogRows:
         # return empty string for blank and NA
         return ""
 
+    # These still have the row value for consistancy, but not use - only allows 5
+    def get_inner_spinbox_value (self, row):
+        """Get the value of the inner spinbox for row 5 custom widget."""
+        return self.row5_inner_spinbox.value()
+
+    def set_inner_spinbox_value (self, row, value):
+        """Set the value of the inner spinbox for row 5 custom widget."""
+        self.row5_inner_spinbox.setValue(value)
+
+    def get_inner_combo_text (self, row):
+        """Get the text of the inner combo box for row 5 custom widget."""
+        return self.row5_inner_combo.currentText()
+
+    def set_inner_combo_text (self, row, text):
+        """Set the text of the inner combo box for row 5 custom widget."""
+        index = self.row5_inner_combo.findText(text)
+        if index != -1:
+            self.row5_inner_combo.setCurrentIndex(index)
+        else:
+            print(f"Entry '{text}' not found in inner combo box for row 5")
+
     def set_field_type (self, row, field_type):
         """Set the widget type in the specified row: 'combo', 'lineedit', 'fieldlabel, or 'spinbox'."""
         # If already this type then ignore
@@ -276,7 +297,7 @@ class AutomationDialogRows:
         if lineedit is not None:
             lineedit.setText(text)
 
-    def get_linedit_text (self, row):
+    def get_lineedit_text (self, row):
         """Get the text of the line edit in the specified row."""
         lineedit = self.lineedits[row]
         if lineedit is not None:
@@ -303,8 +324,11 @@ class AutomationDialogRows:
         elif action == "Function":
             self.show_hide_row(5, True, "Function:")
             self.set_field_type(5, 'custom')
-            # Todo load existing
-            #action_items = [f"F{i}" for i in range(1, 19)]  # F1 to F18
+            if data and "function" in data and "function_action" in data:
+                function = data["function"]
+                function_action = data["function_action"]
+                self.set_inner_spinbox_value(5, function)
+                self.set_inner_combo_text(5, function_action)
         # Others don't need a value - eg. stop and all stop
         else:
             self.show_hide_row(5, False)

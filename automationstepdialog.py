@@ -616,16 +616,36 @@ class AutomationStepDialog(QDialog):
             QMessageBox.warning(self, "Invalid Type", "Please select a valid rule type.")
             return
         # All steps needed a name - but if empty can be created automatically
-        self.name = self.rows.get_linedit_text(0).strip()
+        self.name = self.rows.get_lineedit_text(0).strip()
 
         # Get additional data and place in a dict
         data_dict = {}        
 
         if rule_type == "VLCB":          
             data_dict = self._get_step_data_vlcb()
+            # If error then prev would give a QMessage and return None
+            # just return to allow correct and try again
+            if data_dict is None:
+                return
             # If no name given then can replace with a user friendly
             if self.name == "":
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['event']} - {data_dict['value']}"
+            
+            # Return as a dict - let Automation Sequence convert into an Automation Step
+            self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
+        elif rule_type == "Loco":          
+            data_dict = self._get_step_data_loco()
+            # If error then prev would give a QMessage and return None
+            # just return to allow correct and try again
+            if data_dict is None:
+                return
+            # If no name given then can replace with a user friendly
+            if self.name == "":
+                # Value depends upon action so not included at the moment
+                if "locoid" in data_dict:
+                    self.name = f"Loco {data_dict['locoid']} - {data_dict['action']}"
+                else:
+                    self.name = f"Loco {data_dict['dccid']} - {data_dict['action']}"
             
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
@@ -661,7 +681,7 @@ class AutomationStepDialog(QDialog):
             
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": "Gui", "name": self.name, "data" : data_dict}
-        elif rule_type == "Loco":
+        elif rule_type == "** OLD Loco":
             # Loco step - so get loco number and DCC ID
             loco_no = self.node_combo.currentText()
             if loco_no == None or loco_no == "Select Node" or loco_no == "NA":
@@ -743,6 +763,52 @@ class AutomationStepDialog(QDialog):
             return None
         data_dict['value'] = value
         return data_dict
+
+    def _get_step_data_loco(self):
+        """ Gets step data for loco - used in save_step """
+        # If fails uses QMessage and returns None
+        data_dict = {}
+        locoid = self.rows.get_combo_text(2)
+        if locoid == None or locoid == "Select Loco" or locoid == "NA":
+            QMessageBox.warning(self, "Invalid Loco", "Please select a valid loco.")
+            return None
+        elif locoid == "Use DCC ID":
+            # Get DCC ID from lineedit
+            dccid_str = self.rows.get_lineedit_text(3)
+            try:
+                dccid = int(dccid_str)
+                if not (1 <= dccid <= 9999):
+                    QMessageBox.warning(self, "Invalid DCC ID", "DCC ID must be between 1 and 9999.")
+                    return None
+            except ValueError:
+                QMessageBox.warning(self, "Invalid DCC ID", "DCC ID must be an integer.")
+                return None
+            data_dict['dccid'] = dccid
+        else:
+            # Save with ID {locoid} format
+            data_dict['locoid'] = locoid
+        action = self.rows.get_combo_text(4)
+        if action == None or action == "Select Action" or action == "NA":
+            QMessageBox.warning(self, "Invalid Action", "Please select a valid action.")
+            return None
+        data_dict['action'] = action
+        # Value depends on action
+        if action == "Set Speed":
+            speed = self.rows.get_spinbox_value(5)
+            data_dict['speed'] = speed
+        elif action == "Set Direction":
+            direction = self.rows.get_combo_text(5)
+            if direction == None or direction == "NA":
+                QMessageBox.warning(self, "Invalid Direction", "Please select a valid direction.")
+                return None
+            data_dict['direction'] = direction
+        elif action == "Function":
+            function = self.rows.get_inner_spinbox_value(5)
+            function_action = self.rows.get_inner_combo_text(5)
+            data_dict['function'] = function
+            data_dict['function_action'] = function_action
+        return data_dict
+        
     
     # Swaps the widget specified (eg. combobox with lineedit or spinbox)
     # Uses label_widget to find the row
