@@ -622,24 +622,7 @@ class AutomationStepDialog(QDialog):
         data_dict = {}        
 
         if rule_type == "VLCB":          
-            # If it's vlcb then convert node to node_id
-            node = self.rows.get_combo_text(2)
-            if node == None or node == "Select Node" or node == "NA":
-                QMessageBox.warning(self, "Invalid Node", "Please select a valid node.")
-                return
-            data_dict['node_id'] = device_model.name_to_key(node)
-            event = self.rows.get_combo_text(3) 
-            if event == None or event == "Select Event" or event == "NA":
-                QMessageBox.warning(self, "Invalid Event", "Please select a valid event.")
-                return
-            data_dict['event'] = event
-            # Value should not return an invalid value but check anyway
-            value = self.rows.get_combo_text(4)
-            if value == None or value == "NA":
-                QMessageBox.warning(self, "Invalid Value", "Please select a valid value.")
-                return
-            data_dict['value'] = value
-            
+            data_dict = self._get_step_data_vlcb()
             # If no name given then can replace with a user friendly
             if self.name == "":
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['event']} - {data_dict['value']}"
@@ -739,6 +722,27 @@ class AutomationStepDialog(QDialog):
     def get_step(self):
         return self.step
     
+    def _get_step_data_vlcb(self):
+        """ Gets step data for vlcb - used in save_step """
+        # If fails uses QMessage and returns None
+        data_dict = {}
+        node = self.rows.get_combo_text(2)
+        if node == None or node == "Select Node" or node == "NA":
+            QMessageBox.warning(self, "Invalid Node", "Please select a valid node.")
+            return None
+        data_dict['node_id'] = device_model.name_to_key(node)
+        event = self.rows.get_combo_text(3) 
+        if event == None or event == "Select Event" or event == "NA":
+            QMessageBox.warning(self, "Invalid Event", "Please select a valid event.")
+            return None
+        data_dict['event'] = event
+        # Value should not return an invalid value but check anyway
+        value = self.rows.get_combo_text(4)
+        if value == None or value == "NA":
+            QMessageBox.warning(self, "Invalid Value", "Please select a valid value.")
+            return None
+        data_dict['value'] = value
+        return data_dict
     
     # Swaps the widget specified (eg. combobox with lineedit or spinbox)
     # Uses label_widget to find the row
