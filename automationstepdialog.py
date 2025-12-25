@@ -66,7 +66,10 @@ class AutomationStepDialog(QDialog):
         # If initial open and step is not None then set current title and type
         if self.current_type == "New" and self.step != None:
             self.rows.set_lineedit_text(0, self.step.get('name'))
-            self.rows.set_combo_text(1, self.step.get('type'))
+            step_type = self.step.get('type')
+            if step_type == "User Interface":
+                step_type = "Gui"   # adjust for combo display
+            self.rows.set_combo_text(1, step_type)
 
         # Get form type and call appropriate method to set up the form
         form_type = self.rows.get_type_text()
@@ -311,7 +314,82 @@ class AutomationStepDialog(QDialog):
         
 
     def form_selected_gui (self):
-        pass
+        self._set_input_types(type="Gui")
+        self.rows.show_hide_row(2, True, "Node:")    # Show node row
+        # Hide remaining rows (can re-enable later if required)
+        self._hide_rows(3)    # Hide remaining rows (from event onwards)
+        # if  current type has changed then generate node list
+        if self.current_type != "Gui":
+            node_items = ["Select Node"] + device_model.get_nodes_names("Gui", null_events=False)
+            # if no nodes then just show NA
+            if node_items == ["Select Node"]:
+                node_items = ["NA"]
+            self.rows.combo_add_items(2, node_items)
+            if self.current_type == "New" and self.step != None:
+                # Set based on loaded step
+                self.rows.set_combo_text(2, device_model.key_to_name(self.step['data']['node_id'], "Gui"))
+            else:
+                #  If Gui is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(2, type="Gui")    # Reset from node onwards
+                #self._hide_rows(3)    # Hide remaining rows (from event onwards)
+                self.current_type = "Gui"
+                return
+        # Reach here then Gui was already selected or we have attempted to load from step
+        self.current_type = "Gui"
+        # Node selection is already populated - check for a value
+        selected_node = device_model.name_to_key(self.rows.get_combo_text(2), "Gui")
+        # If this was new and not loaded or moved back to "Select Node" then return here - need to select node first
+        if selected_node == None:
+            self.current_row2 = "Select Node"
+            return
+        #print (f"selected node {selected_node} curr {self.current_row2}")
+        # Set Action to visible
+        self.rows.show_hide_row(3, True, "Action:")
+        if self.current_row2 == "New" or selected_node != self.current_row2:
+            # node is different to current - so update action list
+            action_items = ["Select Action"] + device_model.get_events(selected_node, "Gui")    
+            if action_items == ["Select Action"]:
+                action_items = ["NA"]
+            self.rows.combo_add_items(3, action_items)
+            
+            # Hide remaining - can re-enable later if selected
+            self._hide_rows(4)    # Hide remaining rows (from value onwards)
+            if self.current_row3 == "New" and self.step != None:
+                # Set based on loaded step
+                #print (f"Raw event {self.step['data']['event']}, as name {device_model.key_to_name(self.step['data']['event'], 'VLCB')}")
+                self.rows.set_combo_text(3, device_model.key_to_name(self.step['data']['event'], "Gui"))
+            else:
+                # If node is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(3, type="Gui")    # Reset from event onwards
+                #self._hide_rows(4)    # Hide remaining rows (from value onwards)
+                self.current_row2 = selected_node
+                return
+        self.current_row2 = selected_node
+        # Reach here then event was already selected or we have attempted to load from step
+        # Read in row 3 (action) and check for change
+        selected_action = self.rows.get_combo_text(3)
+        if selected_action == None or selected_action == "Select Action" or selected_action == "Toggle":
+            self._hide_rows(4)    # Hide remaining rows (from value onwards)
+            self.current_row3 = "Select Action"
+            return
+        # show value field
+        self.rows.show_hide_row(4, True, "Value:")
+        #print (f"selected event {selected_event} curr {self.current_row3}")
+        if self.current_row3 == "New" or selected_action != self.current_row3:
+            # event is different to current - so update value list
+            # For vlcb then value is on / off depending on event (no select default to on)
+            value_items = ["on", "off"]
+            self.rows.combo_add_items(4, value_items)
+            
+            if self.current_row4 == "New" and self.step != None:
+                # Set based on loaded step
+                self.rows.set_combo_text(4, self.step['data']['value'])
+            # value 2 not used - set defaults and hide value 2
+            self._reset_row_currents(4, type="Gui")    # Reset from value onwards
+            #self._hide_rows(5)    # Hide remaining rows (from value2 onwards)
+        self.current_row3 = selected_action
+        # Don't need to check value as there are no fields below it
+
 
     def form_selected_app (self):
         pass 
@@ -616,10 +694,7 @@ class AutomationStepDialog(QDialog):
             QMessageBox.warning(self, "Invalid Type", "Please select a valid rule type.")
             return
         # All steps needed a name - but if empty can be created automatically
-        self.name = self.rows.get_lineedit_text(0).strip()
-
-        # Get additional data and place in a dict
-        data_dict = {}        
+        self.name = self.rows.get_lineedit_text(0).strip()     
 
         if rule_type == "VLCB":          
             data_dict = self._get_step_data_vlcb()
@@ -650,85 +725,19 @@ class AutomationStepDialog(QDialog):
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
         elif rule_type == "User Interface":
-            
-            node = self.node_combo.currentText()
-            if node == None or node == "Select Node" or node == "NA":
-                # todo replace with qmessage - also see other print messages
-                print ("Invalid node")
+            data_dict = self._get_step_data_gui()
+            # If error then prev would give a QMessage and return None
+            # just return to allow correct and try again
+            if data_dict is None:
                 return
-            data_dict['node_id'] = device_model.name_to_key(node, type="Gui")
-            event = self.event_combo.currentText()
-            if event == None or event == "Select Action" or event == "NA":
-                print ("Invalid event")
-                return
-            data_dict['action'] = event
-
-            if data_dict['action'] != "Toggle":
-
-                # Value should not return an invalid value but check anyway
-                value = self.value_combo.currentText()
-                if value == None or value == "NA":
-                    print ("Invalid value")
-                    return
-                data_dict['value'] = value
-            else:
-                value = ""            
             # If no name given then can replace with a user friendly
             if self.name == "":
                 self.name = f"{rule_type}, {data_dict['node_id']} - {data_dict['action']}"
-                if value != "":
-                    self.name += f" - {value}"
+                if 'value' in data_dict:
+                    self.name += f" - {data_dict['value']}"
             
             # Return as a dict - let Automation Sequence convert into an Automation Step
             self.step = {"type": "Gui", "name": self.name, "data" : data_dict}
-        elif rule_type == "** OLD Loco":
-            # Loco step - so get loco number and DCC ID
-            loco_no = self.node_combo.currentText()
-            if loco_no == None or loco_no == "Select Node" or loco_no == "NA":
-                print ("Invalid loco number")
-                return
-            else:
-                data_dict["locoid"] = loco_no
-                # If DCC ID then also get DCC ID value
-                if loco_no == "Use DCC ID":        
-                    dcc_id = self.event_edit.text()
-                    try:
-                        data_dict["dcc"] = int(dcc_id)
-                        if not (1 <= data_dict["dcc"] <= 9999):
-                            print("DCC ID must be between 1 and 9999")
-                            return
-                    except ValueError:
-                        print("DCC ID must be an integer")
-                        return
-            
-            # Get the action and value
-            action = self.value_combo.currentText()
-            if action == None or action == "NA" or action == "Select Action":
-                print ("Action, not selected")
-                return
-            else: 
-                data_dict["action"] = action
-            
-            # If speed then use spinbox, else use combo
-            if action == "Set Speed":
-                speed = self.value2_spinbox.value()
-                data_dict["speed"] = speed
-            elif action == "Set Direction":
-                data_dict["direction"] = self.value2_combo.currentText()
-            elif action == "Function":
-                data_dict["function"] = self.value2_inner_spinbox.value()
-                data_dict["function_action"] = self.value2_inner_combo.currentText()
-            else:
-                # This shouldn't happen
-                print ("Unknown command / value 2")
-                return
-            
-            # If no name given then can replace with a user friendly
-            if self.name == "":
-                self.name = f"Loco {loco_no} - {action}"
-            
-            # Return as a dict - let Automation Sequence convert into an Automation Step
-            self.step = {"type": rule_type, "name": self.name, "data" : data_dict}
 
             
         # Todo need to implement all rule types so this doesn't happen
@@ -809,7 +818,31 @@ class AutomationStepDialog(QDialog):
             data_dict['function_action'] = function_action
         return data_dict
         
-    
+    def _get_step_data_gui(self):
+        """ Gets step data for vlcb - used in save_step """
+        # If fails uses QMessage and returns None
+        data_dict = {}
+        node = self.rows.get_combo_text(2)
+        if node == None or node == "Select Node" or node == "NA":
+            QMessageBox.warning(self, "Invalid Node", "Please select a valid node.")
+            return None
+        data_dict['node_id'] = device_model.name_to_key(node)
+        action = self.rows.get_combo_text(3) 
+        if action == None or action == "Select Action" or action == "NA":
+            QMessageBox.warning(self, "Invalid Action", "Please select a valid action.")
+            return None
+        data_dict['action'] = action
+        # Do not need a value if action is Toggle
+        if action != "Toggle":
+            value = self.rows.get_combo_text(4)
+            if value == None or value == "NA":
+                QMessageBox.warning(self, "Invalid Value", "Please select a valid value.")
+                return None
+            data_dict['value'] = value
+        return data_dict
+
+
+
     # Swaps the widget specified (eg. combobox with lineedit or spinbox)
     # Uses label_widget to find the row
     # New widget is the one to insert
