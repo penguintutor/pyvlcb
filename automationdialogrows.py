@@ -1,3 +1,4 @@
+""" Used by AutomationStepDialog - creates / modifies data collection rows in dialog"""
 from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget, QMessageBox,
@@ -5,6 +6,8 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
+
+
 
 class AutomationDialogRows:
     def __init__(self, parent, layout):
@@ -37,13 +40,14 @@ class AutomationDialogRows:
                 QLineEdit(),    # Step Name
                 None,           # Rule Type
                 None,           # Node / Loco ID
-                QLineEdit(),    # Event / DCC ID
+                QLineEdit(),    # Event / DCC ID / Delay
                 QLineEdit(),    # Value / Action
                 QLineEdit()     # Value2
                 ]
-        # Special setup for Loco - if use these for other types would need to adjust
-        # Only allow numbers for DCC ID (1 to 9999)
-        self.lineedits[3].setValidator(QIntValidator(1, 9999, self.lineedits[3]))
+        # Special setup for Loco and App Delay - if use these for other types would need to adjust
+        ### Only allow numbers for DCC ID (1 to 9999)
+        # Set large range if required validate in save
+        self.lineedits[3].setValidator(QIntValidator(1, 99999, self.lineedits[3]))
         self.fieldlabels = [QLabel() for i in range (6)]
         self.fieldlabels[3].setText("Allocated when run")  # Event alternative label if DCC not selected
         # Can sometimes swap out combo for spinbox - eg. loco speed

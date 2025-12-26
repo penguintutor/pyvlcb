@@ -1,10 +1,13 @@
-# Dialog for creating a new AutomationSequence.
+""" Dialog for creating a new AutomationSequence."""
+# TODO: Fix Gui loading
+# TODO: Allow text string to wait (allow variable) - hide further rows
 
 import sys
 from PySide6.QtWidgets import (
     QApplication, QDialog, QVBoxLayout, QGridLayout,
     QLabel, QComboBox, QPushButton, QHBoxLayout, QWidget, QMessageBox,
-    QListWidget, QFormLayout, QLineEdit, QSpinBox, QSizePolicy, QSpacerItem
+    QListWidget, QFormLayout, QLineEdit, QSpinBox, QSizePolicy, QSpacerItem,
+    QInputDialog 
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QIntValidator
@@ -101,6 +104,8 @@ class AutomationStepDialog(QDialog):
         if from_row <= 3:
             if type == "Loco":
                 self.current_row3 = "Select Loco"
+            elif type == "App":
+                self.current_row3 = "Select Command"
             else:
                 self.current_row3 = "Select Event"
         if from_row <= 4:
@@ -392,7 +397,120 @@ class AutomationStepDialog(QDialog):
 
 
     def form_selected_app (self):
-        pass 
+        self._set_input_types(type="App")
+        self.rows.show_hide_row(2, True, "Command:")    # Show node row
+        # Hide remaining rows (can re-enable later if required)
+        self._hide_rows(3)    # Hide remaining rows (from event onwards)
+
+        #print (f"Checking current type {self.current_type}")
+        # if  current type has changed then generate node list
+        if self.current_type != "App":
+            # For app then just hard code some options for now
+            command_items = ["Select Command", "Wait", "Set Variable"]
+            self.rows.combo_add_items(2, command_items)
+            if self.current_type == "New" and self.step != None:
+                # Set based on loaded step
+                self.rows.set_combo_text(2, self.step['data']['command'])
+            else:
+                #  If App is just selected and it's not loading existing step then set all other items to default
+                self._reset_row_currents(2, type="App")    # Reset from node onwards
+                #self._hide_rows(3)    # Hide remaining rows (from event onwards)
+                self.current_type = "App"
+                return
+        # Reach here then App was already selected or we have attempted to load from step
+        self.current_type = "App"
+        #print (f"Current type set to {self.current_type}")
+
+
+        # Command selection is already populated - check for a value
+        selected_command = self.rows.get_combo_text(2)
+
+        #print (f"Selected commnd {selected_command} row2 {self.current_row2}")
+
+        # If this was new and not loaded or moved back to "Select Command" then return here - need to select node first
+        if selected_command == None or selected_command == "Select Command":
+            self.current_row2 = "Command"
+            self.current_row3 = "Select Command"
+            return
+        # Set Argument to visible - diferent argument depending upon command
+        #self.rows.show_hide_row(3, True, "Event:")
+        if self.current_row2 == "New" or selected_command != self.current_row2:
+            #print (f"New? {self.current_row2} - selected command {selected_command}")
+            self.current_row2 = selected_command
+            # command is different to current - so update argument
+            if selected_command == "Wait":
+                self.rows.set_field_type(3, "lineedit")
+                self.rows.show_hide_row(3, True, "Delay:")
+
+                if self.current_row3 == "New" and self.step != None:
+                    if "delay" in self.step['data']:
+                        self.rows.set_lineedit_text (3, self.step['data']['delay'])
+                # set 3 to a string that is not New
+                self.current_row3 = "Wait"
+                self._hide_rows (4)
+            elif selected_command == "Set Variable":
+                #print (f"Set Variable selected current row 3 {self.current_row3}")
+                self.rows.set_field_type(3, "combo")
+                self.rows.show_hide_row(3, True, "Variable name:")
+
+                variable_list = ["Select Variable"] + device_model.get_variable_names() + ["New Variable"]
+                self.rows.combo_add_items(3, variable_list)
+
+                # If loading existing then select variable
+                if self.current_row3 == "New" and self.step != None:
+                    if "variable" in self.step['data']:
+                        self.rows.set_combo_text (3, self.step['data']['variable'])
+
+        # Read value back to check setting
+        selected_variable = self.rows.get_combo_text (3)
+
+        #print (f"Selected variable {selected_variable}")
+
+        if selected_variable == "Select Variable":
+            # hide remaining - need to choose variable first
+            self.rows.show_hide_row(3, True, "Variable name:")
+            self.current_row3 = "Select Variable"
+            self._hide_rows(4)
+            return
+
+        # If new variable then request variable through a 
+        # new dialog
+        elif selected_variable == "New Variable":
+            self.rows.show_hide_row(3, True, "Variable name:")
+            self._hide_rows(4)
+            self.current_row3 = "New Variable"
+            #print ("Launching dialog")
+            new_variable = self.create_variable_dialog()
+            if new_variable != None and new_variable != "" and self.mainwindow.appvariables.is_variable(new_variable) != True:
+                # Create new variable by setting value to ""
+                self.mainwindow.add_variable(new_variable, "", False)
+                # Update menu
+                variable_list = ["Select Variable"] + device_model.get_variable_names() + ["New Variable"]
+                self.rows.combo_add_items(3, variable_list)
+                self.rows.set_combo_text(3, new_variable)
+            else:
+                # If didn't get a new variable then return so that the user can select again
+                self.current_row3 = "Select Variable"
+                self._hide_rows(4)
+                return 
+            
+        # Here - confirm a variable is selected
+        selected_variable = self.rows.get_combo_text(3)
+        #print (f"Selecte variable {selected_variable}")
+        self.current_row3 = selected_variable
+
+        # Check haven't gone back to Select Variable (eg. variable creation error)
+        if selected_variable == "Select Variable":
+            return
+
+        self.rows.show_hide_row(3, True, "Variable name:")
+        # Show row4 - value entry - which is a lineedit
+        self.rows.set_field_type(4, "lineedit")
+        # TODO: clear any existing unless this is loading from previous step 
+        self.rows.show_hide_row(4, True, "Value:")
+        self._hide_rows(5)
+
+
         
     def old (self):
         form_type = self.rule_type_combo.currentText()
@@ -875,6 +993,23 @@ class AutomationStepDialog(QDialog):
         if hide_old:
             old_widget.hide()
 
-                
+    def create_variable_dialog(self):
+        """
+        Prompts the user for a variable name. 
+        Returns the string if successful, or None if cancelled.
+        """
+        # getText returns (text, ok_pressed)
+        text, ok = QInputDialog.getText(
+            self, 
+            "Create New Variable", 
+            "Variable Name:", 
+            QLineEdit.Normal, 
+            ""
+        )
+
+        if ok and text.strip():
+            return text.strip()
+        
+        return None                
 
 

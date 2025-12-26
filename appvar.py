@@ -9,21 +9,26 @@ class AppVar():
         # Variables in a dict with the variable name as the key
         self.variables={}
 
+    def is_variable (self, variable_name):
+        return variable_name in self.variables
+
     def get_variable (self, variable_name):
         if variable_name in self.variables:
             return self.variables[variable_name]
         else:
             return None
         
-    def set_variable (self, variable_name, new_value):
+    def set_variable (self, variable_name, new_value, event=True):
         # Does variable already exist - if so need to trigger new event (if not then change event)
+        # If event=false then don't send a broadcast event
         if variable_name in self.variables:    
             event_type = "change"
         else:
             event_type = "new"
         self.variables[variable_name] = new_value
         var_event = VarEvent ({"name":variable_name, "value":new_value, "event_type": event_type})
-        event_bus.broadcast(var_event)
+        if event:
+            event_bus.broadcast(var_event)
         # Return value - to be consistant with inc_variable
         return new_value
         

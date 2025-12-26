@@ -375,6 +375,9 @@ class DeviceModel(QObject):
         # pass to locolist to reduce coupling
         return self.locos.get_loco_from_filename (filename)
 
+    def add_variable (self, variable_name):
+        self.other_nodes['Variable'].append(variable_name)
+
     def get_variable_names (self):
         return self.other_nodes['Variable']
 

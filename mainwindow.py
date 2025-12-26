@@ -141,7 +141,6 @@ class MainWindowUI(QMainWindow):
         # get_variable(variable_name), set_variable(variable_name, new_value), inc_variable(variable_name, inc_amount)
         self.appvariables = AppVar(self.var_signal)
         
-        
         # Load the settings file here
         self.settings = Settings(self, self.data_dir, self.files['settings'])
         
@@ -1407,3 +1406,14 @@ class MainWindowUI(QMainWindow):
         # Includes load layout background image
         # and UI objects
         self.ui.layoutDisplayLabel.update()
+
+    # Adds a variable to the AppVar class AND to the device_model
+    # If variable already exists then returns false
+    # event is whether to broadcast
+    def add_variable (self, variable_name, value="", event=True):
+        # Check if variable exists
+        if self.appvariables.is_variable(variable_name):
+            return False
+        self.appvariables.set_variable(variable_name, value, event)
+        device_model.add_variable(variable_name)
+        return True
