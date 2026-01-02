@@ -1,4 +1,4 @@
-#PyVLCB Python Software Library for CBUS / VLCB
+# PyVLCB Python Software Library for CBUS / VLCB
 
 This is a small software library for CBUS and VLCB using Python. It's designed for use with the MERG CANUSB4 CBUS adapter.
 
