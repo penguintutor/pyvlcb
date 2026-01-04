@@ -157,6 +157,9 @@ class VLCB:
     
     # node and ev should be the IDs - state either "on" or "off" / True or False
     def accessory_command (self, node_id, ev_id, state):
+        # if ev_id is a string then convert to an int
+        # Setting based to 0 will automatically handle base 10 or hex
+        ev_id = int(ev_id, 0)
         # determine if long or short
         if ev_id <= 0xffff:
             return self.accessory_short_command (node_id, ev_id, state)
