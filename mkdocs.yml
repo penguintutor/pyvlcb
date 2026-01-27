@@ -7,7 +7,3 @@ plugins:
   - search
   - mkdocstrings
 
-name: Install dependencies
-  run: |
-     pip install -r docs/requirements.txt
-     pip install .  # <--- Installs YOUR library in the CI environment
