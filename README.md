@@ -34,7 +34,7 @@ To install the library, as a submodule in your own git project repository, then 
     git submodule add https://github.com/penguintutor/pyvlcb.git lib/pyvlcb
     pip install lib/pyvlcb
 
-If you subsequenctly want to get the lastest version of the library run a git pull then use the pip install command again. 
+If you subsequenctly want to get the latest version of the library run a git pull then use the pip install command again. 
 
 _Important_ To use as a submodule you must create your own git project first and install within the project folder.
 
