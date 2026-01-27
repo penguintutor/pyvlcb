@@ -26,7 +26,12 @@ jobs:
         run: |
           pip install -r docs/requirements.txt
           # If your library is needed for the docs to build (to read docstrings), install it too:
-          # pip install . 
+          pip install . 
+
+      - name: Configure Git User
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com" 
 
       - name: Build and Deploy
 	run: mkdocs gh-deploy --force
