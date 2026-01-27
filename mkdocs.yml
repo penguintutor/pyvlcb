@@ -1,0 +1,8 @@
+site_name: PyVLCB
+theme:
+  name: material
+
+# This plugin allows mkdocs to read Python docstrings
+plugins:
+  - search
+  - mkdocstrings

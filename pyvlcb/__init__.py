@@ -5,21 +5,43 @@ from .vlcbformat import VLCBformat, VLCBopcode
 from .canusb import CanUSB4
 
 class VLCB:
+    """Handle VLCB formatting
+    
+    It generates the appropriate strings which can be sent to CBUS / VLCB
+
+    Attributs:
+    can_id (int): The Can ID for your software (default = 60)
+    
+    """
     # 60 is default canid for canusb4 (127 is dcc controller)
     def __init__ (self, can_id=60):
+        """Inits VLCB with a can_id
+        
+        Args:
+            can_id (int): The can_id for the software (default = 60)
+        """
         self.can_id = can_id
         self.debug = False
     
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
     def parse_input (self, input_bytes):
-        #print (f"Start parse {input_bytes}")
+        """"Parse a raw CBUS packet as an input bytestring
+
+        Take a bytestring (or string) from the CBUS and extract the details
+
+        Args: 
+            input_types (bytestring): Input raw bytestring (or string)
+
+        Returns:
+            VLCBFormat: parsed data in VLCBFormat
+
+        """"
         # Also allow string (no need to decode)
         if isinstance (input_bytes, str):
             input_string = input_bytes
         else:
             input_string = input_bytes.decode("utf-8")
-        #print (f"Parsing {input_string}")
         if (len(input_string) < 5):        # packets are actually much longer
             print ("Data too short")    
             return False

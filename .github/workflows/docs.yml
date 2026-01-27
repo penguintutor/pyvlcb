@@ -1,0 +1,37 @@
+name: Deploy Documentation
+
+# Trigger the workflow on push to the main branch
+on:
+  push:
+    branches:
+      - main
+
+# Grant GITHUB_TOKEN the permissions to write to the gh-pages branch
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          pip install -r docs/requirements.txt
+          # If your library is needed for the docs to build (to read docstrings), install it too:
+          # pip install . 
+
+      - name: Build and Deploy
+        uses: mkdocs/gh-deploy-action@v4
+        with:
+          # This token is automatically provided by GitHub Actions
+          token: ${{ secrets.GITHUB_TOKEN }}
+          # This forces the documentation to be pushed to the 'gh-pages' branch
+          branch: gh-pages
