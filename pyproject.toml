@@ -5,10 +5,33 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "PyVLCB"
 version = "0.0.1"
+description = "A library for CBUS / VLCB communication"
+readme = "README.md"  # Highly recommended to add this!
+requires-python = ">=3.6"
+license = {file = "LICENSE"}
 
-classifiers = [
-    "License :: OSI Approved :: MIT License",
-    "Programming Language :: Python :: 3"
+# 'author' and 'author_email' become a list of tables
+authors = [
+  {name = "Stewart Watkiss (penguintutor)", email = "5587863+penguintutor@users.noreply.github.com"}
 ]
 
-license = {file = "LICENSE"}
+# 'classifiers' is copied directly
+classifiers = [
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+]
+
+# 'install_requires' becomes 'dependencies'
+dependencies = [
+    "pyserial",
+]
+
+# 'url' and 'project_urls' move here
+[project.urls]
+Homepage = "https://github.com/penguintutor/pyvlcb/"
+Documentation = "https://www.penguintutor.com/projects/pyvlcb"
+Source = "https://github.com/penguintutor/pyvlcb/"
+
+# 'packages=find_packages()' moves to this specific tool section
+[tool.setuptools.packages.find]
+where = ["."]  # "." is the default, scans the root folder
