@@ -38,7 +38,13 @@ If you subsequenctly want to get the lastest version of the library run a git pu
 
 _Important_ To use as a submodule you must create your own git project first and install within the project folder.
 
-## Demo examples ##
+## Library Reference 
+
+See the link below for the library reference documentation
+[PyVLCB Library Reference Documentation](https://penguintutor.github.io/pyvlcb/reference/)
+
+
+## Demo examples 
 
 Example code is stored within the demo folder. Copy these into your project folder to test the library and connectivity. 
 The demos are created for a Raspberry Pi or other Linux computer. The USB port is hard-coded as /dev/ttyACM0
