@@ -26,7 +26,7 @@ class VLCB:
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
     def parse_input (self, input_bytes):
-        """"Parse a raw CBUS packet as an input bytestring
+        """Parse a raw CBUS packet as an input bytestring
 
         Take a bytestring (or string) from the CBUS and extract the details
 
@@ -36,7 +36,7 @@ class VLCB:
         Returns:
             VLCBFormat: parsed data in VLCBFormat
 
-        """"
+        """
         # Also allow string (no need to decode)
         if isinstance (input_bytes, str):
             input_string = input_bytes
