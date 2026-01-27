@@ -2,7 +2,7 @@
 # Data is returned as string - needs to be encoded afterwards
 
 from .vlcbformat import VLCBformat, VLCBopcode
-from .canusb4 import CanUSB4
+from .canusb import CanUSB4
 
 class VLCB:
     # 60 is default canid for canusb4 (127 is dcc controller)
