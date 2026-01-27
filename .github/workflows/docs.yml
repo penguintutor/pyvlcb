@@ -34,4 +34,4 @@ jobs:
           git config --global user.email "github-actions[bot]@users.noreply.github.com" 
 
       - name: Build and Deploy
-	run: mkdocs gh-deploy --force
+        run: mkdocs gh-deploy --force
