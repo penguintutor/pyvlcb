@@ -29,9 +29,4 @@ jobs:
           # pip install . 
 
       - name: Build and Deploy
-        uses: mkdocs/gh-deploy-action@v4
-        with:
-          # This token is automatically provided by GitHub Actions
-          token: ${{ secrets.GITHUB_TOKEN }}
-          # This forces the documentation to be pushed to the 'gh-pages' branch
-          branch: gh-pages
+	run: mkdocs gh-deploy --force
