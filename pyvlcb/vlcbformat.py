@@ -13,9 +13,7 @@ class VLCBformat:
         return '??'
     
     def format_data (self):
-        opcode = self.data[0:2]
-        data_noopcode = self.data[2:]
-        return VLCBopcode.parse_data(opcode, data_noopcode)
+        return VLCBopcode.parse_data(self.data)
         
     def __str__ (self):
         return f'{self.priority} : {self.can_id} : {self.opcode()} ({self.data[0:2]}) : {self.data} / {self.format_data()}'
