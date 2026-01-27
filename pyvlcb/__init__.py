@@ -2,6 +2,7 @@
 # Data is returned as string - needs to be encoded afterwards
 
 from .vlcbformat import VLCBformat, VLCBopcode
+from .canusb4 import CanUSB4
 
 class VLCB:
     # 60 is default canid for canusb4 (127 is dcc controller)
@@ -239,9 +240,3 @@ class VLCB:
     def loco_set_dfun (self, session_id, byte1, byte2):
         return f"{self.make_header(opcode='60')}60{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(byte1)}{VLCB.num_to_1hexstr(byte2)};"
         
-    #manufaturer name  is requested by RQMN.
-    #<0x11>
-    #The response is NAME
-    #<0xE2><><char1><char2><char3><char4><char5><char6><char7>
-    #Obviously the NAME string is limited to 7 chars, all 7 characters are used
-    
