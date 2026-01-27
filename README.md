@@ -36,6 +36,14 @@ To install the library, as a submodule in your own git project repository, then 
 
 If you subsequenctly want to get the lastest version of the library run a git pull then use the pip install command again. 
 
+_Important_ To use as a submodule you must create your own git project first and install within the project folder.
+
+## Demo examples ##
+
+Example code is stored within the demo folder. Copy these into your project folder to test the library and connectivity. 
+The demos are created for a Raspberry Pi or other Linux computer. The USB port is hard-coded as /dev/ttyACM0
+For other computers / USB ports then edit the python file directory and update the port statement.
+
 
 ## More Details
 
