@@ -25,7 +25,7 @@ class VLCB:
     
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
-    def parse_input (self, input_bytes):
+    def parse_input(self, input_bytes: bytes) -> VLCBformat:
         """Parse a raw CBUS packet as an input bytestring
 
         Take a bytestring (or string) from the CBUS and extract the details
@@ -78,8 +78,15 @@ class VLCB:
     
     # Parse and format into standard log format (datastring, direction, fulldata, direction, can_id, op_code, data
     # For log all values are returned as strings - note that the number (log entry number) is not returned
-    def log_entry (self, input_string):
-        # Input string is num,date,direction,message
+    def log_entry(self, input_string: str) -> list[str]:
+        """Parse a log entry and return as a list of string values
+
+        Args:
+            input_string (string): String consisting of of num, date, direction, message as a single string
+        
+        Returns (list[str]): List of strings
+
+        """
         # First remove number and date from the front of the string
         entry_parts = input_string.split(',', 3)
         date_string = entry_parts[1]
@@ -110,7 +117,15 @@ class VLCB:
     
     @staticmethod
     # Where 1 x bytes (2 chars)
-    def num_to_1hexstr (num):
+    def num_to_1hexstr (num: int) -> str:
+        """Convert number to a byte
+
+        Args:
+            num (int): Number to convert
+
+        Returns:
+            String: A hex representation of the number (2 chars)
+        """
         return f"{hex(num).upper()[2:]:0>2}"
     
     @staticmethod
