@@ -3,6 +3,10 @@
 
 from .vlcbformat import VLCBformat, VLCBopcode
 from .canusb import CanUSB4
+# As some Raspberry Pis are still running pre Python 3.10 uses optional
+# in method types. In future when everyone is on Bookworm or later
+# # this can be upgraded to use the | option
+from typing import Optional, Union
 
 class VLCB:
     """Handle VLCB formatting
@@ -130,30 +134,77 @@ class VLCB:
     
     @staticmethod
     # Where 2 x bytes (4 chars)
-    def num_to_2hexstr (num):
+    def num_to_2hexstr (num: int) -> str:
+        """Convert number to 2 bytes
+
+        Args:
+            num (int): Number to convert
+
+        Returns:
+            String: A hex representation of the number (4 chars)
+        """
         return f"{hex(num).upper()[2:]:0>4}"
     
     @staticmethod
     # Where 4 x bytes (8 chars)
-    def num_to_4hexstr (num):
+    def num_to_4hexstr (num: int) -> str:
+        """Convert number to 4 bytes
+
+        Args:
+            num (int): Number to convert
+
+        Returns:
+            String: A hex representation of the number (8 chars)
+        """
         return f"{hex(num).upper()[2:]:0>8}"
     
     @staticmethod
     # Where 2 bytes convert to addr id
-    def bytes_to_addr (byte1, byte2):
+    def bytes_to_addr (byte1: bytes, byte2: bytes) -> int:
+        """Convert 2 byte values into an address id sring
+
+        Args:
+            byte1 (bytes): Most significant byte
+            byte2 (bytes): Least significant byte
+
+        Returns:
+            Int: The address id value
+        """
         msb = int(byte1)
         lsb = int(byte2)
         return ((msb << 8) + lsb)
     
     @staticmethod
-    def bytes_to_hexstr (byte1, byte2):
+    def bytes_to_hexstr (byte1: bytes, byte2: bytes) -> str:
+        """Convert 2 bytes to a hex string
+
+        Args:
+            byte1 (bytes): Most significant byte
+            byte2 (bytes): Least significant byte
+
+        Returns:
+            String: A hex representation of the number
+        """
         return f"{hex(byte1).upper()[2:]:0>2}{hex(byte2).upper()[2:]:0>2}"
         
     
     # Create header using low priority and can_id (or self.can_id)
     # If opcode provided, but no priority then appropriate min code looked up
     # MajPri would be based on packet aging - needs to be managed outside of this
-    def make_header (self, majpri = 0b10, minpri = None, can_id = None, opcode=None):
+    def make_header(self, 
+                majpri: int = 0b10, 
+                minpri: Optional[int] = None, 
+                can_id: Optional[int] = None, 
+                opcode: Optional[int] = None) -> str:
+        """Create a CBUS/VLCB header
+
+        Args:
+            byte1 (byte): Most significant byte
+            byte2 (byte): Least significant byte
+
+        Returns:
+            String: A hex representation of the number
+        """
         if can_id == None:
             can_id = self.can_id
             
@@ -172,29 +223,86 @@ class VLCB:
         #return header_string.encode('utf-8')
     
     # Discover nodes
-    def discover (self):
+    def discover (self) -> str:
+        """Create a discovery string 
+
+        Uses op-code QNN (0D)
+
+        Returns:
+            String: A string for the request
+        """
         # Return QNN 
         return self.make_header(opcode='0D') + '0D;'
     
     # Discover number of events configured
-    def discover_evn (self, node_id):
+    def discover_evn (self, node_id: int) -> str:
+        """Create a discover number of events for a node
+
+        Uses op-code RQEVN (58)
+
+        Args:
+            node_id (int): Node ID to query
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='58')}58{VLCB.num_to_2hexstr(node_id)};" 
         
     # Discover number of events available
-    def discover_nevn (self, node_id):
+    def discover_nevn (self, node_id: int) -> str:
+        """Create a discover number of events available for a node
+
+        Uses op-code NNEVN (56)
+
+        Args:
+            node_id (int): Node ID to query
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='56')}56{VLCB.num_to_2hexstr(node_id)};"
     
     # Discover stored events NERD
-    def discover_nerd (self, node_id):
+    def discover_nerd (self, node_id: int) -> str:
+        """Create a discover stored events for a node
+
+        Uses op-code NERD (57)
+
+        Args:
+            node_id (int): Node ID to query
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='57')}57{VLCB.num_to_2hexstr(node_id)};"
     
     # Emergency stop all locos
     # RESTP
-    def loco_stop_all (self):
+    def loco_stop_all (self) -> str:
+        """Create an emergency stop all locos
+
+        Uses op-code RESTP (0A)
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='0A')}0A;"
     
     # node and ev should be the IDs - state either "on" or "off" / True or False
-    def accessory_command (self, node_id, ev_id, state):
+    def accessory_command (self, node_id: int, ev_id: int, state: Union[str, bool]) -> str:
+        """Create an accessory command
+
+        Uses approprite Accessory On / Off command
+        Defaulting to short, but using long if > 0xffff
+
+        Args:
+            node_id: Node ID to query
+            ev_id: Event ID
+            state: State to change to can be "on" or "off" / True or False
+
+        Returns:
+            String: A string for the request
+        """
         # if ev_id is a string then convert to an int
         # Setting based to 0 will automatically handle base 10 or hex
         ev_id = int(ev_id, 0)
@@ -205,7 +313,19 @@ class VLCB:
             return self.accessory_long_command (node_id, ev_id, state)
         
     # Note that short is the same as long but different code and node_id is added (already included in long)
-    def accessory_short_command (self, node_id, ev_id, state):
+    def accessory_short_command (self, node_id: int, ev_id: int, state: Union[str, bool]) -> str:
+        """Create an accessory short command
+
+        Uses ASON (98) or ASOF (99)
+
+        Args:
+            node_id: Node ID to query
+            ev_id: Event ID
+            state: State to change to can be "on" or "off" / True or False
+
+        Returns:
+            String: A string for the request
+        """
         # Turn on
         if state == True or state == "on":
             # ASON
@@ -214,7 +334,19 @@ class VLCB:
         else:
             return f"{self.make_header(opcode='99')}99{VLCB.num_to_2hexstr(node_id)}{VLCB.num_to_2hexstr(ev_id)};"
         
-    def accessory_long_command (self, node_id, ev_id, state):
+    def accessory_long_command (self, node_id: int, ev_id: int, state: Union[str, bool]) -> str:
+        """Create an accessory long command
+
+        Uses ACON (90) or ACOF (91)
+
+        Args:
+            node_id: Node ID to query
+            ev_id: Event ID
+            state: State to change to can be "on" or "off" / True or False
+
+        Returns:
+            String: A string for the request
+        """
         # Turn on
         if state == True or state == "on":
             # ASON
@@ -229,7 +361,18 @@ class VLCB:
     
     # Generate code to allocate a loco
     # Assume long code, but if long = False and ID < 128 then use short mode
-    def allocate_loco (self, loco_id, long=True):
+    def allocate_loco (self, loco_id: int, long: Optional[bool] = True):
+        """Create an allocate loco request
+
+        Uses RLOC (40)
+
+        Args:
+            loco_id: Loco ID (long or short number)
+            long: Long loco ID (True) or short loco ID (False)
+
+        Returns:
+            String: A string for the request
+        """
         # Generate RLOC to allocate loco to a session
         if long == False and loco_id >= 127:
             print ("Invalid short code")
