@@ -36,19 +36,12 @@ def main ():
         in_data = usb.read_data()
         
         # If no data then slight pause and try loop again
-        if in_data[0] == 0:
+        if len(in_data) < 1:
             time.sleep(0.1)
-        elif in_data[0] < 1:
-            print (f"Error {in_data[1]}, {in_data[2]}")
-    
-        # Also check that the number of bytes is same as returned entry
-        # Shouldn't get this, but additional check
-        # Just warn then use the actual length of the error
-        if (len(in_data) -1 != in_data[0]):
-            print (f"Warning incorrect data returned, expected {in_data[0]}, received {len(in_data) - 1}")
+            continue
             
         # If reach then at least 1 packet received
-        for i in range(1, len(in_data)):
+        for i in range(0, len(in_data)):
             this_input = in_data[i]
             # date, i(incoming rather than o), data_string
             #print (f"Raw data {this_input}")

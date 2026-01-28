@@ -68,7 +68,7 @@ class CanUSB4 ():
         """
         if port != None:
             self.port = port
-        if not port:
+        if not self.port:
             raise InvalidConfigurationError("Port name cannot be empty")
         if baud != None:
             self.baud = baud

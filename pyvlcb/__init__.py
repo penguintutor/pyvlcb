@@ -309,7 +309,7 @@ class VLCB:
     def accessory_command (self, node_id: int, ev_id: int, state: Union[str, bool]) -> str:
         """Create an accessory command
 
-        Uses approprite Accessory On / Off command
+        Uses appropriate Accessory On / Off command
         Defaulting to short, but using long if > 0xffff
 
         Args:
