@@ -1,41 +1,119 @@
 import serial
+from typing import Optional, Union
+from .exceptions import DeviceConnectionError, InvalidConfigurationError, ProtocolError, DeviceTimeoutError
+import logging
+
+# Set up a null handler so nothing prints by default unless the user enables it
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 # Based on CANUSB4 - sends using pyserial
 # This just makes calls to pyserial, but by abstracting would mean you could
 # replace easier if using a different way to connect to CANBUS
 # Needs port (eg. /dev/ttyACM0)
 class CanUSB4 ():
-    def __init__ (self, port, baud=115200, timeout=0.01):
+    """Handle USB serial communication to CANUSB4
+    
+    Uses pyserial to communicate over USB.
+
+    Attributes:
+        port: The usb port eg. /dev/ttyACM0 (RPi)
+    """
+    def __init__ (self, 
+                  port: str, 
+                  baud: Optional[int] = 115200, 
+                  timeout: Optional[float] = 0.01) -> None:
+        """Inits CanUSB4 with a USB port
+        
+        Args:
+            port: USB port eg. /dev/ttyACM0 (RPi)
+            baud: Baud rate in bytes
+            timeout: How long to wait for a serial timeout (seconds)
+
+        Raises:
+            DeviceConnectionError: If the port cannot be opened or is already in use.
+            InvalidConfigurationError: If the port name is empty or invalid.
+
+        """
         self.debug = False
         self.port = port
         self.baud = baud
         self.timeout = timeout
         self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
+        # Timeout for a request could be max_rety x timeout
+        
+        if not port:
+            raise InvalidConfigurationError("Port name cannot be empty")
+
         # buffer to hold partial string - allows us to continue if read ends partway through a packet
         self.current_buffer = ''
         # Track if we are in a valid string (ie. ignore any data outside of : ; blocks
         self.data_start = False
-        # Wait for this * timeout - so could be 2 seconds before giving up
         self.connect()
         
         
     # Optional arguments override existing
     def connect(self, port=None, baud=None, timeout=None):
+        """Inits CanUSB4 with a USB port
+        
+        Args:
+            port: USB port eg. /dev/ttyACM0 (RPi)
+            baud: Baud rate in bytes
+            timeout: How long to wait for a serial timeout (seconds)
+
+        Raises:
+            DeviceConnectionError: If the port cannot be opened or is already in use.
+            InvalidConfigurationError: If the port name is empty or invalid.
+
+        """
         if port != None:
             self.port = port
+        if not port:
+            raise InvalidConfigurationError("Port name cannot be empty")
         if baud != None:
             self.baud = baud
         if timeout != None:
             self.timeout = timeout
-        self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
+        try:
+            self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
+        except serial.SerialException as e:
+            raise DeviceConnectionError(f"Could not open port {self.port}") from e
+        if self.ser:
+            logger.info("Connected to serial port")
 
 
     # Data can either be string or bytestring
-    def send_data(self, data):
-        if self.debug:
-            print (f"Sending {data}")
-        self.ser.write(data.encode())
-        
+    def send_data(self, data: Union[str, bytes]) -> None:
+        """Send data to serial
+
+        Args:
+            data: Data to send, normally from a VLCB method
+
+        Raises:
+            InvalidConfigurationError: If string contains invalid characters
+            TypeError: If data passed is not a string or a bytestring
+            
+
+        """
+        logger.debug(f"Sending {data}")
+        if isinstance(data, str):
+            try:
+                # Convert string to bytes
+                payload = data.encode('ascii') # using ascii which is more restrictive than default "utf-8"
+            except UnicodeEncodeError as e:
+                raise InvalidConfigurationError(f"String contains invalid characters: {data}") from e
+        elif isinstance(data, bytes):
+            # It's already bytes, just use it
+            payload = data
+        else:
+            # User sent an int, list, or something else weird
+            raise TypeError(f"Expected str or bytes, got {type(data).__name__}")
+
+        # Send payload which is now bytes
+        try:
+            self.ser.write(payload)
+        except serial.SerialException as e:
+            raise DeviceConnectionError("Connection lost during write") from e
     
     def read_data(self):
         #print (f"Reading data - status {self.ser.is_open}")

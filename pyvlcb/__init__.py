@@ -3,26 +3,43 @@
 
 from .vlcbformat import VLCBformat, VLCBopcode
 from .canusb import CanUSB4
+from .exceptions import (
+    MyLibraryError, 
+    DeviceConnectionError, 
+    ProtocolError
+)
 # As some Raspberry Pis are still running pre Python 3.10 uses optional
 # in method types. In future when everyone is on Bookworm or later
 # # this can be upgraded to use the | option
 from typing import Optional, Union
+
+# Classes which are exported from import *
+__all__ = [
+    "VLCB",
+    "CanUSB4",
+    "VLCBformat",
+    "VLCBopcode", 
+    # Exceptions that may be raised
+    "MyLibraryError", 
+    "DeviceConnectionError", 
+    "ProtocolError"
+]
 
 class VLCB:
     """Handle VLCB formatting
     
     It generates the appropriate strings which can be sent to CBUS / VLCB
 
-    Attributs:
-    can_id (int): The Can ID for your software (default = 60)
+    Attributes:
+        can_id: The Can ID for your software (default = 60)
     
     """
     # 60 is default canid for canusb4 (127 is dcc controller)
-    def __init__ (self, can_id=60):
+    def __init__ (self, can_id: Optional[int] = 60) -> None:
         """Inits VLCB with a can_id
         
         Args:
-            can_id (int): The can_id for the software (default = 60)
+            can_id: The can_id for the software (default = 60)
         """
         self.can_id = can_id
         self.debug = False
@@ -361,7 +378,7 @@ class VLCB:
     
     # Generate code to allocate a loco
     # Assume long code, but if long = False and ID < 128 then use short mode
-    def allocate_loco (self, loco_id: int, long: Optional[bool] = True):
+    def allocate_loco (self, loco_id: int, long: Optional[bool] = True) -> str:
         """Create an allocate loco request
 
         Uses RLOC (40)
@@ -381,10 +398,32 @@ class VLCB:
             loco_id = loco_id | 0xC000
         return f"{self.make_header(opcode='40')}40{VLCB.num_to_2hexstr(loco_id)};"
     
-    def release_loco (self, session_id):
+    def release_loco (self, session_id: int) -> str:
+        """Create a release loco request
+
+        Uses KLOC (21)
+
+        Args:
+            session_id: Session number
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='21')}21{VLCB.num_to_1hexstr(session_id)};"
     
-    def steal_loco (self, loco_id, long=True):
+    def steal_loco (self, loco_id: int, long: Optional[bool] = True) -> str:
+        """Create an steal loco request
+
+        Takes the loco and other connectons to the loco should be terminated.        
+        Uses GLOC (60)
+
+        Args:
+            loco_id: Loco ID (long or short number)
+            long: Long loco ID (True) or short loco ID (False)
+
+        Returns:
+            String: A string for the request
+        """
         # GLOC 61 - flag = 1 for steal, flag = for share
         if long == False and loco_id >= 127:
             print ("Invalid short code")
@@ -393,7 +432,19 @@ class VLCB:
             loco_id = loco_id | 0xC000
         return f"{self.make_header(opcode='61')}61{VLCB.num_to_2hexstr(loco_id)}01;"   
         
-    def share_loco (self, loco_id, long=True):
+    def share_loco (self, loco_id: int, long: Optional[bool] = True) -> str:
+        """Create an share loco request
+
+        Takes the loco and other connectons to the loco can remain.
+        Uses GLOC (61)
+
+        Args:
+            loco_id: Loco ID (long or short number)
+            long: Long loco ID (True) or short loco ID (False)
+
+        Returns:
+            String: A string for the request
+        """
         # GLOC 61 - flag = 1 for steal, flag = for share
         if long == False and loco_id >= 127:
             print ("Invalid short code")
@@ -402,14 +453,36 @@ class VLCB:
             loco_id = loco_id | 0xC000
         return f"{self.make_header(opcode='61')}61{VLCB.num_to_2hexstr(loco_id)}02;" 
         
-    def keep_alive (self, session_id):
+    def keep_alive (self, session_id: int) -> str:
+        """Create an keep alive request
+
+        For any loco allocated send a keep alive at least every 4 seconds
+        Uses DKEEP (23)
+
+        Args:
+            session_id: Session ID 
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='23')}23{VLCB.num_to_1hexstr(session_id)};"
     
     # Set loco speed and direction (always done together)
     # Maximum once every 32 miliseconds (GUI configured based on non triggered so shouldn't be an issue)
     # Could add time detection if required
     # This uses the combined speed and direction value
-    def loco_speeddir (self, session_id, speeddir):
+    def loco_speeddir (self, session_id: int, speeddir: int) -> str:
+        """Create a combined set speed and direction event
+
+        Uses DSPD (47)
+
+        Args:
+            session_id: Session ID
+            speeddir: Unsigned 8 bit number. MSB is direction, 7 bits for speed
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='47')}47{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(speeddir)};"
     
     # Set function using DFUN - needs to be provided with the two bytes
@@ -417,6 +490,19 @@ class VLCB:
     # 4 = F13 to 19, 5 = F20 to F28
     # Second byte is 1 bit per function - set 1 for on, 0 for off, lsb to right
     # eg. 1 = 0001, 2 = 0010
-    def loco_set_dfun (self, session_id, byte1, byte2):
+    def loco_set_dfun (self, session_id: int, byte1: bytes, byte2: bytes) -> str:
+        """Create a set function request
+
+        Uses DFUN (60)
+
+        Args:
+            session_id: Session ID
+            byte1: Function group. 1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12, 4 = F13 to 19, 5 = F20 to F28
+            byte2: 1 bit per function 1=on, 0=off. LSB to right eg 1 = 0001, 2 = 0010
+
+        Returns:
+            String: A string for the request
+        """
         return f"{self.make_header(opcode='60')}60{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(byte1)}{VLCB.num_to_1hexstr(byte2)};"
         
+    
