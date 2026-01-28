@@ -1,5 +1,5 @@
 import serial
-from typing import Optional, Union
+from typing import List, Optional, Union
 from .exceptions import DeviceConnectionError, InvalidConfigurationError, ProtocolError, DeviceTimeoutError
 import logging
 
@@ -92,8 +92,7 @@ class CanUSB4 ():
         Raises:
             InvalidConfigurationError: If string contains invalid characters
             TypeError: If data passed is not a string or a bytestring
-
-
+            DeviceConnectionError: Error sending data - possible connection lost
         """
         logger.debug(f"Sending {data}")
         if isinstance(data, str):
@@ -115,46 +114,35 @@ class CanUSB4 ():
         except serial.SerialException as e:
             raise DeviceConnectionError("Connection lost during write") from e
     
-    def read_data(self):
-        """Inits CanUSB4 with a USB port
+    def read_data(self) -> List[str]:
+        """Read data from CanUSB4
         
-        Args:
-            port: USB port eg. /dev/ttyACM0 (RPi)
-            baud: Baud rate in bytes
-            timeout: How long to wait for a serial timeout (seconds)
+        Returns:
+            List: List of strings for all data read
 
         Raises:
-            DeviceConnectionError: If the port cannot be opened or is already in use.
-            InvalidConfigurationError: If the port name is empty or invalid.
+            DeviceConnectionError: Error receiving data - possible connection list
+            
 
         """
-        #print (f"Reading data - status {self.ser.is_open}")
+
         num_bytes = self.ser.in_waiting
-        #print (f"Num bytes {num_bytes}")
         # As each data string is read then it is stored into this list
         # Which allows all new packets to be returned
-        # First packet is number of entries (or in the case of error negative)
-        # If error then always 2 more strings - First general error, next is output from e
-        num_received = 0
         received_data = []
         if num_bytes > 1:
             try:
                 in_chars = self.ser.read(num_bytes)
-            except serial.SerialException:
-                pass
+            except serial.SerialException as e:
+                raise DeviceConnectionError("Connection lost during read") from e
             # Unable to communicate with USB
-            except TypeError as e:
-                # Close if not already
-                self.ser.close()
-                return [-1, "NotConnect", "e"]
             # Any other error
             except Exception as e:
-                return [-2, "Error", "e"]
+                raise DeviceConnectionError("Unable to read other error") from e
             
             
             for i in range(0, len(in_chars)):
                 this_char = chr(in_chars[i])
-                #print (f"This char {this_char}")
                 # End of packet
                 if this_char == ';':
                     # Check we have some data if not then ignore
@@ -162,11 +150,8 @@ class CanUSB4 ():
                         continue
                     # Add the terminating char
                     self.current_buffer += this_char
-                    if self.debug:
-                        print (f"Read {self.current_buffer}")
-                    #received_data.append(self.current_buffer.decode('utf-8'))
+                    logger.debug (f"Read {self.current_buffer}")
                     received_data.append(self.current_buffer)
-                    num_received += 1
                     # delete the data
                     self.current_buffer = ''
                     # no longer inside a data packet
@@ -181,6 +166,5 @@ class CanUSB4 ():
                 # If not then we are not in data block
                 else:
                     continue
-        #print (f"USB returning {received_data}")
         return received_data    
         
