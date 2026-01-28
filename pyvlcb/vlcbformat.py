@@ -1,18 +1,58 @@
-        
+import logging
+from typing import List, Optional, Union, Dict
+
+OpcodeData = Dict[str, Union[str, Dict[str, str]]]
+
+
 # Handles a single packet
-class VLCBformat:
-    def __init__ (self, priority, can_id, data):
+class VLCBformat :
+    """ Handles a single VLCB packet
+
+    Attributes:
+        priority: CAN priority
+        can_id: CAN ID
+        data: Remaining data as a hex str
+    
+    """ 
+     
+    def __init__ (self, priority: int, can_id: int, data: str) -> None:
+        """Inits VLCBformat
+        
+        Args:
+            priority: CAN priority
+            can_id: CAN ID
+            data: Remaining data as a hex string
+
+        """
         self.priority = priority # Priority is actually high and low priority (2bit high / 2bit low) but just treated as single value
         self.can_id = can_id
         self.data = data # Data is left as hex string
         
     # Lookup OpCode
-    def opcode (self):
-        if self.data[0:2] in VLCBopcode.opcodes.keys():
-            return VLCBopcode.opcodes[self.data[0:2]]['opc']
-        return '??'
+    def opcode (self): # -> Dict[str,str]:
+        """Returns the opcode associated with the data string
+
+        Returns:
+            Dictionary of the opcode data
+
+        Raises:
+            ValueError: If opcode not found
+        """
+        str_value = self.data[0:2]
+        if str_value in VLCBopcode.opcodes.keys():
+            return VLCBopcode.opcodes[str_value]['opc']
+        else:
+            raise ValueError(f"Opcode '{str_value}' is not defined.")
     
-    def format_data (self):
+    def format_data (self) -> OpcodeData:
+        """Returns the opcode associated with the data string
+
+        Returns:
+            VLCBopcode: Opcode from data
+
+        Raises:
+            ValueError: If opcode not found
+        """
         return VLCBopcode.parse_data(self.data)
         
     def __str__ (self):
@@ -299,9 +339,9 @@ class VLCBopcode:
         else:
             return "Unknown"
     
-    # Parse the data based on the format string and store in a dictionary
+    # Parse the data based on the format str and store in a dictionary
     @staticmethod
-    def parse_data (data):
+    def parse_data (data: str): # -> OpcodeData:
         opcode = VLCBopcode.opcode_extract(data)
         # strip opcode from data
         data = data[2:]
