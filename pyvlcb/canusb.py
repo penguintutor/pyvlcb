@@ -92,7 +92,7 @@ class CanUSB4 ():
         Raises:
             InvalidConfigurationError: If string contains invalid characters
             TypeError: If data passed is not a string or a bytestring
-            
+
 
         """
         logger.debug(f"Sending {data}")
@@ -116,6 +116,18 @@ class CanUSB4 ():
             raise DeviceConnectionError("Connection lost during write") from e
     
     def read_data(self):
+        """Inits CanUSB4 with a USB port
+        
+        Args:
+            port: USB port eg. /dev/ttyACM0 (RPi)
+            baud: Baud rate in bytes
+            timeout: How long to wait for a serial timeout (seconds)
+
+        Raises:
+            DeviceConnectionError: If the port cannot be opened or is already in use.
+            InvalidConfigurationError: If the port name is empty or invalid.
+
+        """
         #print (f"Reading data - status {self.ser.is_open}")
         num_bytes = self.ser.in_waiting
         #print (f"Num bytes {num_bytes}")
@@ -123,7 +135,8 @@ class CanUSB4 ():
         # Which allows all new packets to be returned
         # First packet is number of entries (or in the case of error negative)
         # If error then always 2 more strings - First general error, next is output from e
-        received_data = [0]
+        num_received = 0
+        received_data = []
         if num_bytes > 1:
             try:
                 in_chars = self.ser.read(num_bytes)
@@ -138,8 +151,6 @@ class CanUSB4 ():
             except Exception as e:
                 return [-2, "Error", "e"]
             
-            #print (f"Num chars {len(in_chars)}")
-            #print (f"Chars are {in_chars}")
             
             for i in range(0, len(in_chars)):
                 this_char = chr(in_chars[i])
@@ -155,7 +166,7 @@ class CanUSB4 ():
                         print (f"Read {self.current_buffer}")
                     #received_data.append(self.current_buffer.decode('utf-8'))
                     received_data.append(self.current_buffer)
-                    received_data[0] += 1
+                    num_received += 1
                     # delete the data
                     self.current_buffer = ''
                     # no longer inside a data packet
@@ -173,59 +184,3 @@ class CanUSB4 ():
         #print (f"USB returning {received_data}")
         return received_data    
         
-        
-    # Reads byte at a time looking for : (start) and ; (end)
-    # timesout if no data received
-    # Returns list [status, data]
-    # Status = "Data", "NoData", "NotConnect", "Error" (other error)
-    # If error then e is sent instead of data
-    def read_data_old(self):
-        retry_count = 0
-        data_start = False    # After : goes to true to signify data being received
-        in_string = b''
-        while retry_count < self.max_retry:
-            try:
-                this_char = self.ser.read(1)
-            # No data
-            except serial.SerialException:
-                retry_count += 1
-                continue
-            # Unable to communicate with USB
-            except TypeError as e:
-                # Close if not already
-                self.ser.close()
-                return ["NotConnect", "e"]
-            # Any other error
-            except Exception as e:
-                return ["Error", "e"]
-            #print (f"Read returned {this_char}")
-            if this_char == b'':
-                retry_count += 1
-            # End of packet
-            elif this_char == b';':
-                # Check we have some data if not then return NoData
-                if len(in_string) == 0:
-                    return ["NoData", ""]
-                # Add the terminating char
-                in_string += this_char
-                if self.debug:
-                    print (f"Read {in_string}")
-                return ["Data", in_string]
-            # Start of packet (resets string even if previous data)
-            elif this_char == b':':
-                in_string = b':'
-                # reset retry value
-                retry_count = 0
-                data_start = True
-            # Only add character if we are inside a data block
-            elif data_start == True:
-                in_string += this_char
-                # increment retry (otherwise won't exist if we don't get a ;)
-                retry_count += 1
-            # If not then we are not in data block
-            else:
-                retry_count += 1
-        # Reach here we exited from retry_count due to a timeout
-        if self.debug:
-            print ("Read timeout")
-        return ["NoData", ""]
