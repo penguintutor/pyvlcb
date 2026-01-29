@@ -1,7 +1,12 @@
 import logging
-from typing import List, Optional, Union, Dict
+from typing import List, Optional, Union, Dict, Any
 
-OpcodeData = Dict[str, Union[str, Dict[str, str]]]
+# Set up a null handler so nothing prints by default unless the user enables it
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
+
+# Custom type for returned Dict, containing inner Dict
+OpcodeData = Dict[str, Union[str, Dict[str, Any]]]
 
 
 # Handles a single packet
@@ -48,7 +53,7 @@ class VLCBformat :
         """Returns the opcode associated with the data string
 
         Returns:
-            VLCBopcode: Opcode from data
+            OpcodeData: Dict from the VLCBopcode
 
         Raises:
             ValueError: If opcode not found
@@ -63,7 +68,16 @@ class VLCBformat :
 # Format provides a string that an be used to help interpret data portion
 # Uses class variables & staticmethods 
 class VLCBopcode:
+    """List of opcodes and other related data
     
+    Includes format information and user friendly strings
+    
+    Attributes:
+        opcodes: Dict of opcodes indexed by opcode number as a hex string
+        field_formats: Dict of data type and number of characters for each field
+        accessory_codes: Dict of accessory on and off codes
+
+    """
     # Dict from opcode to dict of opcode information
     opcodes = {
         '00':  {'opc': 'ACK', 'title': 'General Acknowledgement', 'format': '', 'minpri': 2, 'comment': 'Positive response to query/request performed for report of availability online'},
@@ -309,39 +323,83 @@ class VLCBopcode:
     # Used to allow methods to be used if mnemonic is included in op-code
     # Or you could pass the entire data section
     @staticmethod
-    def opcode_extract (opcode_string):
-        return opcode_string[0:2]
+    def opcode_extract (opcode_string: str) -> str:
+        """Shortens op code by removing extra characters
+
+        Returns:
+            String: shortened opcode string
+
+        Raises:
+            ValueError: If string does not contain at least 2 characters
+        """
+        if len(opcode_string) >= 2:
+            return opcode_string[0:2]
+        else:
+            raise ValueError(f"String '{opcode_string}' is too short.")
     
     # Get min priority from opcode
     @staticmethod
-    def opcode_priority (opcode):
+    def opcode_priority (opcode: str) -> int:
+        """Get priority from opcode
+
+        Returns:
+            int: priority value
+
+        Raises:
+            ValueError: If opcode not found
+        """
         opcode = VLCBopcode.opcode_extract(opcode)
         if opcode in VLCBopcode.opcodes.keys():
             return VLCBopcode.opcodes[opcode]['minpri']
         else:
-            return None
+            raise ValueError(f"Opcode '{opcode}' is not defined.")
     
     # Title of opcode (used in tooltip)
     @staticmethod
-    def opcode_title (opcode):
+    def opcode_title (opcode: str) -> str:
+        """Get title from opcode
+
+        Returns:
+            String: Opcode Title
+
+        Raises:
+            ValueError: If opcode not found
+        """
         opcode = VLCBopcode.opcode_extract(opcode)
         if opcode in VLCBopcode.opcodes.keys():
             return VLCBopcode.opcodes[opcode]['title']
         else:
-            return "Unknown"
+            raise ValueError(f"Opcode '{opcode}' is not defined.")
     
     # Convert op-code to mnemonic
     @staticmethod
     def opcode_mnemonic (opcode):
+        """Get mnemonic from opcode
+
+        Returns:
+            String: Opcode mnemonic
+
+        Raises:
+            ValueError: If opcode not found
+        """
         opcode = VLCBopcode.opcode_extract(opcode)
         if opcode in VLCBopcode.opcodes.keys():
             return VLCBopcode.opcodes[opcode]['opc']
         else:
-            return "Unknown"
+            raise ValueError(f"Opcode '{opcode}' is not defined.")
     
     # Parse the data based on the format str and store in a dictionary
     @staticmethod
-    def parse_data (data: str): # -> OpcodeData:
+    def parse_data (data: str) -> OpcodeData:
+        """Returns the data associated with the data string as a dict
+
+        Returns:
+            OpcodeData: Dict in OpcodeData format
+
+        Raises:
+            ValueError: If opcode not found
+        """
+        # Does not raise any explicit exceptions but uses methods that could raise a ValueError
         opcode = VLCBopcode.opcode_extract(data)
         # strip opcode from data
         data = data[2:]
@@ -365,7 +423,7 @@ class VLCBopcode:
                 break
             # If unknown then flag here - should only get this during unittests if a new format is added
             if this_field not in VLCBopcode.field_formats.keys():
-                print (f"Warning format field {this_field} not recognised")
+                logging.warning (f"Warning format field {this_field} not recognised")
                 this_field = "Unknown"
             # Take number of bytes from remaining data
             # Check enough first - if not then add warning
