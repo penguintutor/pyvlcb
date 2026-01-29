@@ -12,6 +12,11 @@ from .exceptions import (
 # in method types. In future when everyone is on Bookworm or later
 # # this can be upgraded to use the | option
 from typing import Optional, Union
+import logging
+
+# Set up a null handler so nothing prints by default unless the user enables it
+logger = logging.getLogger(__name__)
+logger.addHandler(logging.NullHandler())
 
 # Classes which are exported from import *
 __all__ = [
@@ -57,6 +62,9 @@ class VLCB:
         Returns:
             VLCBFormat: parsed data in VLCBFormat
 
+        Raises:
+            ValueError: If invalid data string
+
         """
         # Also allow string (no need to decode)
         if isinstance (input_bytes, str):
@@ -64,36 +72,28 @@ class VLCB:
         else:
             input_string = input_bytes.decode("utf-8")
         if (len(input_string) < 5):        # packets are actually much longer
-            print ("Data too short")    
-            return False
+            raise ValueError(f"input_bytes '{input_string}' is too short.")
         if (input_string[0] != ":"):
-            print ("No start frame")
-            return False
+            raise ValueError(f"No start frame in '{input_string}'")
         if (input_string[1] != "S"):
-            print ("Format not supported - only Standard frames allowed")
-            return False
+            raise ValueError("Format not supported - only Standard frames allowed in {input_string}")
         # Use try when converting to number in case of error
         try:
             header = input_string[2:6]
             header_val = int(header, 16)
         except:
-            print (f"Invalid format, number expected {header}")
+            raise ValueError(f"Invalid format, number expected {header}")
             header_val = 0
-        if self.debug:
-            print (f"Header {hex(header_val)}")
+        logger.debug (f"Header {hex(header_val)}")
         priority = (header_val & 0xf000) >> 12
-        if self.debug:
-            print (f"Priority {priority:b}")
+        logger.debug (f"Priority {priority:b}")
         can_id = (header_val & 0xfe0) >> 5
-        if self.debug:
-            print (f"Can ID {can_id}")
+        logger.debug(f"Can ID {can_id}")
         # Next is N / RTR can be ignored
-        if self.debug:
-            print (f"N / RTR {input_string[6]}")
+        logger.debug(f"N / RTR {input_string[6]}")
         # Data is rest excluding ; 
         data = input_string[7:-1]
-        if self.debug:
-            print (f"Data {data}")
+        logger.debug(f"Data {data}")
         # Creates a VLCB_format and returns that
         return VLCBformat (priority, can_id, data)
     
@@ -392,8 +392,7 @@ class VLCB:
         """
         # Generate RLOC to allocate loco to a session
         if long == False and loco_id >= 127:
-            print ("Invalid short code")
-            return False
+            raise ValueError ("Invalid short code. Loco ID {loco_id} is larger than 127")
         if long == True:
             loco_id = loco_id | 0xC000
         return f"{self.make_header(opcode='40')}40{VLCB.num_to_2hexstr(loco_id)};"
