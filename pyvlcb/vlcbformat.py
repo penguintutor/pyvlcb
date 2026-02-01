@@ -11,7 +11,7 @@ OpcodeData = Dict[str, Union[str, Dict[str, Any]]]
 
 
 # Handles a single packet
-class VLCBformat :
+class VLCBFormat :
     """ Handles a single VLCB packet
 
     Attributes:
@@ -448,4 +448,5 @@ class VLCBOpcode:
 
 # Alias for backwards compability 
 # Deprecated
+VLCBformat = VLCBFormat
 VLCBopcode = VLCBOpcode

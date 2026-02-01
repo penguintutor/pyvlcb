@@ -1,7 +1,7 @@
 # Class for handling VLCB data formatting
 # Data is returned as string - needs to be encoded afterwards
 
-from .vlcbformat import VLCBformat, VLCBopcode
+from .vlcbformat import VLCBFormat, VLCBOpcode
 from .canusb import CanUSB4
 from .exceptions import (
     MyLibraryError, 
@@ -22,8 +22,8 @@ logger.addHandler(logging.NullHandler())
 __all__ = [
     "VLCB",
     "CanUSB4",
-    "VLCBformat",
-    "VLCBopcode", 
+    "VLCBFormat",
+    "VLCBOpcode", 
     # Exceptions that may be raised
     "MyLibraryError", 
     "DeviceConnectionError", 
@@ -51,7 +51,7 @@ class VLCB:
     
     # Takes input bytestring and parses header / data
     # Does not try and interpret op-code - that is left to VLCB_format
-    def parse_input(self, input_bytes: bytes) -> VLCBformat:
+    def parse_input(self, input_bytes: bytes) -> VLCBFormat:
         """Parse a raw CBUS packet as an input bytestring
 
         Take a bytestring (or string) from the CBUS and extract the details
@@ -95,7 +95,7 @@ class VLCB:
         data = input_string[7:-1]
         logger.debug(f"Data {data}")
         # Creates a VLCB_format and returns that
-        return VLCBformat (priority, can_id, data)
+        return VLCBFormat (priority, can_id, data)
     
     # Parse and format into standard log format (datastring, direction, fulldata, direction, can_id, op_code, data
     # For log all values are returned as strings - note that the number (log entry number) is not returned
@@ -120,9 +120,9 @@ class VLCB:
         # convert op-code to string
         # opcode is first two chars of data
         opcode = vlcb_entry.data[0:2]
-        opcode_string = f'{opcode} - {VLCBopcode.opcode_mnemonic(opcode)}'
-        #data_string = f"{VLCBopcode.parse_data(vlcb_entry.data)}"
-        data_string = VLCB._dict_to_string(VLCBopcode.parse_data(vlcb_entry.data))
+        opcode_string = f'{opcode} - {VLCBOpcode.opcode_mnemonic(opcode)}'
+        #data_string = f"{VLCBOpcode.parse_data(vlcb_entry.data)}"
+        data_string = VLCB._dict_to_string(VLCBOpcode.parse_data(vlcb_entry.data))
         return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
@@ -226,7 +226,7 @@ class VLCB:
             can_id = self.can_id
             
         if minpri == None and opcode != None:
-            minpri = VLCBopcode.opcode_priority(opcode)
+            minpri = VLCBOpcode.opcode_priority(opcode)
             
         # If opcode not updated then use default low priority
         # Lower number is higher priority
