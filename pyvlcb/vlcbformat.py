@@ -1,4 +1,5 @@
 import logging
+import warnings
 from typing import List, Optional, Union, Dict, Any
 
 # Set up a null handler so nothing prints by default unless the user enables it
@@ -44,8 +45,8 @@ class VLCBformat :
             ValueError: If opcode not found
         """
         str_value = self.data[0:2]
-        if str_value in VLCBopcode.opcodes.keys():
-            return VLCBopcode.opcodes[str_value]['opc']
+        if str_value in VLCBOpcode.opcodes.keys():
+            return VLCBOpcode.opcodes[str_value]['opc']
         else:
             raise ValueError(f"Opcode '{str_value}' is not defined.")
     
@@ -53,12 +54,12 @@ class VLCBformat :
         """Returns the opcode associated with the data string
 
         Returns:
-            OpcodeData: Dict from the VLCBopcode
+            OpcodeData: Dict from the VLCBOpcode
 
         Raises:
             ValueError: If opcode not found
         """
-        return VLCBopcode.parse_data(self.data)
+        return VLCBOpcode.parse_data(self.data)
         
     def __str__ (self):
         return f'{self.priority} : {self.can_id} : {self.opcode()} ({self.data[0:2]}) : {self.data} / {self.format_data()}'
@@ -67,7 +68,7 @@ class VLCBformat :
 # or to allow code to provide user friendly information
 # Format provides a string that an be used to help interpret data portion
 # Uses class variables & staticmethods 
-class VLCBopcode:
+class VLCBOpcode:
     """List of opcodes and other related data
     
     Includes format information and user friendly strings
@@ -348,9 +349,9 @@ class VLCBopcode:
         Raises:
             ValueError: If opcode not found
         """
-        opcode = VLCBopcode.opcode_extract(opcode)
-        if opcode in VLCBopcode.opcodes.keys():
-            return VLCBopcode.opcodes[opcode]['minpri']
+        opcode = VLCBOpcode.opcode_extract(opcode)
+        if opcode in VLCBOpcode.opcodes.keys():
+            return VLCBOpcode.opcodes[opcode]['minpri']
         else:
             raise ValueError(f"Opcode '{opcode}' is not defined.")
     
@@ -365,9 +366,9 @@ class VLCBopcode:
         Raises:
             ValueError: If opcode not found
         """
-        opcode = VLCBopcode.opcode_extract(opcode)
-        if opcode in VLCBopcode.opcodes.keys():
-            return VLCBopcode.opcodes[opcode]['title']
+        opcode = VLCBOpcode.opcode_extract(opcode)
+        if opcode in VLCBOpcode.opcodes.keys():
+            return VLCBOpcode.opcodes[opcode]['title']
         else:
             raise ValueError(f"Opcode '{opcode}' is not defined.")
     
@@ -382,9 +383,9 @@ class VLCBopcode:
         Raises:
             ValueError: If opcode not found
         """
-        opcode = VLCBopcode.opcode_extract(opcode)
-        if opcode in VLCBopcode.opcodes.keys():
-            return VLCBopcode.opcodes[opcode]['opc']
+        opcode = VLCBOpcode.opcode_extract(opcode)
+        if opcode in VLCBOpcode.opcodes.keys():
+            return VLCBOpcode.opcodes[opcode]['opc']
         else:
             raise ValueError(f"Opcode '{opcode}' is not defined.")
     
@@ -400,7 +401,7 @@ class VLCBopcode:
             ValueError: If opcode not found
         """
         # Does not raise any explicit exceptions but uses methods that could raise a ValueError
-        opcode = VLCBopcode.opcode_extract(data)
+        opcode = VLCBOpcode.opcode_extract(data)
         # strip opcode from data
         data = data[2:]
 
@@ -408,12 +409,12 @@ class VLCBopcode:
         # Include opcode in data if required for future use
         data_parsed = {'opid': opcode}
         # check valid opcode (if not then empty format)
-        if not opcode in VLCBopcode.opcodes.keys():
+        if not opcode in VLCBOpcode.opcodes.keys():
             format = ""
             data_parsed['opcode'] = "UNKNOWN"
         else:
-            format = VLCBopcode.opcodes[opcode]['format']
-            data_parsed['opcode'] = VLCBopcode.opcodes[opcode]['opc']
+            format = VLCBOpcode.opcodes[opcode]['format']
+            data_parsed['opcode'] = VLCBOpcode.opcodes[opcode]['opc']
         format_fields = format.split(',')
         # Remove data as added to dict so when reach 0 we are complete
         # parse each of the fields
@@ -422,12 +423,12 @@ class VLCBopcode:
             if this_field == "":
                 break
             # If unknown then flag here - should only get this during unittests if a new format is added
-            if this_field not in VLCBopcode.field_formats.keys():
+            if this_field not in VLCBOpcode.field_formats.keys():
                 logging.warning (f"Warning format field {this_field} not recognised")
                 this_field = "Unknown"
             # Take number of bytes from remaining data
             # Check enough first - if not then add warning
-            num_chars = VLCBopcode.field_formats[this_field][0] 
+            num_chars = VLCBOpcode.field_formats[this_field][0] 
             if len(data) < num_chars :
                 data_parsed[this_field] = f"Insufficient data {data}"
                 # remove remaining
@@ -437,7 +438,7 @@ class VLCBopcode:
                 this_val = data[0:num_chars]
                 data = data[num_chars:]
                 # if number expected then convert
-                if VLCBopcode.field_formats[this_field][1] != "char":
+                if VLCBOpcode.field_formats[this_field][1] != "char":
                     this_val = int(this_val, 16)
                 data_parsed[this_field] = this_val
         # remaining data added to final field (shouldn't normally get this)
@@ -445,4 +446,6 @@ class VLCBopcode:
             data_parsed["ExtraData"] = data
         return data_parsed
 
-
+# Alias for backwards compability 
+# Deprecated
+VLCBopcode = VLCBOpcode
