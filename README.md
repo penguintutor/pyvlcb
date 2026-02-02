@@ -50,7 +50,6 @@ Example code is stored within the demo folder. Copy these into your project fold
 The demos are created for a Raspberry Pi or other Linux computer. The USB port is hard-coded as /dev/ttyACM0
 For other computers / USB ports then edit the python file directory and update the port statement.
 
-
 ## More Details
 
 For more details see: [PenguinTutor PyVLCB library page](https://www.penguintutor.com/projects/pyvlcb)
