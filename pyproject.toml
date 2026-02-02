@@ -6,7 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "PyVLCB"
 version = "0.0.1"
 description = "A library for CBUS / VLCB communication"
-readme = "README.md"  # Highly recommended to add this!
+readme = {file="README.md",  content-type = "text/markdown"} 
 requires-python = ">=3.6"
 license = {file = "LICENSE"}
 
@@ -23,7 +23,7 @@ classifiers = [
 
 # 'install_requires' becomes 'dependencies'
 dependencies = [
-    "pyserial",
+    "pyserial>=3.4",
 ]
 
 # 'url' and 'project_urls' move here
@@ -34,4 +34,4 @@ Source = "https://github.com/penguintutor/pyvlcb/"
 
 # 'packages=find_packages()' moves to this specific tool section
 [tool.setuptools.packages.find]
-where = ["."]  # "." is the default, scans the root folder
+where = ["src"]  # uses the src folder

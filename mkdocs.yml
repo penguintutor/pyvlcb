@@ -5,7 +5,10 @@ theme:
 # This plugin allows mkdocs to read Python docstrings
 plugins:
   - search
-  - mkdocstrings
+  - mkdocstrings:
+      handlers:
+        python:
+          paths: [src] # Look in the src directory
 
 nav:
   - Home: index.md
