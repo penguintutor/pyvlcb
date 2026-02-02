@@ -48,7 +48,7 @@ class VLCBFormat :
         if str_value in VLCBOpcode.opcodes.keys():
             return VLCBOpcode.opcodes[str_value]['opc']
         else:
-            raise ValueError(f"Opcode '{str_value}' is not defined.")
+            raise ValueError(f"Opcode {str_value} is not defined.")
     
     def format_data (self) -> OpcodeData:
         """Returns the opcode associated with the data string
@@ -336,7 +336,7 @@ class VLCBOpcode:
         if len(opcode_string) >= 2:
             return opcode_string[0:2]
         else:
-            raise ValueError(f"String '{opcode_string}' is too short.")
+            raise ValueError(f"String {opcode_string} is too short.")
     
     # Get min priority from opcode
     @staticmethod
@@ -353,7 +353,7 @@ class VLCBOpcode:
         if opcode in VLCBOpcode.opcodes.keys():
             return VLCBOpcode.opcodes[opcode]['minpri']
         else:
-            raise ValueError(f"Opcode '{opcode}' is not defined.")
+            raise ValueError(f"Opcode {opcode} is not defined.")
     
     # Title of opcode (used in tooltip)
     @staticmethod
@@ -370,7 +370,7 @@ class VLCBOpcode:
         if opcode in VLCBOpcode.opcodes.keys():
             return VLCBOpcode.opcodes[opcode]['title']
         else:
-            raise ValueError(f"Opcode '{opcode}' is not defined.")
+            raise ValueError(f"Opcode {opcode} is not defined.")
     
     # Convert op-code to mnemonic
     @staticmethod
@@ -387,7 +387,7 @@ class VLCBOpcode:
         if opcode in VLCBOpcode.opcodes.keys():
             return VLCBOpcode.opcodes[opcode]['opc']
         else:
-            raise ValueError(f"Opcode '{opcode}' is not defined.")
+            raise ValueError(f"Opcode {opcode} is not defined.")
     
     # Parse the data based on the format str and store in a dictionary
     @staticmethod
