@@ -1,9 +1,6 @@
 name: Publish to TestPyPI
 
 on:
-  push:
-    branches:
-      - main  # This will trigger a test upload every time you push to main
   release:
     types: [published] # This will also trigger if you create a GitHub Release
 
