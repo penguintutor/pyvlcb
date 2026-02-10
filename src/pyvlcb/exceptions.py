@@ -50,3 +50,10 @@ class DeviceTimeoutError(MyLibraryError):
     """
     pass
 
+class InvalidLocoError(MyLibraryError):
+    """
+    Raised for an invalid loco definition
+    Includes if the ID is out of range
+    or short code specified but code needs long code
+    """
+    pass
