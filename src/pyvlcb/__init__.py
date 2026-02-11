@@ -3,6 +3,7 @@
 
 from .vlcbformat import VLCBFormat, VLCBOpcode
 from .canusb import CanUSB4
+from .utils import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes
 from .exceptions import (
     MyLibraryError, 
     DeviceConnectionError, 
@@ -126,158 +127,13 @@ class VLCB:
         return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
-    # dict to string without {} or ""
-    @staticmethod
-    def _dict_to_string (dictionary: dict) -> str:
-        """ Convert a dict to a string without {} or quotes """
-        data_string = ""
-        for key, value in dictionary.items():
-            if data_string != "":
-                data_string += " , "
-            data_string += f"{key} = {value}"
-        return data_string
-    
-    @staticmethod
-    def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]:
-        """ Convert a Fnumber (Loco function ID) to bytes
-
-        Can be used to create correct format for loco_set_dfun
-        Limited to range 0 to 28 - which is max for DFUN
-        Higher would need to use DFNON/DFOFF
-
-        Args:
-            f_num: Function number
-            function_status: List with value of all functions (must be updated before calling)
-            
-        Returns:
-            Tuple of two bytes
-            
-        Raises: ValueError
-
-        """
-        # Must be an F number between 0 and 28
-        if f_num < 0 or f_num > 28:
-            raise ValueError (f"Fnumber needs to be between 0 and 28. Number provided {f_num}")
         
-        # Extend function_status to 29 entries
-        function_list = function_status + [0] * (29 - len(function_status))
-
-        if f_num <= 4:
-            byte1 = 1
-            byte2 = (0b10000 * function_list[0] +  # fn0 is higher nibble (bit 5)
-                     0b0001 * function_list[1] +
-                     0b0010 * function_list[2] +
-                     0b0100 * function_list[3] +
-                     0b1000 * function_list[4]
-                     )
-        elif f_num <= 8:
-            byte1 = 2
-            byte2 = (0b0001 * function_list[5] +
-                     0b0010 * function_list[6] +
-                     0b0100 * function_list[7] +
-                     0b1000 * function_list[8]
-                     )
-        elif f_num <= 12:
-            byte1 = 3
-            byte2 = (0b0001 * function_list[9] +
-                     0b0010 * function_list[10] +
-                     0b0100 * function_list[11] +
-                     0b1000 * function_list[12]
-                     )
-        elif f_num <= 20:
-            byte1 = 4
-            byte2 = (0b0001 * function_list[13] +
-                     0b0010 * function_list[14] +
-                     0b0100 * function_list[15] +
-                     0b1000 * function_list[16] +
-                     0b10000 * function_list[17] +
-                     0b100000 * function_list[18] +
-                     0b1000000 * function_list[19] +
-                     0b10000000 * function_list[20]
-                     )
-        elif f_num <= 28:
-            byte1 = 5
-            byte2 = (0b0001 * function_list[21] +
-                     0b0010 * function_list[22] +
-                     0b0100 * function_list[23] +
-                     0b1000 * function_list[24] +
-                     0b10000 * function_list[25] +
-                     0b100000 * function_list[26] +
-                     0b1000000 * function_list[27] +
-                     0b10000000 * function_list[28]
-                     )
-        return (byte1, byte2)
-        
+    # Static Methods moved to utils
+    #num_to_1hexstr = staticmethod(num_to_1hexstr)
+    #num_to_2hexstr = staticmethod(num_to_2hexstr)
+    #num_to_4hexstr = staticmethod(num_to_4hexstr)
     
-    @staticmethod
-    # Where 1 x bytes (2 chars)
-    def num_to_1hexstr (num: int) -> str:
-        """Convert number to a byte
 
-        Args:
-            num (int): Number to convert
-
-        Returns:
-            String: A hex representation of the number (2 chars)
-        """
-        return f"{hex(num).upper()[2:]:0>2}"
-    
-    @staticmethod
-    # Where 2 x bytes (4 chars)
-    def num_to_2hexstr (num: int) -> str:
-        """Convert number to 2 bytes
-
-        Args:
-            num (int): Number to convert
-
-        Returns:
-            String: A hex representation of the number (4 chars)
-        """
-        return f"{hex(num).upper()[2:]:0>4}"
-    
-    @staticmethod
-    # Where 4 x bytes (8 chars)
-    def num_to_4hexstr (num: int) -> str:
-        """Convert number to 4 bytes
-
-        Args:
-            num (int): Number to convert
-
-        Returns:
-            String: A hex representation of the number (8 chars)
-        """
-        return f"{hex(num).upper()[2:]:0>8}"
-    
-    @staticmethod
-    # Where 2 bytes convert to addr id
-    def bytes_to_addr (byte1: bytes, byte2: bytes) -> int:
-        """Convert 2 byte values into an address id sring
-
-        Args:
-            byte1 (bytes): Most significant byte
-            byte2 (bytes): Least significant byte
-
-        Returns:
-            Int: The address id value
-        """
-        msb = int(byte1)
-        lsb = int(byte2)
-        return ((msb << 8) + lsb)
-    
-    @staticmethod
-    def bytes_to_hexstr (byte1: bytes, byte2: bytes) -> str:
-        """Convert 2 bytes to a hex string
-
-        Args:
-            byte1 (bytes): Most significant byte
-            byte2 (bytes): Least significant byte
-
-        Returns:
-            String: A hex representation of the number
-        """
-        return f"{hex(byte1).upper()[2:]:0>2}{hex(byte2).upper()[2:]:0>2}"
-        
-    
     # Create header using low priority and can_id (or self.can_id)
     # If opcode provided, but no priority then appropriate min code looked up
     # MajPri would be based on packet aging - needs to be managed outside of this
@@ -312,6 +168,7 @@ class VLCB:
         return header_string
         #return header_string.encode('utf-8')
     
+    
     # Discover nodes
     def discover (self) -> str:
         """Create a discovery string 
@@ -336,7 +193,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='58')}58{VLCB.num_to_2hexstr(node_id)};" 
+        return f"{self.make_header(opcode='58')}58{num_to_2hexstr(node_id)};" 
         
     # Discover number of events available
     def discover_nevn (self, node_id: int) -> str:
@@ -350,7 +207,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='56')}56{VLCB.num_to_2hexstr(node_id)};"
+        return f"{self.make_header(opcode='56')}56{num_to_2hexstr(node_id)};"
     
     # Discover stored events NERD
     def discover_nerd (self, node_id: int) -> str:
@@ -364,7 +221,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='57')}57{VLCB.num_to_2hexstr(node_id)};"
+        return f"{self.make_header(opcode='57')}57{num_to_2hexstr(node_id)};"
     
     # Emergency stop all locos
     # RESTP
@@ -419,10 +276,10 @@ class VLCB:
         # Turn on
         if state == True or state == "on":
             # ASON
-            return f"{self.make_header(opcode='98')}98{VLCB.num_to_2hexstr(node_id)}{VLCB.num_to_2hexstr(ev_id)};"
+            return f"{self.make_header(opcode='98')}98{num_to_2hexstr(node_id)}{num_to_2hexstr(ev_id)};"
         # Turn off = ASOFF
         else:
-            return f"{self.make_header(opcode='99')}99{VLCB.num_to_2hexstr(node_id)}{VLCB.num_to_2hexstr(ev_id)};"
+            return f"{self.make_header(opcode='99')}99{num_to_2hexstr(node_id)}{num_to_2hexstr(ev_id)};"
         
     def accessory_long_command (self, node_id: int, ev_id: int, state: Union[str, bool]) -> str:
         """Create an accessory long command
@@ -440,10 +297,10 @@ class VLCB:
         # Turn on
         if state == True or state == "on":
             # ASON
-            return f"{self.make_header(opcode='90')}90{VLCB.num_to_4hexstr(ev_id)};"
+            return f"{self.make_header(opcode='90')}90{num_to_4hexstr(ev_id)};"
         # Turn off = ASOFF
         else:
-            return f"{self.make_header(opcode='91')}91{VLCB.num_to_4hexstr(ev_id)};"
+            return f"{self.make_header(opcode='91')}91{num_to_4hexstr(ev_id)};"
         
     # RLOC (Allocate loco) :SB040N40D446;
     # Short address upper address all zeros, only 6 bits of the lower byte are used (1 to 127) 0 is decoderless
@@ -468,7 +325,7 @@ class VLCB:
             raise ValueError ("Invalid short code. Loco ID {loco_id} is larger than 127")
         if long == True:
             loco_id = loco_id | 0xC000
-        return f"{self.make_header(opcode='40')}40{VLCB.num_to_2hexstr(loco_id)};"
+        return f"{self.make_header(opcode='40')}40{num_to_2hexstr(loco_id)};"
     
     def release_loco (self, session_id: int) -> str:
         """Create a release loco request
@@ -481,7 +338,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='21')}21{VLCB.num_to_1hexstr(session_id)};"
+        return f"{self.make_header(opcode='21')}21{num_to_1hexstr(session_id)};"
     
     def steal_loco (self, loco_id: int, long: Optional[bool] = True) -> str:
         """Create an steal loco request
@@ -504,7 +361,7 @@ class VLCB:
             raise InvalidLocoError(f"Invalid short code {loco_id}")
         if long == True:
             loco_id = loco_id | 0xC000
-        return f"{self.make_header(opcode='61')}61{VLCB.num_to_2hexstr(loco_id)}01;"   
+        return f"{self.make_header(opcode='61')}61{num_to_2hexstr(loco_id)}01;"   
         
     def share_loco (self, loco_id: int, long: Optional[bool] = True) -> str:
         """Create an share loco request
@@ -527,7 +384,7 @@ class VLCB:
             raise InvalidLocoError(f"Invalid short code {loco_id}")
         if long == True:
             loco_id = loco_id | 0xC000
-        return f"{self.make_header(opcode='61')}61{VLCB.num_to_2hexstr(loco_id)}02;" 
+        return f"{self.make_header(opcode='61')}61{num_to_2hexstr(loco_id)}02;" 
         
     def keep_alive (self, session_id: int) -> str:
         """Create an keep alive request
@@ -541,7 +398,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='23')}23{VLCB.num_to_1hexstr(session_id)};"
+        return f"{self.make_header(opcode='23')}23{num_to_1hexstr(session_id)};"
     
     # Set loco speed and direction (always done together)
     # Maximum once every 32 miliseconds (GUI configured based on non triggered so shouldn't be an issue)
@@ -559,7 +416,7 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='47')}47{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(speeddir)};"
+        return f"{self.make_header(opcode='47')}47{num_to_1hexstr(session_id)}{num_to_1hexstr(speeddir)};"
     
     # Set function using DFUN - needs to be provided with the two bytes
     # First byte is group (1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12)
@@ -579,6 +436,6 @@ class VLCB:
         Returns:
             String: A string for the request
         """
-        return f"{self.make_header(opcode='60')}60{VLCB.num_to_1hexstr(session_id)}{VLCB.num_to_1hexstr(byte1)}{VLCB.num_to_1hexstr(byte2)};"
+        return f"{self.make_header(opcode='60')}60{num_to_1hexstr(session_id)}{num_to_1hexstr(byte1)}{num_to_1hexstr(byte2)};"
         
     

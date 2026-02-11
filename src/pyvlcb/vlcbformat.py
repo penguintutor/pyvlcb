@@ -1,5 +1,6 @@
 import logging
 import warnings
+from .utils import bytes_to_addr
 from typing import List, Optional, Union, Dict, Any
 
 # Set up a null handler so nothing prints by default unless the user enables it
@@ -49,7 +50,18 @@ class VLCBFormat :
             return VLCBOpcode.opcodes[str_value]['opc']
         else:
             raise ValueError(f"Opcode {str_value} is not defined.")
-    
+
+    def get_data (self) -> OpcodeData:
+        """Returns the opcode associated with the data string as a dict
+
+        Returns:
+            OpcodeData: Dict from the VLCBOpcode
+
+        Raises:
+            ValueError: If opcode not found
+        """
+        return VLCBOpcode.parse_data(self.data)
+
     def format_data (self) -> OpcodeData:
         """Returns the opcode associated with the data string
 
@@ -60,7 +72,43 @@ class VLCBFormat :
             ValueError: If opcode not found
         """
         return VLCBOpcode.parse_data(self.data)
+    
+    def get_loco_id (self) -> int:
+        """Converts AddrHigh and AddrLow into a loco_id
+
+        Only valid with certain VLCBFormat packets associated with Locos.
+        If packet is does not contain the AddrHigh & AddrLow values (which
+        may be formatted differently) then raises a InvalidLocoError
         
+        Returns:
+            loco_id: Loco number
+            
+        Raises:
+            InvalidLocoError: If AddrHigh / AddrLow are not in the packet
+        """
+        loco_id = None
+        if self.opcode() == "PLOC":
+            # Get data
+            data_dict = VLCBOpcode.parse_data(self.data)
+            loco_id = data_dict['AddrHigh_AddrLow'] & 0x3FFF
+        elif self.opcode() == "ERR":
+            # also check it's one of the Error codes associated with allocate loco etc.
+            # 1 = loco stack full 2 = loco taken, 7 = invalid request
+            # The following are not supported as data bytes contain session / consist ID and not loco_id
+            # 3 = no session, 4 consist empty, 5 loco not found, 6 can bus error
+            data_dict = VLCBOpcode.parse_data(self.data)
+            if data_dict["ErrCode"] in [1, 2, 7]:
+                loco_id = bytes_to_addr(data_dict['Byte1'],data_dict['Byte2']) & 0x3FFF
+            else:
+                raise InvalidLocoError (f"Error code {data_dict['ErrCode']} does not contain a loco_id")
+            
+        # If loco_id not updated then raise error
+        if loco_id != None:
+            return loco_id
+        else:
+            raise InvalidLocoError(f"Opcode {self.opcode()} does not contain a loco_id")
+
+
     def __str__ (self):
         return f'{self.priority} : {self.can_id} : {self.opcode()} ({self.data[0:2]}) : {self.data} / {self.format_data()}'
 

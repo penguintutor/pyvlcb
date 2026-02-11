@@ -1,6 +1,8 @@
 import unittest
 from typing import Optional
 from pyvlcb import VLCB
+# Import utils
+from pyvlcb import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes
 from pyvlcb.vlcbformat import VLCBFormat
 
 class TestVLCB(unittest.TestCase):
@@ -13,14 +15,14 @@ class TestVLCB(unittest.TestCase):
     def test_num_to_hex_conversions(self):
         """Test that numbers are correctly padded and converted to hex strings."""
         # Test 1 byte (2 chars)
-        self.assertEqual(VLCB.num_to_1hexstr(10), "0A")
-        self.assertEqual(VLCB.num_to_1hexstr(255), "FF")
+        self.assertEqual(num_to_1hexstr(10), "0A")
+        self.assertEqual(num_to_1hexstr(255), "FF")
         
         # Test 2 bytes (4 chars)
-        self.assertEqual(VLCB.num_to_2hexstr(10), "000A")
+        self.assertEqual(num_to_2hexstr(10), "000A")
         
         # Test 4 bytes (8 chars)
-        self.assertEqual(VLCB.num_to_4hexstr(10), "0000000A")
+        self.assertEqual(num_to_4hexstr(10), "0000000A")
 
     ## Tests for Packet Parsing
     def test_parse_input_valid_1(self):
@@ -86,10 +88,10 @@ class TestVLCB(unittest.TestCase):
     #f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]
     def test_f_to_bytes(self):
         functions = [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1]
-        self.assertEqual(self.vlcb.f_to_bytes (1, functions), (1, 25))
-        self.assertEqual(self.vlcb.f_to_bytes (2, functions), (1, 25))
-        self.assertEqual(self.vlcb.f_to_bytes (7, functions), (2, 6))
-        self.assertEqual(self.vlcb.f_to_bytes (24, functions), (5, 0))
+        self.assertEqual(f_to_bytes (1, functions), (1, 25))
+        self.assertEqual(f_to_bytes (2, functions), (1, 25))
+        self.assertEqual(f_to_bytes (7, functions), (2, 6))
+        self.assertEqual(f_to_bytes (24, functions), (5, 0))
 
 
 if __name__ == "__main__":

@@ -55,5 +55,6 @@ class InvalidLocoError(MyLibraryError):
     Raised for an invalid loco definition
     Includes if the ID is out of range
     or short code specified but code needs long code
+    or if the packet does not contain a loco_id (eg. certain Err codes)
     """
     pass
