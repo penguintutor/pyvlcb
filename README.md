@@ -18,16 +18,19 @@ For most systems including a Raspberry Pi then Python is managed using virtual e
 ```bash
 mkdir ~/venv
 python3 -m venv ~/venv/pyvlcb --system-site-packages
+```
 
 **Activate the virtual environment:**
 
 ```bash
 source ~/venv/pyvlcb/bin/activate
+```
     
 **Install the latest release:**
 
 ```bash
 pip install pyvlcb
+```
 
 ---
 
@@ -43,6 +46,7 @@ To install the library, as a submodule in your own git project repository, then 
 ```bash
 git submodule add https://github.com/penguintutor/pyvlcb.git lib/pyvlcb
 pip install lib/pyvlcb
+```
 
 *Note: To use as a submodule, you must create your own git project first and install within the project folder. To update, run `git pull` and repeat the pip install command.*
 
