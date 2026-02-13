@@ -40,7 +40,7 @@ def num_to_4hexstr (num: int) -> str:
 
 
 # dict to string without {} or ""
-def _dict_to_string (dictionary: dict) -> str:
+def dict_to_string (dictionary: dict) -> str:
     """ Convert a dict to a string without {} or quotes """
     data_string = ""
     for key, value in dictionary.items():
@@ -49,8 +49,8 @@ def _dict_to_string (dictionary: dict) -> str:
         data_string += f"{key} = {value}"
     return data_string
 
-def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]:
-    """ Convert a Fnumber (Loco function ID) to bytes
+def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[str, str]:
+    """ Convert a Fnumber (Loco function ID) to bytes as string representation
 
     Can be used to create correct format for loco_set_dfun
     Limited to range 0 to 28 - which is max for DFUN
@@ -61,7 +61,7 @@ def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]:
         function_status: List with value of all functions (must be updated before calling)
         
     Returns:
-        Tuple of two bytes
+        Tuple of two x 2-characer strings representing the bytes
         
     Raises: ValueError
 
@@ -117,7 +117,11 @@ def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]:
                  0b1000000 * function_list[27] +
                  0b10000000 * function_list[28]
                  )
-    return (byte1, byte2)
+    # convert to strings before returning
+    # and with 0xFF guarentees it doesn't overflow (although not really neccessary for this method)
+    str1 = f"{ (byte1 & 0xFF) :02x}"
+    str2 = f"{ (byte2 & 0xFF) :02x}"
+    return (str1, str2)
 
 
 # Where 2 bytes convert to addr id
@@ -148,3 +152,29 @@ def bytes_to_hexstr (byte1: bytes, byte2: bytes) -> str:
     """
     return f"{hex(byte1).upper()[2:]:0>2}{hex(byte2).upper()[2:]:0>2}"
     
+
+def bytes_to_functions (fn1: bytes, fn2: bytes, fn3: bytes) -> List[int]:
+    """ Sets the value of the functions from a PLOC message
+    Only returns values for F0 to F12 (others not included in PLOC)
+    Provides as a list for inclusion in menus etc.
+    
+    Args:
+        fn1: Function byte F0 to F4 - bit 5 = dir lighting (F0), bit 6 = direction, bit 7 = res, bit 8 = 0
+        fn2: Function byte F5 to F8 - bit 5 upwards reserved
+        fn3: Function byte F9 to F12
+        
+    Returns:
+        List of function values as 0 or 1 for each function as off and on
+    
+    """    
+    data_in = [fn1, fn2, fn3]
+    mask = [0b0001, 0b0010, 0b0100, 0b1000]
+    function_status = [0] * 29
+    # Handle 0 separately as it's in the upper nibble
+    function_status[0] = data_in[0] & 0b10000
+    # Create a list of 12 entries
+    for i in range (0, 3):
+        for j in range (0, 4):
+            function_status[(i*4)+j+1] = 1 if (data_in[i] & mask[j]) > 0 else 0
+            
+    return function_status

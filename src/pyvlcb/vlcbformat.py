@@ -1,6 +1,6 @@
 import logging
 import warnings
-from .utils import bytes_to_addr
+from .utils import bytes_to_addr, bytes_to_functions
 from typing import List, Optional, Union, Dict, Any
 
 # Set up a null handler so nothing prints by default unless the user enables it
@@ -107,6 +107,29 @@ class VLCBFormat :
             return loco_id
         else:
             raise InvalidLocoError(f"Opcode {self.opcode()} does not contain a loco_id")
+
+    def get_function_list (self) -> List[int]:
+        """Where packet contains Fn1, Fn2, Fn3 (eg. PLOC)
+        returns 
+
+        Only valid with certain VLCBFormat packets associated with Locos.
+        If packet is does not contain the 3 byte values (which
+        may be formatted differently) then raises a InvalidFunctionError
+        
+        Returns:
+            List of function values as 0 or 1 for each function as off and on
+            
+        Raises:
+            InvalidFunctionError: If Function Bytes are not in the packet
+        """
+        if self.opcode() == "PLOC":
+            # Get data
+            data_dict = VLCBOpcode.parse_data(self.data)
+            return bytes_to_functions (data_dict['Fn1'], data_dict['Fn2'], data_dict['Fn3'])
+        else:
+            raise InvalidLocoError(f"Opcode {self.opcode()} does not contain a loco_id")
+
+
 
 
     def __str__ (self):

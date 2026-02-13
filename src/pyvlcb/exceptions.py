@@ -58,3 +58,11 @@ class InvalidLocoError(MyLibraryError):
     or if the packet does not contain a loco_id (eg. certain Err codes)
     """
     pass
+
+class InvalidFunctionError(MyLibraryError):
+    """
+    Raised for an invalid function requests
+    For example asking for function information
+    from a response which doesn't include the function information.
+    """
+    pass

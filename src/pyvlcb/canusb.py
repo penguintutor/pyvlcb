@@ -22,7 +22,8 @@ class CanUSB4 ():
     def __init__ (self, 
                   port: str, 
                   baud: Optional[int] = 115200, 
-                  timeout: Optional[float] = 0.01) -> None:
+                  timeout: Optional[float] = 0.01,
+                  exclusive: Optional[bool] = True) -> None:
         """Inits CanUSB4 with a USB port
         
         Args:
@@ -41,6 +42,10 @@ class CanUSB4 ():
         self.timeout = timeout
         self.max_retry = 30    # How many times to attempt on get_data must be at least as long as frame
         # Timeout for a request could be max_rety x timeout
+        self.exclusive = exclusive	# Exclusive determines if check for exclusive use of the USB port
+        # If this is set to false then if another application is already using the port then the application
+        # will run, but appear to hang if there is no response because another thread has already
+        # taken the incoming data
         
         if not port:
             raise InvalidConfigurationError("Port name cannot be empty")
@@ -53,7 +58,11 @@ class CanUSB4 ():
         
         
     # Optional arguments override existing
-    def connect(self, port=None, baud=None, timeout=None):
+    def connect(self,
+                port: Optional[str] = None,
+                baud: Optional[int] = None,
+                timeout: Optional[float] = None,
+                exclusive: Optional[bool] = None) -> None:
         """Inits CanUSB4 with a USB port
         
         Args:
@@ -74,8 +83,15 @@ class CanUSB4 ():
             self.baud = baud
         if timeout != None:
             self.timeout = timeout
+        if exclusive != None:
+            self.exclusive = exclusive
         try:
-            self.ser = serial.Serial(self.port, self.baud, timeout=self.timeout)
+            self.ser = serial.Serial(
+                self.port,
+                self.baud,
+                timeout=self.timeout,
+                exclusive = exclusive
+                )
         except serial.SerialException as e:
             raise DeviceConnectionError(f"Could not open port {self.port}") from e
         if self.ser:

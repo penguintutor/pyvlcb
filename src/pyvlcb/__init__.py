@@ -3,7 +3,7 @@
 
 from .vlcbformat import VLCBFormat, VLCBOpcode
 from .canusb import CanUSB4
-from .utils import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes
+from .utils import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes, dict_to_string
 from .exceptions import (
     MyLibraryError, 
     DeviceConnectionError, 
@@ -123,7 +123,7 @@ class VLCB:
         opcode = vlcb_entry.data[0:2]
         opcode_string = f'{opcode} - {VLCBOpcode.opcode_mnemonic(opcode)}'
         #data_string = f"{VLCBOpcode.parse_data(vlcb_entry.data)}"
-        data_string = VLCB._dict_to_string(VLCBOpcode.parse_data(vlcb_entry.data))
+        data_string = dict_to_string(VLCBOpcode.parse_data(vlcb_entry.data))
         return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string]
         # Todo - error handling 
     
@@ -400,12 +400,42 @@ class VLCB:
         """
         return f"{self.make_header(opcode='23')}23{num_to_1hexstr(session_id)};"
     
+    def loco_speed_dir (self, session_id: int, speed: int, direction: int) -> str:
+        """Set loco speed and direction based on separate arguments
+
+        Same as loco_speeddir but this takes 2 arguments, whereas loco_speeddir needs a combined value
+        Maximum call this once every 32 milliseconds
+
+        Uses DSPD (47)
+
+        Args:
+            session_id: Session ID
+            speed: 0 to 127 (1 is increased to 2 to avoid emergency stop)
+            direction: 1 = forward, 0 = reverse
+
+        Returns:
+            String: A string for the request
+            
+        Raises:
+            ValueError is speed is out of range, or invalid direction
+        """
+        if speed < 0 or speed > 127:
+            raise ValueError ("Invalid speed specified. Must be in range 0 to 127")
+        if direction <0 or direction > 1:
+            raise ValueError ("Direction is not valid. Use 1 for forward, 0 for reverse")
+        # special case - ignore emergency stop
+        if speed == 1:
+            speed = 2
+        speeddir = (direction * 0x80) + speed
+        return self.loco_speeddir (session_id, speeddir)
+    
     # Set loco speed and direction (always done together)
-    # Maximum once every 32 miliseconds (GUI configured based on non triggered so shouldn't be an issue)
-    # Could add time detection if required
-    # This uses the combined speed and direction value
     def loco_speeddir (self, session_id: int, speeddir: int) -> str:
-        """Create a combined set speed and direction event
+        """Set loco speed and direction
+
+        Maximum call this once every 32 milliseconds
+        Needs combined speed and direction value.
+        If speed is set to 1 then that is considered an emergency stop
 
         Uses DSPD (47)
 
@@ -437,5 +467,28 @@ class VLCB:
             String: A string for the request
         """
         return f"{self.make_header(opcode='60')}60{num_to_1hexstr(session_id)}{num_to_1hexstr(byte1)}{num_to_1hexstr(byte2)};"
+    
+    def loco_set_function (self, session_id: int, function_num, function_list) -> str:
+        """Create a set function request using the function list
+        Sends the entire group of functions where the function_num resides
+        This is an alternative to loco_set_dfun as this calculates the bytes
+        this method can only be used for functions 0 to 27
+
+        Uses DFUN (60)
+
+        Args:
+            session_id: Session ID
+            byte1: Function number
+            byte2: List of current function statuses
+
+        Returns:
+            String: A string for the request
+            
+        Raises:
+            ValueError: Typically raised from f_to_bytes
+        """
+        byte1_2 = f_to_bytes(function_num, function_list)
+        return f"{self.make_header(opcode='60')}60{num_to_1hexstr(session_id)}{byte1_2[0]}{byte1_2[1]};"
         
+
     
