@@ -22,7 +22,7 @@ import time
 port = '/dev/ttyACM0'
 
 # Set appropriate loco id
-loco_id = 5754
+loco_id = 3
 
 def main ():
     
