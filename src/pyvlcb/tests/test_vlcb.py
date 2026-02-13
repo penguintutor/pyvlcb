@@ -88,10 +88,10 @@ class TestVLCB(unittest.TestCase):
     #f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[bytes, bytes]
     def test_f_to_bytes(self):
         functions = [1, 1, 0, 0, 1, 0, 1, 1, 0, 0, 1, 1, 1]
-        self.assertEqual(f_to_bytes (1, functions), (1, 25))
-        self.assertEqual(f_to_bytes (2, functions), (1, 25))
-        self.assertEqual(f_to_bytes (7, functions), (2, 6))
-        self.assertEqual(f_to_bytes (24, functions), (5, 0))
+        self.assertEqual(f_to_bytes (1, functions), ("01", "19"))
+        self.assertEqual(f_to_bytes (2, functions), ("01", "19"))
+        self.assertEqual(f_to_bytes (7, functions), ("02", "06"))
+        self.assertEqual(f_to_bytes (24, functions), ("05", "00"))
 
 
 if __name__ == "__main__":

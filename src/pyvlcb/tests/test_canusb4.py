@@ -34,7 +34,7 @@ class TestCanUSB4(unittest.TestCase):
     def test_init_valid(self):
         """Test that initialization opens the serial port with correct settings."""
         # Check if serial.Serial was called with correct args
-        self.mock_serial_class.assert_called_with(self.port, 115200, timeout=0.01)
+        self.mock_serial_class.assert_called_with(self.port, 115200, timeout=0.01, exclusive=None)
 
     def test_init_empty_port(self):
         """Test that empty port raises InvalidConfigurationError."""
