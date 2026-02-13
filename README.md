@@ -62,9 +62,10 @@ See the link below for the library reference documentation
 
 Example code is stored within the demo folder available on GitHub. Copy these into your project folder to test the library and connectivity.
 
-* The demos are created for a Raspberry Pi or other Linux computers.
-* The USB port is hard-coded as /dev/ttyACM0.
-* For other computers or USB ports, edit the Python file and update the port statement.Example code is stored within the demo folder available from GitHub. Copy these into your project folder to test the library and connectivity. 
+*The demos are created for a Raspberry Pi or other Linux computers.
+*The USB port is hard-coded as /dev/ttyACM0.
+*The Loco ID is hard-coded as 3.
+*For other computers or USB ports, edit the Python file and update the port statement.Example code is stored within the demo folder available from GitHub. Copy these into your project folder to test the library and connectivity. 
 
 ## More Details
 
