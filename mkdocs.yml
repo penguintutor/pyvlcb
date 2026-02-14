@@ -13,4 +13,7 @@ plugins:
 nav:
   - Home: index.md
   - Reference: reference.md
-  - VLCB specs: specs.md
+  - VLCB specs: spec.md
+
+extra_css:
+  - stylesheets/extra.css

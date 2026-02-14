@@ -1,0 +1,10 @@
+/* Force all Markdown tables to 100% width */
+.md-typeset table {
+    width: 100%;
+    display: table;
+}
+
+/* Optional: Make columns equal width */
+.md-typeset td, .md-typeset th {
+    width: auto;
+}
