@@ -197,30 +197,32 @@ class VLCBOpcode:
         '50':  {'opc': 'RQNN', 'title': 'Request node number', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a node that is in setup/configuration mode and requests assignment of a node number (NN). The node allocating node numbers responds with (SNN) which contains the newly assigned node number. <NN hi> and <NN lo> are the existing node number, if the node has one. If it does not yet have a node number, these bytes should be set to zero.'},
         '51':  {'opc': 'NNREL', 'title': 'Node number release', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by node when taken out of service. e.g. when reverting to SLiM mode.'},
         '52':  {'opc': 'NNACK', 'title': 'Node number acknowledge', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a node to verify its presence and confirm its node id. This message is sent to acknowledge an SNN.'},
-        '53':  {'opc': 'NNLRN', 'title': 'Set node into learn mode', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to put a specific node into learn mode.'},
+        '53':  {'opc': 'NNLRN', 'title': 'Set node into learn mode', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to put a specific node into learn mode. Deprecated - replaced by MODE'},
         '54':  {'opc': 'NNULN', 'title': 'Release node from learn mode', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to take node out of learn mode and revert to normal operation.'},
         '55':  {'opc': 'NNCLR', 'title': 'Clear all events from a node', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to clear all events from a specific node. Must be in learn mode first to safeguard against accidental erasure of all events.'},
         '56':  {'opc': 'NNEVN', 'title': 'Read number of events available in a node', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to read the number of available event slots in a node.Response is EVLNF (0x70)'},
         '57':  {'opc': 'NERD', 'title': 'Read back all stored events in a node', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to read all the stored events in a node. Response is 0xF2.'},
         '58':  {'opc': 'RQEVN', 'title': 'Request to read number of stored events', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a configuration tool to read the number of stored events in a node. Response is 0x74( NUMEV).'},
-        '59':  {'opc': 'WRACK', 'title': 'Write acknowledge', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a node to indicate the completion of a write to memory operation. All nodes must issue WRACK when a write operation to node variables, events or event variables has completed. This allows for teaching nodes where the processing time may be slow.'},
+        '59':  {'opc': 'WRACK', 'title': 'Write acknowledge', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by a node to indicate the completion of a write to memory operation. All nodes must issue WRACK when a write operation to node variables, events or event variables has completed. This allows for teaching nodes where the processing time may be slow. Deprecated replaced by GRSP'},
         '5A':  {'opc': 'RQDAT', 'title': 'Request node data event', 'format': 'NN', 'minpri': 3, 'comment': 'Sent by one node to read the data event from another node.(eg: RFID data). Response is 0xF7 (ARDAT).'},
         # DN = Device number
         '5B':  {'opc': 'RQDDS', 'title': 'Request device data - short mode', 'format': 'DNHigh_DNLow', 'minpri': 3, 'comment': 'To request a data set from a device using the short event method. where DN is the device number. Response is 0xFB (DDRS)'},
-        '5C':  {'opc': 'BOOTM', 'title': 'Put node into bootload mode', 'format': 'NN', 'minpri': 3, 'comment': 'For SliM nodes with no NN then the NN of the command must be zero. For SLiM nodes with an NN, and all FLiM nodes the command must contain the NN of the target node. Sent by a configuration tool to prepare for loading a new program.'},
-        '5D':  {'opc': 'ENUM', 'title': 'Force a self enumeration cyble for use with CAN', 'format': 'NN', 'minpri': 3, 'comment': 'For nodes in FLiM using CAN as transport. This OPC will force a self-enumeration cycle for the specified node. A new CAN_ID will be allocated if needed. Following the ENUM sequence, the node should issue a NNACK to confirm completion and verify the new CAN_ID. If no CAN_ID values are available, an error message 7 will be issued instead.'},
+        '5C':  {'opc': 'BOOTM', 'title': 'Put node into bootload mode', 'format': 'NN', 'minpri': 3, 'comment': 'For SliM nodes with no NN then the NN of the command must be zero. For SLiM nodes with an NN, and all FLiM nodes the command must contain the NN of the target node. Sent by a configuration tool to prepare for loading a new program. Deprecated replaced by MODE'},
+        '5D':  {'opc': 'ENUM', 'title': 'Force a self enumeration cyble for use with CAN', 'format': 'NN', 'minpri': 3, 'comment': 'For nodes in FLiM using CAN as transport. This OPC will force a self-enumeration cycle for the specified node. A new CAN_ID will be allocated if needed. Following the ENUM sequence, the node should issue a NNACK to confirm completion and verify the new CAN_ID. If no CAN_ID values are available, an error message 7 will be issued instead. Deprecated replaced with automatic self enumeration.'},
         '5F':  {'opc': 'EXTC1', 'title': 'Extended op-code with 1 additional byte', 'format': 'ExtOpc,Byte1', 'minpri': 3, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs'},
         # 3rd data section
         '60':  {'opc': 'DFUN', 'title': 'Set Engine functions', 'format': 'Session,Fn1,Fn2', 'minpri': 2, 'comment': '<Dat2> (Fn1) is the function range. 1 is F0(FL) to F4; 2 is F5 to F8; 3 is F9 to F12; 4 is F13 to F20; 5 is F21 to F28; <Dat3> (Fn2) is the NMRA DCC format function byte for that range in corresponding bits. Sent by a CAB or equivalent to request an engine Fn state change.'},
         '61':  {'opc': 'GLOC', 'title': 'Get engine session', 'format': 'AddrHigh_AddrLow,Flags', 'minpri': 2, 'comment': '<Dat1> and <Dat2> are [AddrH] and [AddrL] of the decoder, respectively.; 7 bit addresses have (AddrH=0).; 14 bit addresses have bits 6,7 of AddrH set to 1.; <Flags> contains flag bits as follows:Bit 0: Set for "Steal" mode; Bit 1: Set for "Share" mode; Both bits set to 0 is exactly equivalent to an RLOC request; Both bits set to 1 is invalid, because the 2 modes are mutually exclusive; The command station responds with (PLOC) if the request is successful. Otherwise responds with (ERR): engine in use. (ERR:) stack full or (ERR) no session. The latter indicates that there is no current session to steal/share depending on the flag bits set in the request. GLOC with all flag bits set to zero is exactly equivalent to RLOC, but command stations must continue to support RLOC for backwards compatibility.'},
         '63':  {'opc': 'ERR', 'title': 'Command station error report', 'format': 'Byte1,Byte2,ErrCode', 'minpri': 2, 'comment': 'Sent in response to an error situation by a command station.'},
-        '6F':  {'opc': 'CMDERR', 'title': 'Error messages from nodes during configuration', 'format': 'NN,Error', 'minpri': 3, 'comment': 'Sent by node if there is an error when a configuration command is sent.'},
+        '6F':  {'opc': 'CMDERR', 'title': 'Error messages from nodes during configuration', 'format': 'NN,Error', 'minpri': 3, 'comment': 'Sent by node if there is an error when a configuration command is sent. Deprecated replaced by GRSP.'},
         '70':  {'opc': 'EVNLF', 'title': 'Event space left reply from node', 'format': 'NN,EVSPC', 'minpri': 3, 'comment': 'EVSPC is a one byte value giving the number of available events left in that node.'},
-        '71':  {'opc': 'NVRD', 'title': 'Request read of a node variable', 'format': 'NN,NVIndex', 'minpri': 3, 'comment': 'NV# is the index for the node variable value requested. Response is NVANS.'},
+        '71':  {'opc': 'NVRD', 'title': 'Request read of a node variable', 'format': 'NN,NVIndex', 'minpri': 3, 'comment': 'NV# is the index for the node variable value requested. Response is NVANS. VLCB also returns GRSP and support for NV#0.'},
         '72':  {'opc': 'NENRD', 'title': 'Request read of stored events by event index', 'format': 'NN,EnIndex', 'minpri': 3, 'comment': 'EN# is the index for the stored event requested. Response is 0xF2 (ENRSP)'},
-        '73':  {'opc': 'RQNPN', 'title': 'Request read of a node parameter by index', 'format': 'NN,ParaIndex', 'minpri': 3, 'comment': 'Para# is the index for the parameter requested. Index 0 returns the number of available parameters, Response is 0x9B (PARAN).'},
+        '73':  {'opc': 'RQNPN', 'title': 'Request read of a node parameter by index', 'format': 'NN,ParaIndex', 'minpri': 3, 'comment': 'Para# is the index for the parameter requested. Index 0 returns the number of available parameters, Response is 0x9B (PARAN). VLCB Para #0 returns a PARAN for each parameter'},
         '74':  {'opc': 'NUMEV', 'title': 'Number of events stored in node', 'format': 'NN,NumEvents', 'minpri': 3, 'comment': 'Response to request 0x58 (RQEVN)'},
-        '75':  {'opc': 'CANID', 'title': 'Set a CAN_ID in existing FLiM node', 'format': 'NN,CAN_ID', 'minpri': 0, 'comment': 'Used to force a specified CAN_ID into a node. Value range is from 1 to 0x63 (99 decimal) This OPC must be used with care as duplicate CAN_IDs are not allowed. Values outside the permitted range will produce an error 7 message and the CAN_ID will not change.'},
+        '75':  {'opc': 'CANID', 'title': 'Set a CAN_ID in existing FLiM node', 'format': 'NN,CAN_ID', 'minpri': 0, 'comment': 'Used to force a specified CAN_ID into a node. Value range is from 1 to 0x63 (99 decimal) This OPC must be used with care as duplicate CAN_IDs are not allowed. Values outside the permitted range will produce an error 7 message and the CAN_ID will not change. Deprecated replaced with self-enumaration. VLCB includes GRSP responses.'},
+        '76':  {'opc': 'MODE', 'title': 'Request a change to a modules operating mode', 'format': 'NN,ModeCmd', 'minpri': 0, 'comment': 'Request to change the operational mode of the module. Mode cmds 0 = transition to setup mode, 1 = transition to normal mode, 16 = turn on FCU compat, 17 = turn off FCU compat. If supported then module returns GRSP. VLCB new features.'},
+        '78':  {'opc': 'RQSD', 'title': 'Request service discover', 'format': 'NN,ServiceIndex', 'minpri': 0, 'comment': 'Request service data from a module if ServiceIndex is 0 then SD message sent, followed by ESD response for each services supported. VLCB new feature.'},
         '7F':  {'opc': 'EXTC2', 'title': 'Extended op-code with 2 additional bytes', 'format': 'ExtOpc,Byte1,Byte2', 'minpri': 0, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs'},
         # 4 data byte packets
         '80':  {'opc': 'RDCC3', 'title': 'Request 3-byte DCC Packet', 'format': 'Rep,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': '<Dat1(REP)> is number of repetitions in sending the packet. <Dat2>..<Dat4> 3 bytes of the DCC packet. Allows a CAB or equivalent to request a 3 byte DCC packet to be sent to the track. The packet is sent <REP> times and is not refreshed on a regular basis. Note: a 3 byte DCC packet is the minimum allowed.'},
@@ -228,14 +230,16 @@ class VLCBOpcode:
         '83':  {'opc': 'WCVB', 'title': 'Write CV (bit) in OPS mode', 'format': 'Session,CVHigh_CVLow,CVVal', 'minpri': 2, 'comment': '<Dat1> is the session number of the loco to be written to; <Dat2> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV to be written; <Dat4> is the value to be written; The format for Dat4 is that specified in RP 9.2.1 for OTM bit manipulation in a DCC packet.; This is ?111CDBBB? where C is here is always 1 as only ?writes? are possible OTM. (unless some loco ACK scheme like RailCom is used). D is the bit value, either 0 or 1 and BBB is the bit position in the CV byte. 000 to 111 for bits 0 to 7.; Sent to the command station to write a DCC CV in OPS mode to specific loco.(on the main)'},
         '84':  {'opc': 'QCVS', 'title': 'Read CV', 'format': 'Session,CVHigh_CVLow,Mode', 'minpri': 2, 'comment': 'This command is used exclusively with service mode.; Sent by the cab to the command station in order to read a CV value. The command station shall respond with a PCVS message containing the value read, or SSTAT if the CV cannot be read.'},
         '85':  {'opc': 'PCVS', 'title': 'Report CV', 'format': 'Session,CVHigh_CVLow,CVVal', 'minpri': 2, 'comment': '<Dat1> is the session number of the cab; <Dat2> is the MSB # of the CV read (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV read; <Dat4> is the read value; This command is used exclusively with service mode.; Sent by the command station to report a read CV.'},
+        '87':  {'opc': 'RDGN', 'title': 'Request dianostic data', 'format': 'NN,ServiceIndex,DiagCode', 'minpri': 0, 'comment': 'Request diagnostic data from a module. If DiagCode is 0 then all data returned. If ServiceIndex 0 then send DGN message for each service, otherwise send DGN for service specified'},
+        '8E':  {'opc': 'NVSETRD', 'title': 'Set an NV value with read back', 'format': 'NN,NNIndex,NVVal', 'minpri': 0, 'comment': 'Sets an NV value and responds with the new value, response may not be the value requested. VLCB new feature.'},
         '90':  {'opc': 'ACON', 'title': 'Accessory ON', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?ON? event using the full event number of 4 bytes. (long event)'},
         '91':  {'opc': 'ACOF', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?OFF? event using the full event number of 4 bytes. (long event)'},
         '92':  {'opc': 'AREQ', 'title': 'Accessory Request Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number (MS WORD of the full event #); <Dat2> is the low byte of the node number (MS WORD of the full event #); <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates a ?request? event using the full event number of 4 bytes. (long event); A request event is used to elicit a status response from a producer when it is required to know the state of the producer without producing an ON or OFF event and to trigger an event from a combi node'},
         '93':  {'opc': 'ARON', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': 'Indicates an ?ON? response event. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
         '94':  {'opc': 'AROF', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ‘OFF’ response event. A response event is a reply to a status request; (AREQ) without producing an ON or OFF event'},
-        '95':  {'opc': 'EVULN', 'title': 'Unlearn an event in learn mode', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': 'Sent by a configuration tool to remove an event from a node.'},
+        '95':  {'opc': 'EVULN', 'title': 'Unlearn an event in learn mode', 'format': 'NN,EnHigh_EnLow', 'minpri': 3, 'comment': 'Sent by a configuration tool to remove an event from a node. VLCB also return GRSP.'},
         # NVIndex is NV Index number
-        '96':  {'opc': 'NVSET', 'title': 'Set a node variable', 'format': 'NN,NVIndex,NVVal', 'minpri': 3, 'comment': 'Sent by a configuration tool to set a node variable. NV# is the NV index number.'},
+        '96':  {'opc': 'NVSET', 'title': 'Set a node variable', 'format': 'NN,NVIndex,NVVal', 'minpri': 3, 'comment': 'Sent by a configuration tool to set a node variable. NV# is the NV index number. Deprecated replaced by NVSETRD. VLCB also return GRSP.'},
         '97':  {'opc': 'NVANS', 'title': 'Response to a request for a node variable value', 'format': 'NN,NVIndex,NVVal', 'minpri': 3, 'comment': 'Sent by node in response to request. (NVRD)'},
         # Short events
         # DNHigh, DNLow = Lower two bytes define device number - considered same as a device address - full 4byte event is still sent
@@ -260,6 +264,9 @@ class VLCBOpcode:
         # Mode - service write mode
         #CVVal - CV value
         'A2':  {'opc': 'WCVS', 'title': 'Write CV in Service Mode', 'format': 'Session,CVHigh_CVLow,Mode,CVVal', 'minpri': 0, 'comment': '<Dat1> is the session number of the cab; <Dat2> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV to be written; <Dat4> is the service write mode; <Dat5> is the CV value to be written; Sent to the command station to write a DCC CV in service mode.'},
+        'AB':  {'opc': 'HEARTB', 'title': 'Heartbeat message from module', 'format': 'NN,Sequence,Status,StatusBits', 'minpri': 0, 'comment': 'Hearbeat message from module indicating alive. Sent every 5 seconds by module. Sequence count from 0, incrementing and wrap around to 0., Statis is binary representation of diagnostic status 0x00 is normal operation. StatusBits is reserved set to 0x00. VLCB new feature.'},
+        'AC':  {'opc': 'SD', 'title': 'Service discovery response', 'format': 'NN,ServiceIndex,ServiceType,Version', 'minpri': 0, 'comment': 'Version of service supported response to RQSD with ServiceIndex = 0. First SD response is number of following SD responses. Also see ESD. VLCB new feature.'},
+        'AF':  {'opc': 'GRSP', 'title': 'Generic response', 'format': 'NN,Opcode,ServiceType,Result', 'minpri': 0, 'comment': 'Generic response for a config change request. Result byte indicates ok for success or error code. CMDERR codes are supported. VLCB new feature.'},
         'B0':  {'opc': 'ACON1', 'title': 'Accessory ON', 'format': 'NN,EnHigh_EnLow,Byte1', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; <Dat5> is an additional data byte; Indicates an ‘ON’ event using the full event number of; 4 bytes with one additional data byte.'},
         'B1':  {'opc': 'ACOF1', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow,Byte1', 'minpri': 3, 'comment': '<Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; <Dat5> is an additional data byte; Indicates an ‘OFF’ event using the full event number of 4 bytes with one additional data byte.'},
         'B2':  {'opc': 'REQEV', 'title': 'Read event variable in learn mode', 'format': 'NN,EnHigh_EnLow,EvIndex', 'minpri': 3, 'comment': 'Allows a configuration tool to read stored event variables from a node. EV# is the EV index. Reply is (EVANS)'},
@@ -273,14 +280,16 @@ class VLCBOpcode:
         'B9':  {'opc': 'ASOF1', 'title': 'Accessory Short OFF', 'format': 'NN,DNHigh_DNLow,Byte1', 'minpri': 3, 'comment': 'Indicates an ‘OFF’ event using the short event number of 2 LS bytes with one added data byte.'},
         'BD':  {'opc': 'ARSON1', 'title': 'Accessory Short Response Event with one data byte', 'format': 'NN,DNHigh_DNLow,Byte1', 'minpri': 3, 'comment': 'Indicates an ‘ON’ response event with one added data byte. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.'},
         'BE':  {'opc': 'ARSOF1', 'title': 'Accessory short response event with one data byte', 'format': 'NN,DNHigh_DNLow,Byte1', 'minpri': 3, 'comment': 'Indicates an ‘OFF’ response event with one added data byte. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.'},
-        'BF':  {'opc': 'EXTC4', 'title': 'Extended op-code with 4 data bytes', 'format': 'ExtOpc,Byte1,Byte2,Byte3,Byte4', 'minpri': 3, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs'},
+        'BF':  {'opc': 'EXTC4', 'title': 'Extended op-code with 4 data bytes', 'format': 'ExtOpc,Byte1,Byte2,Byte3,Byte4', 'minpri': 3, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs.'},
         # 6 data byte packets
         'C0':  {'opc': 'RDCC5', 'title': 'Requst 5-byte DCC packet', 'format': 'Rep,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 2, 'comment': '<Dat1(REP)> is # of repetitions in sending the packet.; <Dat2>..<Dat6> 5 bytes of the DCC packet.; Allows a CAB or equivalent to request a 5 byte DCC packet to be sent to the track. The packet is sent <REP> times and is not refreshed on a regular basis.'},
         'C1':  {'opc': 'WCVOA', 'title': 'Write CV (byte) in OPS mode by address', 'format': 'AddrHigh_AddrLow,CVHigh_CVLow,Mode,CVVal', 'minpri': 2, 'comment': '<Dat1> and <Dat2> are [AddrH] and [AddrL] of the decoder, respectively.; 7 bit addresses have (AddrH=0).; 14 bit addresses have bits 7,8 of AddrH set to 1.; <Dat3> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat4> is the LSB # of the CV to be written; <Dat5> is the programming mode to be used; <Dat6> is the CV byte value to be written; Sent to the command station to write a DCC CV byte in OPS mode to specific loco (on the main). Used by computer based ops mode programmer that does not have a valid throttle handle.'},
+        'C2':  {'opc': 'CABDAT', 'title': 'Send data to DCC CAB which is controlling loco', 'format': 'AddrHigh_AddrLow,DataCode,Byte1,Byte2,Byte3', 'minpri': 1, 'comment': 'Send data to DCC CAB controlling particular loco. CABSIG data1 for aspect1, data2 for aspect2, data3 for speed. Defined in RFC0005.'},
+        'C7':  {'opc': 'DGN', 'title': 'Dianostic data resonse', 'format': 'NN,ServiceIndex,DiagCode,DiagVal', 'minpri': 0, 'comment': 'Diagnostic data value from a module sent in response to RDGN. VLCB new features'},
         'CF':  {'opc': 'FCLK', 'title': 'Fast Clock', 'format': 'DateTime', 'minpri': 3, 'comment': 'This addendum defines a time encoding'},
         'D0':  {'opc': 'ACON2', 'title': 'Accessory ON', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2', 'minpri': 3, 'comment': 'Indicates an ‘ON’ event using the full event number of 4 bytes with two additional data bytes.'},
         'D1':  {'opc': 'ACOF2', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2', 'minpri': 3, 'comment': 'ndicates an ‘OFF’ event using the full event number of 4 bytes with two additional data bytes.'},
-        'D2':  {'opc': 'EVLRN', 'title': 'Teach an event in learn mode', 'format': 'NN,EnHigh_EnLow,EvIndex,EvVal', 'minpri': 3, 'comment': 'A node response to a request from a configuration tool for the EVs associated with an event (REQEV). For multiple EVs, there will be one response per request.'},
+        'D2':  {'opc': 'EVLRN', 'title': 'Teach an event in learn mode', 'format': 'NN,EnHigh_EnLow,EvIndex,EvVal', 'minpri': 3, 'comment': 'A node response to a request from a configuration tool for the EVs associated with an event (REQEV). For multiple EVs, there will be one response per request. VLCB also return GRSP.'},
         'D3':  {'opc': 'EVANS', 'title': 'Response to a request for an EV value in a node in learn mode', 'format': 'NN,EnHigh_EnLow,EvIndex,EvVal', 'minpri': 3, 'comment': 'A node response to a request from a configuration tool for the EVs associated with an event (REQEV). For multiple EVs, there will be one response per request.'},
         'D4':  {'opc': 'ARON2', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2', 'minpri': 3, 'comment': 'Indicates an ‘ON’ response event with two added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
         'D5':  {'opc': 'AROF2', 'title': 'Accessory Response Event', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2', 'minpri': 3, 'comment': 'Indicates an ‘OFF’ response event with two added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
@@ -293,19 +302,22 @@ class VLCBOpcode:
         'E1':  {'opc': 'PLOC', 'title': 'Engine Report', 'format': 'Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3', 'minpri': 2, 'comment': '<Dat4> is the Speed/Direction value. Bit 7 is the direction bit and bits 0-6 are the speed value.; <Dat5> is the function byte F0 to F4; <Dat6> is the function byte F5 to F8; <Dat7> is the function byte F9 to F12; A report of an engine entry sent by the command station. Sent in response to QLOC or as an acknowledgement of acquiring an engine requested by a cab (RLOC or GLOC).'},
         'E2':  {'opc': 'NAME', 'title': 'Response to request for node name string', 'format': 'Char1_7', 'minpri': 3, 'comment': 'A node response while in ‘setup’ mode for its name string. Reply to (RQMN). The string for the module type is returned in char1 to char7, space filled to 7 bytes. The Module Name prefix , currently either CAN or ETH, depends on the Interface Protocol parameter, it is not included in the response, see section 12.2 for the definition of the parameters.'},
         'E3':  {'opc': 'STAT', 'title': 'Command station status report', 'format': 'NN,CSNum,Flags,MajRev,MinRev,Build', 'minpri': 2, 'comment': '<NN hi> <NN lo> Gives node id of command station, so further info can be got from parameters or interrogating NVs; <CS num> For future expansion - set to zero at present; <flags> Flags as defined below; <Major rev> Major revision number; <Minor rev> Minor revision letter; <Build no.> Build number, always 0 for a released version.; <flags> is status defined by the bits below.; bits:; 0 - Hardware Error (self test); 1 - Track Error; 2 - Track On/ Off; 3 - Bus On/ Halted; 4 - EM. Stop all performed; 5 - Reset done; 6 - Service mode (programming) On/ Off; 7 – reserved; Sent by the command station in response to RSTAT.'},
+        'E7':  {'opc': 'ESD', 'title': 'Extended service discovery response', 'format': 'NN,ServiceIndex,ServiceType,Byte1,Byte2,Byte3', 'minpri':0, 'comment': 'Detailed information about a service supported by a module. Sent in response to RQSD where ServiceIndex is not 0. VLCB new feature'},
+        'E9':  {'opc': 'DTXC', 'title': 'Streaming protocol', 'format': 'StreamID,Sequence,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 0, 'comment': 'Used to transport relatively large block of data. StreamID is unique layout wide (> 20). If Sequence num is 0x00 then bytes are MessageLen (2 bytes), CRC16 (2 bytes), Flags (1 byte reserved). Defined in RFC0005'},
         'EF':  {'opc': 'PARAMS', 'title': 'Response to request for node parameters', 'format': 'Para1_7', 'minpri': 3, 'comment': 'A node response while in ‘setup’ mode for its parameter string. Reply to (RQNP)'},
         'F0':  {'opc': 'ACON3', 'title': 'Accessory ON', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an ON event using the full event number of 4 bytes with three additional data bytes.'},
         'F1':  {'opc': 'ACOF3', 'title': 'Accessory OFF', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an OFF event using the full event number of 4 bytes with three additional data bytes.'},
         'F2':  {'opc': 'ENRSP', 'title': 'Response to request to read node events', 'format': 'NN,En3_0,EnIndex', 'minpri': 3, 'comment': 'Where the NN is that of the sending node. EN3 to EN0 are the four bytes of the stored event. EN# is the index of the event within the sending node. This is a response to either 57 (NERD) or 72 (NENRD)'},
         'F3':  {'opc': 'ARON3', 'title': 'Acessory Response Event', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an ‘ON’ response event with three added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
         'F4':  {'opc': 'AROF3', 'title': 'Acessory Response Event', 'format': 'NN,EnHigh_EnLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an ‘ON’ response event with three added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.'},
-        'F5':  {'opc': 'EVLRNI', 'title': 'Teach and event in learn mode using event indexing', 'format': 'NN,EnHigh_EnLow,EnIndex,EvIndex,EvVal', 'minpri': 3, 'comment': 'Sent by a configuration tool to a node in learn mode to teach it an event. The event index must be known. Also teaches it the associated event variables.(EVs). This command is repeated for each EV required.'},
+        'F5':  {'opc': 'EVLRNI', 'title': 'Teach and event in learn mode using event indexing', 'format': 'NN,EnHigh_EnLow,EnIndex,EvIndex,EvVal', 'minpri': 3, 'comment': 'Sent by a configuration tool to a node in learn mode to teach it an event. The event index must be known. Also teaches it the associated event variables.(EVs). This command is repeated for each EV required. VLCB allow zero events and zero EVid, also return GRSP.'},
         'F6':  {'opc': 'ACDAT', 'title': 'Accessory node data event', 'format': 'NN,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'Indicates an event from this node with 5 bytes of data. For example, this can be used to send the 40 bits of an RFID tag. There is no event number in order to allow space for 5 bytes of data in the packet, so there can only be one data event per node.'},
         'F7':  {'opc': 'ARDAT', 'title': 'Accessory node data response', 'format': 'NN,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'Indicates a node data response. A response event is a reply to a status request (RQDAT) without producing a new data event.'},
         'F8':  {'opc': 'ASON3', 'title': 'Accessory Short ON', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an ON event using the short event number of 2 LS bytes with three added data bytes.'},
         'F9':  {'opc': 'ASOF3', 'title': 'Accessory Short OFF', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an OFF event using the short event number of 2 LS bytes with three added data bytes.'},
         'FA':  {'opc': 'DDES', 'title': 'Device data event (short mode)', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'Function is the same as F6 but uses device addressing so can relate data to a device attached to a node. e.g. one of several RFID readers attached to a single node.'},
-        'FB':  {'opc': 'DDRS', 'title': 'Device data response (short mode)', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': "The response to a request for data from a device. (0x5B)"},
+        'FB':  {'opc': 'DDRS', 'title': 'Device data response (short mode)', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'The response to a request for data from a device. (0x5B)'},
+        'FC':  {'opc': 'DDWS', 'title': 'Write data', 'format': 'DNHigh_DNLow,byte1,byte2,byte3,byte4,byte5', 'minpri': 0, 'comment': 'Used to write data to a device such as an RFID tag. For RC522 byte1 should be 0.'},
         'FD':  {'opc': 'ARSON3', 'title': 'Accessory Short Response Event', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': "Indicates an ON response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event."},
         'FE':  {'opc': 'ARSOF3', 'title': 'Accessory Short Response Event', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': "Indicates an OFF response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event."},
         'FF':  {'opc': 'EXTC6', 'title': 'Extended op-code with 6 data bytes', 'format': 'ExtOpc,Byte1,Byte2,Byte3,Byte4,Byte5,Byte6', 'minpri': 3, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs'}
@@ -364,7 +376,19 @@ class VLCBOpcode:
             "En3_0": [8, "hex"],           # 4 bytes of stored event
             "EVSPC": [2, "num"],           # Amount of space available for events
             "ErrCode": [2, "hex"],         # Short 1 byte error code
-            "Error": [4, "hex"]            # Error code
+            "Error": [4, "hex"],           # Error code
+            "ModeCmd": [2, "num"],         # New VLCB mode command
+            "ServiceIndex": [2, "hex"],    # New VLCB Index of services
+            "DiagCode": [2, "hex"],        # New VLCB Diagnostic data code
+            "DiagVal": [4, "hex"],         # New VLCB Diagnostic data value
+            "Sequence": [2, "num"],        # New VLCB Sequence number (also RFC0005 SequenceNum)
+            "StatusBits": [2, "hex"],      # New VLCB StatusBits
+            "ServiceType": [2, "hex"],     # New VLCB Service Type
+            "Version": [2, "num"],         # New VLCB Version of service definition
+            "Opcode": [2, "hex"],          # New VLCB Requested Opcode (in response)
+            "Result": [2, "hex"],          # New VLCB Result from GRSP
+            "DataCode": [2, "hex"],        # Used in CABDAT meaning of next 3 bytes
+            "StreamID": [2, "num"]         # StreamID must be unique for the layout
         }
     
     # Accessory Codes - provided for convenient lookup
@@ -390,6 +414,44 @@ class VLCBOpcode:
             'ASOF3'
             ]
         }
+    
+    # DCC error codes as byte string lookup
+    dcc_error_codes = {
+        '01': 'Loco stack full',
+        '02': 'Loco address taken',
+        '03': 'Session not present',
+        '04': 'Consist empty',
+        '05': 'Loco not found',
+        '06': 'CAN bus error',
+        '07': 'Invalid request',
+        '08': 'Session cancelled'
+        }
+    
+    # CMDERR / GRSP error codes as byte string lookup
+    grsp_error_codes = {
+        '00': 'OK',
+        '01': 'Invalid command',
+        '02': 'Not in learn mode',
+        '03': 'Not in setup mode',
+        '04': 'Too many events',
+        '05': 'No event',
+        '06': 'Invalid event variable index',
+        '07': 'Invalid event',
+        '08': 'Reserved',
+        '09': 'Invalid parameter index',
+        '0A': 'Invalid node variable index',
+        '0B': 'Invalid event variable value',
+        '0C': 'Invalid node variable value',
+        '0D': 'Other in learn mode',
+        'FA': 'Invalid mode',
+        'FB': 'Invalid command parameter',
+        'FC': 'Invalid service',
+        'FD': 'Invalid diagnostic',
+        'FE': 'Unknown NVM type',
+        'FF': 'Reserved'
+        }
+
+        
     
     # Shorten op-code (remove extra characters)
     # Used to allow methods to be used if mnemonic is included in op-code
