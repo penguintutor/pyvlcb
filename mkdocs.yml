@@ -13,3 +13,4 @@ plugins:
 nav:
   - Home: index.md
   - Reference: reference.md
+  - VLCB specs: specs.md
