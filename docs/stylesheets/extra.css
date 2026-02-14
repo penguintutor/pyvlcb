@@ -1,10 +1,11 @@
-/* Force all Markdown tables to 100% width */
-.md-typeset table {
-    width: 100%;
-    display: table;
+/* 1. Force the scrollable wrapper to fill the space */
+.md-typeset__table {
+    min-width: 100%;
+    display: block; /* Ensures it takes up the full line */
 }
 
-/* Optional: Make columns equal width */
-.md-typeset td, .md-typeset th {
-    width: auto;
+/* 2. Force the table itself to fill the wrapper */
+.md-typeset table:not([class]) {
+    width: 100%;
+    display: table;
 }

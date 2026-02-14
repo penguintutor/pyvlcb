@@ -1,4 +1,8 @@
-# Protocol OpCodes
+# VLCB protocol specification
+
+Details of the VLCB specification as implemented within PyVLCB library
+
+## Opcode table
 
 | OpCode | Hex: 00 Decimal 0 |
 | :--- | :--- |
