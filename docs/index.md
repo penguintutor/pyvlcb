@@ -47,6 +47,7 @@ For further details please see [PenguinTutor PyVLCB page](https://www.penguintut
 * Simplified methods for CBUS / VLCB lookup
 * Full CBUS opcode support
 * Fully type-hinted for better IDE support
+* Full opcode listing for CBUS and VLCB
 
 ## Legal and Trademarks
 
