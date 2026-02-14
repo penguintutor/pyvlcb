@@ -1,10 +1,14 @@
 # VLCB protocol specification
 
-Details of the VLCB specification as implemented within PyVLCB library
+Details of the VLCB specification as implemented within the PyVLCB library
 
-## Opcode table
+This is intended as an overview only, where the specification differs from the official VLCB standards, then the VLCB documentation should take precedent.
 
-| OpCode | Hex: 00 Decimal 0 |
+## VLCB Opcodes
+
+These are the opcodes listed in the VLCBOpcode.opcodes dictionary.
+
+| OpCode | '00' (0) |
 | :--- | :--- |
 | Name | ACK |
 | Title | General Acknowledgement |
@@ -14,7 +18,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 01 Decimal 1 |
+| OpCode | '01' (1) |
 | :--- | :--- |
 | Name | NAK |
 | Title | General No Ack |
@@ -24,7 +28,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 02 Decimal 2 |
+| OpCode | '02' (2) |
 | :--- | :--- |
 | Name | HLT |
 | Title | Bus Halt |
@@ -34,7 +38,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 03 Decimal 3 |
+| OpCode | '03' (3) |
 | :--- | :--- |
 | Name | BON |
 | Title | Bus On |
@@ -44,7 +48,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 04 Decimal 4 |
+| OpCode | '04' (4) |
 | :--- | :--- |
 | Name | TOF |
 | Title | Track Off |
@@ -54,7 +58,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 05 Decimal 5 |
+| OpCode | '05' (5) |
 | :--- | :--- |
 | Name | TON |
 | Title | Track On |
@@ -64,7 +68,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 06 Decimal 6 |
+| OpCode | '06' (6) |
 | :--- | :--- |
 | Name | ERSTOP |
 | Title | Emergency Stop |
@@ -74,7 +78,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 07 Decimal 7 |
+| OpCode | '07' (7) |
 | :--- | :--- |
 | Name | ARST |
 | Title | System Reset |
@@ -84,7 +88,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 08 Decimal 8 |
+| OpCode | '08' (8) |
 | :--- | :--- |
 | Name | RTOF |
 | Title | Request Track Off |
@@ -94,7 +98,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 09 Decimal 9 |
+| OpCode | '09' (9) |
 | :--- | :--- |
 | Name | RTON |
 | Title | Request Track On |
@@ -104,7 +108,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 0A Decimal 10 |
+| OpCode | '0A' (10) |
 | :--- | :--- |
 | Name | RESTP |
 | Title | Request Emergency Stop All |
@@ -114,7 +118,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 0C Decimal 12 |
+| OpCode | '0C' (12) |
 | :--- | :--- |
 | Name | RSTAT |
 | Title | Request Command Station Status |
@@ -124,7 +128,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 0D Decimal 13 |
+| OpCode | '0D' (13) |
 | :--- | :--- |
 | Name | QNN |
 | Title | Query node number |
@@ -134,7 +138,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 10 Decimal 16 |
+| OpCode | '10' (16) |
 | :--- | :--- |
 | Name | RQNP |
 | Title | Request node parameters |
@@ -144,7 +148,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 11 Decimal 17 |
+| OpCode | '11' (17) |
 | :--- | :--- |
 | Name | RQMN |
 | Title | Request module name |
@@ -154,7 +158,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 21 Decimal 33 |
+| OpCode | '21' (33) |
 | :--- | :--- |
 | Name | KLOC |
 | Title | Release Engine |
@@ -164,7 +168,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 22 Decimal 34 |
+| OpCode | '22' (34) |
 | :--- | :--- |
 | Name | QLOC |
 | Title | Query Engine |
@@ -174,7 +178,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 23 Decimal 35 |
+| OpCode | '23' (35) |
 | :--- | :--- |
 | Name | DKEEP |
 | Title | Session keep alive |
@@ -184,7 +188,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 30 Decimal 48 |
+| OpCode | '30' (48) |
 | :--- | :--- |
 | Name | DBG1 |
 | Title | Debug with one data byte |
@@ -194,7 +198,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 3F Decimal 63 |
+| OpCode | '3F' (63) |
 | :--- | :--- |
 | Name | EXTC |
 | Title | Extended op-code with no additional bytes |
@@ -204,7 +208,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 40 Decimal 64 |
+| OpCode | '40' (64) |
 | :--- | :--- |
 | Name | RLOC |
 | Title | Request engine session |
@@ -214,7 +218,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 41 Decimal 65 |
+| OpCode | '41' (65) |
 | :--- | :--- |
 | Name | QCON |
 | Title | Query Consist |
@@ -224,7 +228,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 42 Decimal 66 |
+| OpCode | '42' (66) |
 | :--- | :--- |
 | Name | SNN |
 | Title | Set Node Number |
@@ -234,7 +238,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 43 Decimal 67 |
+| OpCode | '43' (67) |
 | :--- | :--- |
 | Name | ALOC |
 | Title | Allocate loco to activity |
@@ -244,7 +248,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 44 Decimal 68 |
+| OpCode | '44' (68) |
 | :--- | :--- |
 | Name | STMOD |
 | Title | Set CAB session mode |
@@ -254,7 +258,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 45 Decimal 69 |
+| OpCode | '45' (69) |
 | :--- | :--- |
 | Name | PCON |
 | Title | Consist Engine |
@@ -264,7 +268,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 46 Decimal 70 |
+| OpCode | '46' (70) |
 | :--- | :--- |
 | Name | KCON |
 | Title | Remove Engine from consist |
@@ -274,7 +278,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 47 Decimal 71 |
+| OpCode | '47' (71) |
 | :--- | :--- |
 | Name | DSPD |
 | Title | Set Engine Speed/Dir |
@@ -284,7 +288,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 48 Decimal 72 |
+| OpCode | '48' (72) |
 | :--- | :--- |
 | Name | DFLG |
 | Title | Set Engine Flags |
@@ -294,7 +298,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 49 Decimal 73 |
+| OpCode | '49' (73) |
 | :--- | :--- |
 | Name | DFNON |
 | Title | Set Engine function on |
@@ -304,7 +308,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 4C Decimal 76 |
+| OpCode | '4C' (76) |
 | :--- | :--- |
 | Name | SSTAT |
 | Title | Service mode status |
@@ -314,7 +318,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 50 Decimal 80 |
+| OpCode | '50' (80) |
 | :--- | :--- |
 | Name | RQNN |
 | Title | Request node number |
@@ -324,7 +328,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 51 Decimal 81 |
+| OpCode | '51' (81) |
 | :--- | :--- |
 | Name | NNREL |
 | Title | Node number release |
@@ -334,7 +338,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 52 Decimal 82 |
+| OpCode | '52' (82) |
 | :--- | :--- |
 | Name | NNACK |
 | Title | Node number acknowledge |
@@ -344,7 +348,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 53 Decimal 83 |
+| OpCode | '53' (83) |
 | :--- | :--- |
 | Name | NNLRN |
 | Title | Set node into learn mode |
@@ -354,7 +358,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 54 Decimal 84 |
+| OpCode | '54' (84) |
 | :--- | :--- |
 | Name | NNULN |
 | Title | Release node from learn mode |
@@ -364,7 +368,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 55 Decimal 85 |
+| OpCode | '55' (85) |
 | :--- | :--- |
 | Name | NNCLR |
 | Title | Clear all events from a node |
@@ -374,7 +378,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 56 Decimal 86 |
+| OpCode | '56' (86) |
 | :--- | :--- |
 | Name | NNEVN |
 | Title | Read number of events available in a node |
@@ -384,7 +388,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 57 Decimal 87 |
+| OpCode | '57' (87) |
 | :--- | :--- |
 | Name | NERD |
 | Title | Read back all stored events in a node |
@@ -394,7 +398,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 58 Decimal 88 |
+| OpCode | '58' (88) |
 | :--- | :--- |
 | Name | RQEVN |
 | Title | Request to read number of stored events |
@@ -404,7 +408,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 59 Decimal 89 |
+| OpCode | '59' (89) |
 | :--- | :--- |
 | Name | WRACK |
 | Title | Write acknowledge |
@@ -414,7 +418,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 5A Decimal 90 |
+| OpCode | '5A' (90) |
 | :--- | :--- |
 | Name | RQDAT |
 | Title | Request node data event |
@@ -424,7 +428,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 5B Decimal 91 |
+| OpCode | '5B' (91) |
 | :--- | :--- |
 | Name | RQDDS |
 | Title | Request device data - short mode |
@@ -434,7 +438,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 5C Decimal 92 |
+| OpCode | '5C' (92) |
 | :--- | :--- |
 | Name | BOOTM |
 | Title | Put node into bootload mode |
@@ -444,7 +448,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 5D Decimal 93 |
+| OpCode | '5D' (93) |
 | :--- | :--- |
 | Name | ENUM |
 | Title | Force a self enumeration cyble for use with CAN |
@@ -454,7 +458,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 5F Decimal 95 |
+| OpCode | '5F' (95) |
 | :--- | :--- |
 | Name | EXTC1 |
 | Title | Extended op-code with 1 additional byte |
@@ -464,7 +468,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 60 Decimal 96 |
+| OpCode | '60' (96) |
 | :--- | :--- |
 | Name | DFUN |
 | Title | Set Engine functions |
@@ -474,7 +478,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 61 Decimal 97 |
+| OpCode | '61' (97) |
 | :--- | :--- |
 | Name | GLOC |
 | Title | Get engine session |
@@ -484,7 +488,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 63 Decimal 99 |
+| OpCode | '63' (99) |
 | :--- | :--- |
 | Name | ERR |
 | Title | Command station error report |
@@ -494,7 +498,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 6F Decimal 111 |
+| OpCode | '6F' (111) |
 | :--- | :--- |
 | Name | CMDERR |
 | Title | Error messages from nodes during configuration |
@@ -504,7 +508,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 70 Decimal 112 |
+| OpCode | '70' (112) |
 | :--- | :--- |
 | Name | EVNLF |
 | Title | Event space left reply from node |
@@ -514,7 +518,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 71 Decimal 113 |
+| OpCode | '71' (113) |
 | :--- | :--- |
 | Name | NVRD |
 | Title | Request read of a node variable |
@@ -524,7 +528,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 72 Decimal 114 |
+| OpCode | '72' (114) |
 | :--- | :--- |
 | Name | NENRD |
 | Title | Request read of stored events by event index |
@@ -534,7 +538,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 73 Decimal 115 |
+| OpCode | '73' (115) |
 | :--- | :--- |
 | Name | RQNPN |
 | Title | Request read of a node parameter by index |
@@ -544,7 +548,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 74 Decimal 116 |
+| OpCode | '74' (116) |
 | :--- | :--- |
 | Name | NUMEV |
 | Title | Number of events stored in node |
@@ -554,7 +558,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 75 Decimal 117 |
+| OpCode | '75' (117) |
 | :--- | :--- |
 | Name | CANID |
 | Title | Set a CAN_ID in existing FLiM node |
@@ -564,7 +568,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 76 Decimal 118 |
+| OpCode | '76' (118) |
 | :--- | :--- |
 | Name | MODE |
 | Title | Request a change to a modules operating mode |
@@ -574,7 +578,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 78 Decimal 120 |
+| OpCode | '78' (120) |
 | :--- | :--- |
 | Name | RQSD |
 | Title | Request service discover |
@@ -584,7 +588,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 7F Decimal 127 |
+| OpCode | '7F' (127) |
 | :--- | :--- |
 | Name | EXTC2 |
 | Title | Extended op-code with 2 additional bytes |
@@ -594,7 +598,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 80 Decimal 128 |
+| OpCode | '80' (128) |
 | :--- | :--- |
 | Name | RDCC3 |
 | Title | Request 3-byte DCC Packet |
@@ -604,7 +608,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 82 Decimal 130 |
+| OpCode | '82' (130) |
 | :--- | :--- |
 | Name | WCVO |
 | Title | Write CV (byte) in OPS mode |
@@ -614,7 +618,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 83 Decimal 131 |
+| OpCode | '83' (131) |
 | :--- | :--- |
 | Name | WCVB |
 | Title | Write CV (bit) in OPS mode |
@@ -624,7 +628,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 84 Decimal 132 |
+| OpCode | '84' (132) |
 | :--- | :--- |
 | Name | QCVS |
 | Title | Read CV |
@@ -634,7 +638,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 85 Decimal 133 |
+| OpCode | '85' (133) |
 | :--- | :--- |
 | Name | PCVS |
 | Title | Report CV |
@@ -644,7 +648,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 87 Decimal 135 |
+| OpCode | '87' (135) |
 | :--- | :--- |
 | Name | RDGN |
 | Title | Request dianostic data |
@@ -654,7 +658,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 8E Decimal 142 |
+| OpCode | '8E' (142) |
 | :--- | :--- |
 | Name | NVSETRD |
 | Title | Set an NV value with read back |
@@ -664,7 +668,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 90 Decimal 144 |
+| OpCode | '90' (144) |
 | :--- | :--- |
 | Name | ACON |
 | Title | Accessory ON |
@@ -674,7 +678,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 91 Decimal 145 |
+| OpCode | '91' (145) |
 | :--- | :--- |
 | Name | ACOF |
 | Title | Accessory OFF |
@@ -684,7 +688,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 92 Decimal 146 |
+| OpCode | '92' (146) |
 | :--- | :--- |
 | Name | AREQ |
 | Title | Accessory Request Event |
@@ -694,7 +698,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 93 Decimal 147 |
+| OpCode | '93' (147) |
 | :--- | :--- |
 | Name | ARON |
 | Title | Accessory Response Event |
@@ -704,7 +708,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 94 Decimal 148 |
+| OpCode | '94' (148) |
 | :--- | :--- |
 | Name | AROF |
 | Title | Accessory Response Event |
@@ -714,7 +718,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 95 Decimal 149 |
+| OpCode | '95' (149) |
 | :--- | :--- |
 | Name | EVULN |
 | Title | Unlearn an event in learn mode |
@@ -724,7 +728,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 96 Decimal 150 |
+| OpCode | '96' (150) |
 | :--- | :--- |
 | Name | NVSET |
 | Title | Set a node variable |
@@ -734,7 +738,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 97 Decimal 151 |
+| OpCode | '97' (151) |
 | :--- | :--- |
 | Name | NVANS |
 | Title | Response to a request for a node variable value |
@@ -744,7 +748,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 98 Decimal 152 |
+| OpCode | '98' (152) |
 | :--- | :--- |
 | Name | ASON |
 | Title | Accessory short ON |
@@ -754,7 +758,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 99 Decimal 153 |
+| OpCode | '99' (153) |
 | :--- | :--- |
 | Name | ASOF |
 | Title | Accessory short OFF |
@@ -764,7 +768,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9A Decimal 154 |
+| OpCode | '9A' (154) |
 | :--- | :--- |
 | Name | ASRQ |
 | Title | Accessory Short Request Event |
@@ -774,7 +778,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9B Decimal 155 |
+| OpCode | '9B' (155) |
 | :--- | :--- |
 | Name | PARAN |
 | Title | Response to request for individual node parameter |
@@ -784,7 +788,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9C Decimal 156 |
+| OpCode | '9C' (156) |
 | :--- | :--- |
 | Name | REVAL |
 | Title | Request for read of an event variable |
@@ -794,7 +798,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9D Decimal 157 |
+| OpCode | '9D' (157) |
 | :--- | :--- |
 | Name | ARSON |
 | Title | Accessory short response event |
@@ -804,7 +808,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9E Decimal 158 |
+| OpCode | '9E' (158) |
 | :--- | :--- |
 | Name | ARSOF |
 | Title | Accessory short response event |
@@ -814,7 +818,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: 9F Decimal 159 |
+| OpCode | '9F' (159) |
 | :--- | :--- |
 | Name | EXTC3 |
 | Title | Extended op-code with 3 additional bytes |
@@ -824,7 +828,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: A0 Decimal 160 |
+| OpCode | 'A0' (160) |
 | :--- | :--- |
 | Name | RDCC4 |
 | Title | Request 4-byte DCC packet |
@@ -834,7 +838,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: A2 Decimal 162 |
+| OpCode | 'A2' (162) |
 | :--- | :--- |
 | Name | WCVS |
 | Title | Write CV in Service Mode |
@@ -844,7 +848,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: AB Decimal 171 |
+| OpCode | 'AB' (171) |
 | :--- | :--- |
 | Name | HEARTB |
 | Title | Heartbeat message from module |
@@ -854,7 +858,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: AC Decimal 172 |
+| OpCode | 'AC' (172) |
 | :--- | :--- |
 | Name | SD |
 | Title | Service discovery response |
@@ -864,7 +868,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: AF Decimal 175 |
+| OpCode | 'AF' (175) |
 | :--- | :--- |
 | Name | GRSP |
 | Title | Generic response |
@@ -874,7 +878,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B0 Decimal 176 |
+| OpCode | 'B0' (176) |
 | :--- | :--- |
 | Name | ACON1 |
 | Title | Accessory ON |
@@ -884,7 +888,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B1 Decimal 177 |
+| OpCode | 'B1' (177) |
 | :--- | :--- |
 | Name | ACOF1 |
 | Title | Accessory OFF |
@@ -894,7 +898,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B2 Decimal 178 |
+| OpCode | 'B2' (178) |
 | :--- | :--- |
 | Name | REQEV |
 | Title | Read event variable in learn mode |
@@ -904,7 +908,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B3 Decimal 179 |
+| OpCode | 'B3' (179) |
 | :--- | :--- |
 | Name | ARON1 |
 | Title | Accessory Response Event |
@@ -914,7 +918,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B4 Decimal 180 |
+| OpCode | 'B4' (180) |
 | :--- | :--- |
 | Name | AROF1 |
 | Title | Accessory Response Event |
@@ -924,7 +928,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B5 Decimal 181 |
+| OpCode | 'B5' (181) |
 | :--- | :--- |
 | Name | NEVAL |
 | Title | Response to request for read of EV value |
@@ -934,7 +938,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B6 Decimal 182 |
+| OpCode | 'B6' (182) |
 | :--- | :--- |
 | Name | PNN |
 | Title | Response to Query Node |
@@ -944,7 +948,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B8 Decimal 184 |
+| OpCode | 'B8' (184) |
 | :--- | :--- |
 | Name | ASON1 |
 | Title | Accessory Short ON |
@@ -954,7 +958,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: B9 Decimal 185 |
+| OpCode | 'B9' (185) |
 | :--- | :--- |
 | Name | ASOF1 |
 | Title | Accessory Short OFF |
@@ -964,7 +968,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: BD Decimal 189 |
+| OpCode | 'BD' (189) |
 | :--- | :--- |
 | Name | ARSON1 |
 | Title | Accessory Short Response Event with one data byte |
@@ -974,7 +978,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: BE Decimal 190 |
+| OpCode | 'BE' (190) |
 | :--- | :--- |
 | Name | ARSOF1 |
 | Title | Accessory short response event with one data byte |
@@ -984,7 +988,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: BF Decimal 191 |
+| OpCode | 'BF' (191) |
 | :--- | :--- |
 | Name | EXTC4 |
 | Title | Extended op-code with 4 data bytes |
@@ -994,7 +998,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: C0 Decimal 192 |
+| OpCode | 'C0' (192) |
 | :--- | :--- |
 | Name | RDCC5 |
 | Title | Requst 5-byte DCC packet |
@@ -1004,7 +1008,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: C1 Decimal 193 |
+| OpCode | 'C1' (193) |
 | :--- | :--- |
 | Name | WCVOA |
 | Title | Write CV (byte) in OPS mode by address |
@@ -1014,7 +1018,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: C2 Decimal 194 |
+| OpCode | 'C2' (194) |
 | :--- | :--- |
 | Name | CABDAT |
 | Title | Send data to DCC CAB which is controlling loco |
@@ -1024,7 +1028,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: C7 Decimal 199 |
+| OpCode | 'C7' (199) |
 | :--- | :--- |
 | Name | DGN |
 | Title | Dianostic data resonse |
@@ -1034,7 +1038,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: CF Decimal 207 |
+| OpCode | 'CF' (207) |
 | :--- | :--- |
 | Name | FCLK |
 | Title | Fast Clock |
@@ -1044,7 +1048,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D0 Decimal 208 |
+| OpCode | 'D0' (208) |
 | :--- | :--- |
 | Name | ACON2 |
 | Title | Accessory ON |
@@ -1054,7 +1058,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D1 Decimal 209 |
+| OpCode | 'D1' (209) |
 | :--- | :--- |
 | Name | ACOF2 |
 | Title | Accessory OFF |
@@ -1064,7 +1068,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D2 Decimal 210 |
+| OpCode | 'D2' (210) |
 | :--- | :--- |
 | Name | EVLRN |
 | Title | Teach an event in learn mode |
@@ -1074,7 +1078,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D3 Decimal 211 |
+| OpCode | 'D3' (211) |
 | :--- | :--- |
 | Name | EVANS |
 | Title | Response to a request for an EV value in a node in learn mode |
@@ -1084,7 +1088,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D4 Decimal 212 |
+| OpCode | 'D4' (212) |
 | :--- | :--- |
 | Name | ARON2 |
 | Title | Accessory Response Event |
@@ -1094,7 +1098,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D5 Decimal 213 |
+| OpCode | 'D5' (213) |
 | :--- | :--- |
 | Name | AROF2 |
 | Title | Accessory Response Event |
@@ -1104,7 +1108,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: D8 Decimal 216 |
+| OpCode | 'D8' (216) |
 | :--- | :--- |
 | Name | ASON2 |
 | Title | Accessory Short ON |
@@ -1114,7 +1118,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: DD Decimal 221 |
+| OpCode | 'DD' (221) |
 | :--- | :--- |
 | Name | ARSON2 |
 | Title | Accessory Short Response Event with two bytes |
@@ -1124,7 +1128,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: DE Decimal 222 |
+| OpCode | 'DE' (222) |
 | :--- | :--- |
 | Name | ARSOF2 |
 | Title | Accessory Short Response Event with two bytes |
@@ -1134,7 +1138,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: DF Decimal 223 |
+| OpCode | 'DF' (223) |
 | :--- | :--- |
 | Name | EXTC5 |
 | Title | Extended op-code with 5 data bytes |
@@ -1144,7 +1148,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E0 Decimal 224 |
+| OpCode | 'E0' (224) |
 | :--- | :--- |
 | Name | RDCC6 |
 | Title | Request 6 byte DCC packet |
@@ -1154,7 +1158,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E1 Decimal 225 |
+| OpCode | 'E1' (225) |
 | :--- | :--- |
 | Name | PLOC |
 | Title | Engine Report |
@@ -1164,7 +1168,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E2 Decimal 226 |
+| OpCode | 'E2' (226) |
 | :--- | :--- |
 | Name | NAME |
 | Title | Response to request for node name string |
@@ -1174,7 +1178,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E3 Decimal 227 |
+| OpCode | 'E3' (227) |
 | :--- | :--- |
 | Name | STAT |
 | Title | Command station status report |
@@ -1184,7 +1188,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E7 Decimal 231 |
+| OpCode | 'E7' (231) |
 | :--- | :--- |
 | Name | ESD |
 | Title | Extended service discovery response |
@@ -1194,7 +1198,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: E9 Decimal 233 |
+| OpCode | 'E9' (233) |
 | :--- | :--- |
 | Name | DTXC |
 | Title | Streaming protocol |
@@ -1204,7 +1208,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: EF Decimal 239 |
+| OpCode | 'EF' (239) |
 | :--- | :--- |
 | Name | PARAMS |
 | Title | Response to request for node parameters |
@@ -1214,7 +1218,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F0 Decimal 240 |
+| OpCode | 'F0' (240) |
 | :--- | :--- |
 | Name | ACON3 |
 | Title | Accessory ON |
@@ -1224,7 +1228,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F1 Decimal 241 |
+| OpCode | 'F1' (241) |
 | :--- | :--- |
 | Name | ACOF3 |
 | Title | Accessory OFF |
@@ -1234,7 +1238,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F2 Decimal 242 |
+| OpCode | 'F2' (242) |
 | :--- | :--- |
 | Name | ENRSP |
 | Title | Response to request to read node events |
@@ -1244,7 +1248,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F3 Decimal 243 |
+| OpCode | 'F3' (243) |
 | :--- | :--- |
 | Name | ARON3 |
 | Title | Acessory Response Event |
@@ -1254,7 +1258,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F4 Decimal 244 |
+| OpCode | 'F4' (244) |
 | :--- | :--- |
 | Name | AROF3 |
 | Title | Acessory Response Event |
@@ -1264,7 +1268,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F5 Decimal 245 |
+| OpCode | 'F5' (245) |
 | :--- | :--- |
 | Name | EVLRNI |
 | Title | Teach and event in learn mode using event indexing |
@@ -1274,7 +1278,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F6 Decimal 246 |
+| OpCode | 'F6' (246) |
 | :--- | :--- |
 | Name | ACDAT |
 | Title | Accessory node data event |
@@ -1284,7 +1288,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F7 Decimal 247 |
+| OpCode | 'F7' (247) |
 | :--- | :--- |
 | Name | ARDAT |
 | Title | Accessory node data response |
@@ -1294,7 +1298,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F8 Decimal 248 |
+| OpCode | 'F8' (248) |
 | :--- | :--- |
 | Name | ASON3 |
 | Title | Accessory Short ON |
@@ -1304,7 +1308,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: F9 Decimal 249 |
+| OpCode | 'F9' (249) |
 | :--- | :--- |
 | Name | ASOF3 |
 | Title | Accessory Short OFF |
@@ -1314,7 +1318,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FA Decimal 250 |
+| OpCode | 'FA' (250) |
 | :--- | :--- |
 | Name | DDES |
 | Title | Device data event (short mode) |
@@ -1324,7 +1328,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FB Decimal 251 |
+| OpCode | 'FB' (251) |
 | :--- | :--- |
 | Name | DDRS |
 | Title | Device data response (short mode) |
@@ -1334,7 +1338,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FC Decimal 252 |
+| OpCode | 'FC' (252) |
 | :--- | :--- |
 | Name | DDWS |
 | Title | Write data |
@@ -1344,7 +1348,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FD Decimal 253 |
+| OpCode | 'FD' (253) |
 | :--- | :--- |
 | Name | ARSON3 |
 | Title | Accessory Short Response Event |
@@ -1354,7 +1358,7 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FE Decimal 254 |
+| OpCode | 'FE' (254) |
 | :--- | :--- |
 | Name | ARSOF3 |
 | Title | Accessory Short Response Event |
@@ -1364,13 +1368,59 @@ Details of the VLCB specification as implemented within PyVLCB library
 
 ---
 
-| OpCode | Hex: FF Decimal 255 |
+| OpCode | 'FF' (255) |
 | :--- | :--- |
 | Name | EXTC6 |
 | Title | Extended op-code with 6 data bytes |
 | Args / data | ExtOpc,Byte1,Byte2,Byte3,Byte4,Byte5,Byte6 |
 | Priority | 3 |
 | Description | Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs |
+
+---
+
+## DCC Error codes
+
+These are the DCC error codes listed in the VLCBOpcode.dcc_error_codes dictionary.
+
+| Error code | Description |
+| :--- | :--- |
+| '01' (1) | Loco stack full |
+| '02' (2) | Loco address taken |
+| '03' (3) | Session not present |
+| '04' (4) | Consist empty |
+| '05' (5) | Loco not found |
+| '06' (6) | CAN bus error |
+| '07' (7) | Invalid request |
+| '08' (8) | Session cancelled |
+
+---
+
+## CMDERR / GRSP Error codes
+
+These are the CMDERR / GRSP error codes listed in the VLCBOpcode.grsp_error_codes dictionary.
+
+| Error code | Description |
+| :--- | :--- |
+| '00' (0) | OK |
+| '01' (1) | Invalid command |
+| '02' (2) | Not in learn mode |
+| '03' (3) | Not in setup mode |
+| '04' (4) | Too many events |
+| '05' (5) | No event |
+| '06' (6) | Invalid event variable index |
+| '07' (7) | Invalid event |
+| '08' (8) | Reserved |
+| '09' (9) | Invalid parameter index |
+| '0A' (10) | Invalid node variable index |
+| '0B' (11) | Invalid event variable value |
+| '0C' (12) | Invalid node variable value |
+| '0D' (13) | Other in learn mode |
+| 'FA' (250) | Invalid mode |
+| 'FB' (251) | Invalid command parameter |
+| 'FC' (252) | Invalid service |
+| 'FD' (253) | Invalid diagnostic |
+| 'FE' (254) | Unknown NVM type |
+| 'FF' (255) | Reserved |
 
 ---
 
