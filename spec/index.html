@@ -1,0 +1,4877 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+        <link rel="prev" href="../reference/">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>VLCB specs - PyVLCB</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.484c7ddc.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    <body dir="ltr">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#vlcb-protocol-specification" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="PyVLCB" class="md-header__button md-logo" aria-label="PyVLCB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            PyVLCB
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              VLCB specs
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="PyVLCB" class="md-nav__button md-logo" aria-label="PyVLCB" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    PyVLCB
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reference/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Reference
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VLCB specs
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VLCB specs
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vlcb-opcodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VLCB Opcodes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dcc-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DCC Error codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cmderr-grsp-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CMDERR / GRSP Error codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#vlcb-opcodes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        VLCB Opcodes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#dcc-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DCC Error codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cmderr-grsp-error-codes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        CMDERR / GRSP Error codes
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+
+<h1 id="vlcb-protocol-specification">VLCB protocol specification</h1>
+<p>Details of the VLCB specification as implemented within the PyVLCB library</p>
+<p>This is intended as an overview only, where the specification differs from the official VLCB standards, then the VLCB documentation should take precedent.</p>
+<h2 id="vlcb-opcodes">VLCB Opcodes</h2>
+<p>These are the opcodes listed in the VLCBOpcode.opcodes dictionary.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'00' (0)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACK</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">General Acknowledgement</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Positive response to query/request performed for report of availability online</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'01' (1)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NAK</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">General No Ack</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Negative response to query/request denied</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'02' (2)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">HLT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Bus Halt</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcasted to all nodes to indicate CBUS is not available and no further packets should be sent until a BON or ARST is received</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'03' (3)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">BON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Bus On</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcasted to all nodes to indicate CBUS is available following a HLT.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'04' (4)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">TOF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Track Off</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcasted to all nodes by a command station to indicate track power is off and no further command packets should be sent, except inquiries..</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'05' (5)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">TON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Track On</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcasted to all nodes by a command station to indicate track power is on.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'06' (6)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ERSTOP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Emergency Stop</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcase to all nodes by a command station to indicate all engines have been emergency stopped.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'07' (7)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARST</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">System Reset</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Commonly broadcasted to all nodes to indicate a full system reset.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'08' (8)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RTOF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request Track Off</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent to request change of track power to off.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'09' (9)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RTON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request Track On</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent to request change of track power to on.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'0A' (10)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RESTP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request Emergency Stop All</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent to request an emergency stop to all trains . Does not affect accessory control.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'0C' (12)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RSTAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request Command Station Status</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent to query the status of the command station. See description of (STAT) for the response from the command station.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'0D' (13)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">QNN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Query node number</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a node to elicit a PNN reply from each node on the bus that has a node number. See OpCode 0xB6</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'10' (16)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQNP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request node parameters</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent to a node while in ?setup?mode to read its parameter set. Used when initially configuring a node.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'11' (17)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQMN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request module name</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a node to request the name of the type of module that is in setup mode. The module in setup mode will reply with opcode NAME. See OpCode 0xE2</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'21' (33)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">KLOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Release Engine</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a CAB to the Command Station. The engine with that Session number is removed from the active engine list.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'22' (34)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">QLOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Query Engine</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">The command station responds with PLOC if the session is assigned. Otherwise responds with ERR: engine not found.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'23' (35)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DKEEP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Session keep alive</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">The cab sends a keep alive at regular intervals for the active session. The interval between keep alive messages must be less than the session timeout implemented by the command station.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'30' (48)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DBG1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Debug with one data byte</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Status</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is a freeform status byte for debugging during CBUS module development. Not used during normal operation</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'3F' (63)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with no additional bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'40' (64)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RLOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request engine session</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">AddrHigh_AddrLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">The command station responds with (PLOC) if engine is free and is being assigned. Otherwise responds with (ERR): engine in use or (ERR:) stack full. This command is typically sent by a cab to the command station following a change of the controlled decoder address. RLOC is exactly equivalent to GLOC with all flag bits set to zero, but command stations must continue to support RLOC for backwards compatibility.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'41' (65)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">QCON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Query Consist</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Consist,Index</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Allows enumeration of a consist. Command station responds with PLOC if an engine exists at the specified index, otherwise responds with ERR: no more engines</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'42' (66)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">SNN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set Node Number</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to assign a node number to a requesting node in response to a RQNN message. The target node must be in ?setup? mode.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'43' (67)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ALOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Allocate loco to activity</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,AllocCode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><em>None</em></td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'44' (68)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">STMOD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set CAB session mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">MMMMMMMM = mode bits: 0 ? 1: speed mode; 00 ? 128 speed steps; 01 ? 14 speed steps; 10 ? 28 speed steps with interleave steps; 11 ? 28 speed steps; 2: service mode; 3: sound control mode</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'45' (69)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PCON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Consist Engine</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Consist</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Adds a decoder to a consist. Dat2 has bit 7 set if consist direction is reversed.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'46' (70)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">KCON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Remove Engine from consist</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Consist</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Removes a loco from a consist.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'47' (71)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DSPD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set Engine Speed/Dir</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,SpeedDir</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">the unsigned speed value. Sent by a CAB or equivalent to request an engine speed/dir change.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'48' (72)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DFLG</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set Engine Flags</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,SpeedFlag</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Bits 0-1: Speed Mode 00 ? 128 speed steps; 01 ? 14 speed steps; 10 ? 28 speed steps with interleave steps; 11 ? 28 speed steps Bit 2: Lights On/OFF; Bit 3: Engine relative direction; Bits 4-5: Engine state (active =0 , consisted =1, consist master=2, inactive=3) Bits 6-7: Reserved.; Sent by a cab to notify the command station of a change in engine flags.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'49' (73)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DFNON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set Engine function on</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Fnum</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a cab to turn on a specific loco function. This provides an alternative method to DFUN for controlling loco functions. A command station must implement both methods.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'4C' (76)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">SSTAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Service mode status</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Status</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Status returned by command station/programmer at end of programming operation that does not return data.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'50' (80)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQNN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request node number</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a node that is in setup/configuration mode and requests assignment of a node number (NN). The node allocating node numbers responds with (SNN) which contains the newly assigned node number. <NN hi> and <NN lo> are the existing node number, if the node has one. If it does not yet have a node number, these bytes should be set to zero.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'51' (81)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNREL</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Node number release</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by node when taken out of service. e.g. when reverting to SLiM mode.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'52' (82)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNACK</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Node number acknowledge</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a node to verify its presence and confirm its node id. This message is sent to acknowledge an SNN.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'53' (83)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNLRN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set node into learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to put a specific node into learn mode. Deprecated - replaced by MODE</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'54' (84)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNULN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Release node from learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to take node out of learn mode and revert to normal operation.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'55' (85)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNCLR</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Clear all events from a node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to clear all events from a specific node. Must be in learn mode first to safeguard against accidental erasure of all events.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'56' (86)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NNEVN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Read number of events available in a node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to read the number of available event slots in a node.Response is EVLNF (0x70)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'57' (87)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NERD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Read back all stored events in a node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to read all the stored events in a node. Response is 0xF2.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'58' (88)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQEVN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request to read number of stored events</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to read the number of stored events in a node. Response is 0x74( NUMEV).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'59' (89)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">WRACK</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write acknowledge</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a node to indicate the completion of a write to memory operation. All nodes must issue WRACK when a write operation to node variables, events or event variables has completed. This allows for teaching nodes where the processing time may be slow. Deprecated replaced by GRSP</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'5A' (90)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQDAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request node data event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by one node to read the data event from another node.(eg: RFID data). Response is 0xF7 (ARDAT).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'5B' (91)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQDDS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request device data - short mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">To request a data set from a device using the short event method. where DN is the device number. Response is 0xFB (DDRS)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'5C' (92)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">BOOTM</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Put node into bootload mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">For SliM nodes with no NN then the NN of the command must be zero. For SLiM nodes with an NN, and all FLiM nodes the command must contain the NN of the target node. Sent by a configuration tool to prepare for loading a new program. Deprecated replaced by MODE</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'5D' (93)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ENUM</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Force a self enumeration cyble for use with CAN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">For nodes in FLiM using CAN as transport. This OPC will force a self-enumeration cycle for the specified node. A new CAN_ID will be allocated if needed. Following the ENUM sequence, the node should issue a NNACK to confirm completion and verify the new CAN_ID. If no CAN_ID values are available, an error message 7 will be issued instead. Deprecated replaced with automatic self enumeration.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'5F' (95)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 1 additional byte</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'60' (96)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DFUN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set Engine functions</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,Fn1,Fn2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat2> (Fn1) is the function range. 1 is F0(FL) to F4; 2 is F5 to F8; 3 is F9 to F12; 4 is F13 to F20; 5 is F21 to F28; <Dat3> (Fn2) is the NMRA DCC format function byte for that range in corresponding bits. Sent by a CAB or equivalent to request an engine Fn state change.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'61' (97)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">GLOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Get engine session</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">AddrHigh_AddrLow,Flags</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> and <Dat2> are [AddrH] and [AddrL] of the decoder, respectively.; 7 bit addresses have (AddrH=0).; 14 bit addresses have bits 6,7 of AddrH set to 1.; <Flags> contains flag bits as follows:Bit 0: Set for "Steal" mode; Bit 1: Set for "Share" mode; Both bits set to 0 is exactly equivalent to an RLOC request; Both bits set to 1 is invalid, because the 2 modes are mutually exclusive; The command station responds with (PLOC) if the request is successful. Otherwise responds with (ERR): engine in use. (ERR:) stack full or (ERR) no session. The latter indicates that there is no current session to steal/share depending on the flag bits set in the request. GLOC with all flag bits set to zero is exactly equivalent to RLOC, but command stations must continue to support RLOC for backwards compatibility.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'63' (99)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ERR</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Command station error report</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Byte1,Byte2,ErrCode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent in response to an error situation by a command station.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'6F' (111)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">CMDERR</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Error messages from nodes during configuration</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,Error</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by node if there is an error when a configuration command is sent. Deprecated replaced by GRSP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'70' (112)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EVNLF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Event space left reply from node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EVSPC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">EVSPC is a one byte value giving the number of available events left in that node.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'71' (113)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NVRD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request read of a node variable</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,NVIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">NV# is the index for the node variable value requested. Response is NVANS. VLCB also returns GRSP and support for NV#0.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'72' (114)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NENRD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request read of stored events by event index</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">EN# is the index for the stored event requested. Response is 0xF2 (ENRSP)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'73' (115)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQNPN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request read of a node parameter by index</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ParaIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Para# is the index for the parameter requested. Index 0 returns the number of available parameters, Response is 0x9B (PARAN). VLCB Para #0 returns a PARAN for each parameter</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'74' (116)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NUMEV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Number of events stored in node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,NumEvents</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Response to request 0x58 (RQEVN)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'75' (117)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">CANID</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set a CAN_ID in existing FLiM node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,CAN_ID</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used to force a specified CAN_ID into a node. Value range is from 1 to 0x63 (99 decimal) This OPC must be used with care as duplicate CAN_IDs are not allowed. Values outside the permitted range will produce an error 7 message and the CAN_ID will not change. Deprecated replaced with self-enumaration. VLCB includes GRSP responses.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'76' (118)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">MODE</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request a change to a modules operating mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ModeCmd</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Request to change the operational mode of the module. Mode cmds 0 = transition to setup mode, 1 = transition to normal mode, 16 = turn on FCU compat, 17 = turn off FCU compat. If supported then module returns GRSP. VLCB new features.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'78' (120)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RQSD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request service discover</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ServiceIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Request service data from a module if ServiceIndex is 0 then SD message sent, followed by ESD response for each services supported. VLCB new feature.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'7F' (127)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 2 additional bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'80' (128)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RDCC3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request 3-byte DCC Packet</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Rep,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1(REP)> is number of repetitions in sending the packet. <Dat2>..<Dat4> 3 bytes of the DCC packet. Allows a CAB or equivalent to request a 3 byte DCC packet to be sent to the track. The packet is sent <REP> times and is not refreshed on a regular basis. Note: a 3 byte DCC packet is the minimum allowed.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'82' (130)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">WCVO</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write CV (byte) in OPS mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,CVHigh_CVLow,CVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the session number of the loco to be written to; <Dat2> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV to be written; <Dat4> is the byte value to be written; Sent to the command station to write a DCC CV byte in OPS mode to specific loco.(on the main)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'83' (131)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">WCVB</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write CV (bit) in OPS mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,CVHigh_CVLow,CVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the session number of the loco to be written to; <Dat2> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV to be written; <Dat4> is the value to be written; The format for Dat4 is that specified in RP 9.2.1 for OTM bit manipulation in a DCC packet.; This is ?111CDBBB? where C is here is always 1 as only ?writes? are possible OTM. (unless some loco ACK scheme like RailCom is used). D is the bit value, either 0 or 1 and BBB is the bit position in the CV byte. 000 to 111 for bits 0 to 7.; Sent to the command station to write a DCC CV in OPS mode to specific loco.(on the main)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'84' (132)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">QCVS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Read CV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,CVHigh_CVLow,Mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">This command is used exclusively with service mode.; Sent by the cab to the command station in order to read a CV value. The command station shall respond with a PCVS message containing the value read, or SSTAT if the CV cannot be read.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'85' (133)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PCVS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Report CV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,CVHigh_CVLow,CVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the session number of the cab; <Dat2> is the MSB # of the CV read (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV read; <Dat4> is the read value; This command is used exclusively with service mode.; Sent by the command station to report a read CV.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'87' (135)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RDGN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request dianostic data</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ServiceIndex,DiagCode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Request diagnostic data from a module. If DiagCode is 0 then all data returned. If ServiceIndex 0 then send DGN message for each service, otherwise send DGN for service specified</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'8E' (142)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NVSETRD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set an NV value with read back</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,NNIndex,NVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sets an NV value and responds with the new value, response may not be the value requested. VLCB new feature.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'90' (144)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?ON? event using the full event number of 4 bytes. (long event)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'91' (145)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACOF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ?OFF? event using the full event number of 4 bytes. (long event)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'92' (146)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">AREQ</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Request Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number (MS WORD of the full event #); <Dat2> is the low byte of the node number (MS WORD of the full event #); <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates a ?request? event using the full event number of 4 bytes. (long event); A request event is used to elicit a status response from a producer when it is required to know the state of the producer without producing an ON or OFF event and to trigger an event from a combi node</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'93' (147)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ?ON? response event. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'94' (148)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">AROF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; Indicates an ‘OFF’ response event. A response event is a reply to a status request; (AREQ) without producing an ON or OFF event</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'95' (149)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EVULN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Unlearn an event in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to remove an event from a node. VLCB also return GRSP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'96' (150)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NVSET</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Set a node variable</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,NVIndex,NVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to set a node variable. NV# is the NV index number. Deprecated replaced by NVSETRD. VLCB also return GRSP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'97' (151)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NVANS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to a request for a node variable value</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,NVIndex,NVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by node in response to request. (NVRD)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'98' (152)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory short ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ event using the short event number of 2 LS bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'99' (153)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASOF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory short OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ event using the short event number of 2 LS bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9A' (154)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASRQ</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Request Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates a ‘request’ event using the short event number of 2 LS bytes. A request event is used to elicit a response from a producer ‘device’ when it is required to know the ‘state’ of the device without producing an ON or OFF event and to trigger an event from a combi node.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9B' (155)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PARAN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to request for individual node parameter</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ParaIndex,ParaVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">NN is the node number of the sending node. Para# is the index of the parameter and Para val is the parameter value.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9C' (156)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">REVAL</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request for read of an event variable</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnIndex,EvIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">This request differs from B2 (REQEV) as it doesn’t need to be in learn mode but does; require the knowledge of the event index to which the EV request is directed.; EN# is the event index. EV# is the event variable index. Response is B5 (NEVAL)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9D' (157)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory short response event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9E' (158)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSOF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory short response event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">ndicates an ‘OFF’ response event. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'9F' (159)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 3 additional bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'A0' (160)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RDCC4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request 4-byte DCC packet</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Rep,Byte1,Byte2,Byte3,Byte4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1(REP)> is number of repetitions in sending the packet.; <Dat2>..<Dat5> 4 bytes of the DCC packet.; Allows a CAB or equivalent to request a 4 byte DCC packet to be sent to the track. The; packet is sent <REP> times and is not refreshed on a regular basis.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'A2' (162)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">WCVS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write CV in Service Mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,CVHigh_CVLow,Mode,CVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the session number of the cab; <Dat2> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat3> is the LSB # of the CV to be written; <Dat4> is the service write mode; <Dat5> is the CV value to be written; Sent to the command station to write a DCC CV in service mode.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'AB' (171)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">HEARTB</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Heartbeat message from module</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,Sequence,Status,StatusBits</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Hearbeat message from module indicating alive. Sent every 5 seconds by module. Sequence count from 0, incrementing and wrap around to 0., Statis is binary representation of diagnostic status 0x00 is normal operation. StatusBits is reserved set to 0x00. VLCB new feature.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'AC' (172)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">SD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Service discovery response</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ServiceIndex,ServiceType,Version</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Version of service supported response to RQSD with ServiceIndex = 0. First SD response is number of following SD responses. Also see ESD. VLCB new feature.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'AF' (175)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">GRSP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Generic response</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,Opcode,ServiceType,Result</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Generic response for a config change request. Result byte indicates ok for success or error code. CMDERR codes are supported. VLCB new feature.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B0' (176)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACON1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; <Dat5> is an additional data byte; Indicates an ‘ON’ event using the full event number of; 4 bytes with one additional data byte.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B1' (177)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACOF1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> is the high byte of the node number; <Dat2> is the low byte of the node number; <Dat3> is the high byte of the event number; <Dat4> is the low byte of the event number; <Dat5> is an additional data byte; Indicates an ‘OFF’ event using the full event number of 4 bytes with one additional data byte.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B2' (178)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">REQEV</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Read event variable in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,EvIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Allows a configuration tool to read stored event variables from a node. EV# is the EV index. Reply is (EVANS)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B3' (179)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARON1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with one additional data byte. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B4' (180)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">AROF1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ response event with one additional data byte. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B5' (181)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NEVAL</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to request for read of EV value</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnIndex,EvIndex,EvVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">NN is the node replying. EN# is the index of the event in that node. EV# is the index of the event variable. EVval is the value of that EV. This is response to 9C (REVAL)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B6' (182)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PNN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to Query Node</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ManufId,ModId,Flags</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><NN Hi> is the high byte of the node number; <NN Lo> is the low byte of the node number; <Manuf Id> is the Manufacturer id as defined in the node parameters; <Module Id> is the Module Type Id id as defined in the node parameters; <Flags> is the node flags as defined in the node parameters. The Flags byte contains bit flags as follows:; Bit 0: Set to 1 for consumer node; Bit 1: Set to 1 for producer node; Bit 2: Set to 1 for FLiM mode; Bit 3: Set to 1 for Bootloader compatible; If a module is both a producer and a consumer then it is referred to as a combi node and; both flags will be set.; Every node should send this message in response to a QNN message.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B8' (184)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASON1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ event using the short event number of 2 LS bytes with one added data byte.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'B9' (185)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASOF1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ event using the short event number of 2 LS bytes with one added data byte.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'BD' (189)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSON1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Response Event with one data byte</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with one added data byte. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'BE' (190)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSOF1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory short response event with one data byte</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ response event with one added data byte. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'BF' (191)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 4 data bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1,Byte2,Byte3,Byte4</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'C0' (192)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RDCC5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Requst 5-byte DCC packet</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Rep,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1(REP)> is # of repetitions in sending the packet.; <Dat2>..<Dat6> 5 bytes of the DCC packet.; Allows a CAB or equivalent to request a 5 byte DCC packet to be sent to the track. The packet is sent <REP> times and is not refreshed on a regular basis.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'C1' (193)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">WCVOA</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write CV (byte) in OPS mode by address</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">AddrHigh_AddrLow,CVHigh_CVLow,Mode,CVVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat1> and <Dat2> are [AddrH] and [AddrL] of the decoder, respectively.; 7 bit addresses have (AddrH=0).; 14 bit addresses have bits 7,8 of AddrH set to 1.; <Dat3> is the MSB # of the CV to be written (supports CVs 1 - 65536); <Dat4> is the LSB # of the CV to be written; <Dat5> is the programming mode to be used; <Dat6> is the CV byte value to be written; Sent to the command station to write a DCC CV byte in OPS mode to specific loco (on the main). Used by computer based ops mode programmer that does not have a valid throttle handle.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'C2' (194)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">CABDAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Send data to DCC CAB which is controlling loco</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">AddrHigh_AddrLow,DataCode,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">1</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Send data to DCC CAB controlling particular loco. CABSIG data1 for aspect1, data2 for aspect2, data3 for speed. Defined in RFC0005.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'C7' (199)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DGN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Dianostic data resonse</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ServiceIndex,DiagCode,DiagVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Diagnostic data value from a module sent in response to RDGN. VLCB new features</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'CF' (207)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">FCLK</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Fast Clock</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">DateTime</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">This addendum defines a time encoding</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D0' (208)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACON2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ event using the full event number of 4 bytes with two additional data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D1' (209)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACOF2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">ndicates an ‘OFF’ event using the full event number of 4 bytes with two additional data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D2' (210)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EVLRN</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Teach an event in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,EvIndex,EvVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">A node response to a request from a configuration tool for the EVs associated with an event (REQEV). For multiple EVs, there will be one response per request. VLCB also return GRSP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D3' (211)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EVANS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to a request for an EV value in a node in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,EvIndex,EvVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">A node response to a request from a configuration tool for the EVs associated with an event (REQEV). For multiple EVs, there will be one response per request.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D4' (212)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARON2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with two added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D5' (213)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">AROF2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ response event with two added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'D8' (216)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASON2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ event using the short event number of 2 LS bytes with two added data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'DD' (221)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSON2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Response Event with two bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with two added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'DE' (222)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSOF2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Response Event with two bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘OFF’ response event with two added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'DF' (223)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 5 data bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E0' (224)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">RDCC6</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Request 6 byte DCC packet</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Rep,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Allows a CAB or equivalent to request a 6 byte DCC packet to be sent to the track. The packet is sent <REP> times and is not refreshed on a regular basis.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E1' (225)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PLOC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Engine Report</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Session,AddrHigh_AddrLow,SpeedDir,Fn1,Fn2,Fn3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><Dat4> is the Speed/Direction value. Bit 7 is the direction bit and bits 0-6 are the speed value.; <Dat5> is the function byte F0 to F4; <Dat6> is the function byte F5 to F8; <Dat7> is the function byte F9 to F12; A report of an engine entry sent by the command station. Sent in response to QLOC or as an acknowledgement of acquiring an engine requested by a cab (RLOC or GLOC).</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E2' (226)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">NAME</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to request for node name string</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Char1_7</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">A node response while in ‘setup’ mode for its name string. Reply to (RQMN). The string for the module type is returned in char1 to char7, space filled to 7 bytes. The Module Name prefix , currently either CAN or ETH, depends on the Interface Protocol parameter, it is not included in the response, see section 12.2 for the definition of the parameters.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E3' (227)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">STAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Command station status report</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,CSNum,Flags,MajRev,MinRev,Build</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">2</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;"><NN hi> <NN lo> Gives node id of command station, so further info can be got from parameters or interrogating NVs; <CS num> For future expansion - set to zero at present; <flags> Flags as defined below; <Major rev> Major revision number; <Minor rev> Minor revision letter; <Build no.> Build number, always 0 for a released version.; <flags> is status defined by the bits below.; bits:; 0 - Hardware Error (self test); 1 - Track Error; 2 - Track On/ Off; 3 - Bus On/ Halted; 4 - EM. Stop all performed; 5 - Reset done; 6 - Service mode (programming) On/ Off; 7 – reserved; Sent by the command station in response to RSTAT.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E7' (231)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ESD</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended service discovery response</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,ServiceIndex,ServiceType,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Detailed information about a service supported by a module. Sent in response to RQSD where ServiceIndex is not 0. VLCB new feature</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'E9' (233)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DTXC</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Streaming protocol</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">StreamID,Sequence,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used to transport relatively large block of data. StreamID is unique layout wide (&gt; 20). If Sequence num is 0x00 then bytes are MessageLen (2 bytes), CRC16 (2 bytes), Flags (1 byte reserved). Defined in RFC0005</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'EF' (239)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">PARAMS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to request for node parameters</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">Para1_7</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">A node response while in ‘setup’ mode for its parameter string. Reply to (RQNP)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F0' (240)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACON3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ON event using the full event number of 4 bytes with three additional data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F1' (241)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACOF3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an OFF event using the full event number of 4 bytes with three additional data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F2' (242)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ENRSP</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Response to request to read node events</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,En3_0,EnIndex</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Where the NN is that of the sending node. EN3 to EN0 are the four bytes of the stored event. EN# is the index of the event within the sending node. This is a response to either 57 (NERD) or 72 (NENRD)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F3' (243)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARON3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Acessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with three added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F4' (244)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">AROF3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Acessory Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ‘ON’ response event with three added data bytes. A response event is a reply to a status request (AREQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F5' (245)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EVLRNI</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Teach and event in learn mode using event indexing</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,EnHigh_EnLow,EnIndex,EvIndex,EvVal</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Sent by a configuration tool to a node in learn mode to teach it an event. The event index must be known. Also teaches it the associated event variables.(EVs). This command is repeated for each EV required. VLCB allow zero events and zero EVid, also return GRSP.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F6' (246)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ACDAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory node data event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an event from this node with 5 bytes of data. For example, this can be used to send the 40 bits of an RFID tag. There is no event number in order to allow space for 5 bytes of data in the packet, so there can only be one data event per node.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F7' (247)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARDAT</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory node data response</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates a node data response. A response event is a reply to a status request (RQDAT) without producing a new data event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F8' (248)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASON3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short ON</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ON event using the short event number of 2 LS bytes with three added data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'F9' (249)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ASOF3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short OFF</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an OFF event using the short event number of 2 LS bytes with three added data bytes.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FA' (250)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DDES</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Device data event (short mode)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Function is the same as F6 but uses device addressing so can relate data to a device attached to a node. e.g. one of several RFID readers attached to a single node.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FB' (251)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DDRS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Device data response (short mode)</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">The response to a request for data from a device. (0x5B)</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FC' (252)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">DDWS</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Write data</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">DNHigh_DNLow,byte1,byte2,byte3,byte4,byte5</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">0</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used to write data to a device such as an RFID tag. For RC522 byte1 should be 0.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FD' (253)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSON3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an ON response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FE' (254)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">ARSOF3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Accessory Short Response Event</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">NN,DNHigh_DNLow,Byte1,Byte2,Byte3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Indicates an OFF response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event.</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">OpCode</th>
+<th style="text-align: left;">'FF' (255)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">Name</td>
+<td style="text-align: left;">EXTC6</td>
+</tr>
+<tr>
+<td style="text-align: left;">Title</td>
+<td style="text-align: left;">Extended op-code with 6 data bytes</td>
+</tr>
+<tr>
+<td style="text-align: left;">Args / data</td>
+<td style="text-align: left;">ExtOpc,Byte1,Byte2,Byte3,Byte4,Byte5,Byte6</td>
+</tr>
+<tr>
+<td style="text-align: left;">Priority</td>
+<td style="text-align: left;">3</td>
+</tr>
+<tr>
+<td style="text-align: left;">Description</td>
+<td style="text-align: left;">Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="dcc-error-codes">DCC Error codes</h2>
+<p>These are the DCC error codes listed in the VLCBOpcode.dcc_error_codes dictionary.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Error code</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">'01' (1)</td>
+<td style="text-align: left;">Loco stack full</td>
+</tr>
+<tr>
+<td style="text-align: left;">'02' (2)</td>
+<td style="text-align: left;">Loco address taken</td>
+</tr>
+<tr>
+<td style="text-align: left;">'03' (3)</td>
+<td style="text-align: left;">Session not present</td>
+</tr>
+<tr>
+<td style="text-align: left;">'04' (4)</td>
+<td style="text-align: left;">Consist empty</td>
+</tr>
+<tr>
+<td style="text-align: left;">'05' (5)</td>
+<td style="text-align: left;">Loco not found</td>
+</tr>
+<tr>
+<td style="text-align: left;">'06' (6)</td>
+<td style="text-align: left;">CAN bus error</td>
+</tr>
+<tr>
+<td style="text-align: left;">'07' (7)</td>
+<td style="text-align: left;">Invalid request</td>
+</tr>
+<tr>
+<td style="text-align: left;">'08' (8)</td>
+<td style="text-align: left;">Session cancelled</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="cmderr-grsp-error-codes">CMDERR / GRSP Error codes</h2>
+<p>These are the CMDERR / GRSP error codes listed in the VLCBOpcode.grsp_error_codes dictionary.</p>
+<table>
+<thead>
+<tr>
+<th style="text-align: left;">Error code</th>
+<th style="text-align: left;">Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;">'00' (0)</td>
+<td style="text-align: left;">OK</td>
+</tr>
+<tr>
+<td style="text-align: left;">'01' (1)</td>
+<td style="text-align: left;">Invalid command</td>
+</tr>
+<tr>
+<td style="text-align: left;">'02' (2)</td>
+<td style="text-align: left;">Not in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">'03' (3)</td>
+<td style="text-align: left;">Not in setup mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">'04' (4)</td>
+<td style="text-align: left;">Too many events</td>
+</tr>
+<tr>
+<td style="text-align: left;">'05' (5)</td>
+<td style="text-align: left;">No event</td>
+</tr>
+<tr>
+<td style="text-align: left;">'06' (6)</td>
+<td style="text-align: left;">Invalid event variable index</td>
+</tr>
+<tr>
+<td style="text-align: left;">'07' (7)</td>
+<td style="text-align: left;">Invalid event</td>
+</tr>
+<tr>
+<td style="text-align: left;">'08' (8)</td>
+<td style="text-align: left;">Reserved</td>
+</tr>
+<tr>
+<td style="text-align: left;">'09' (9)</td>
+<td style="text-align: left;">Invalid parameter index</td>
+</tr>
+<tr>
+<td style="text-align: left;">'0A' (10)</td>
+<td style="text-align: left;">Invalid node variable index</td>
+</tr>
+<tr>
+<td style="text-align: left;">'0B' (11)</td>
+<td style="text-align: left;">Invalid event variable value</td>
+</tr>
+<tr>
+<td style="text-align: left;">'0C' (12)</td>
+<td style="text-align: left;">Invalid node variable value</td>
+</tr>
+<tr>
+<td style="text-align: left;">'0D' (13)</td>
+<td style="text-align: left;">Other in learn mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FA' (250)</td>
+<td style="text-align: left;">Invalid mode</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FB' (251)</td>
+<td style="text-align: left;">Invalid command parameter</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FC' (252)</td>
+<td style="text-align: left;">Invalid service</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FD' (253)</td>
+<td style="text-align: left;">Invalid diagnostic</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FE' (254)</td>
+<td style="text-align: left;">Unknown NVM type</td>
+</tr>
+<tr>
+<td style="text-align: left;">'FF' (255)</td>
+<td style="text-align: left;">Reserved</td>
+</tr>
+</tbody>
+</table>
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": [], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
