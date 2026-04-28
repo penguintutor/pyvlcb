@@ -463,14 +463,15 @@ class VLCBOpcode:
 
         Returns:
             String: shortened opcode string
+            or empty string for NULL opcode
 
-        Raises:
-            ValueError: If string does not contain at least 2 characters
         """
-        if len(opcode_string) >= 2:
+        # Also ignore - in position 1 (eg. " - ")
+        if len(opcode_string) >= 2 and opcode_string[1] != "-":
             return opcode_string[0:2]
         else:
-            raise ValueError(f"String {opcode_string} is too short.")
+            # If not a opcode_string (eg. Null) return ""
+            return ""
     
     # Get min priority from opcode
     @staticmethod
@@ -484,7 +485,7 @@ class VLCBOpcode:
             ValueError: If opcode not found
         """
         opcode = VLCBOpcode.opcode_extract(opcode)
-        if opcode in VLCBOpcode.opcodes.keys():
+        if opcode in VLCBOpcode.opcodes:
             return VLCBOpcode.opcodes[opcode]['minpri']
         else:
             raise ValueError(f"Opcode {opcode} is not defined.")
