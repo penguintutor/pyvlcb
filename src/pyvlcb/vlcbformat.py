@@ -152,6 +152,7 @@ class VLCBOpcode:
     """
     # Dict from opcode to dict of opcode information
     opcodes = {
+        '':  {'opc': 'N/A', 'title': 'Null', 'format': '', 'minpri': 0, 'comment': 'Null Opcode / data packet'},
         '00':  {'opc': 'ACK', 'title': 'General Acknowledgement', 'format': '', 'minpri': 2, 'comment': 'Positive response to query/request performed for report of availability online'},
         '01':  {'opc': 'NAK', 'title': 'General No Ack', 'format': '', 'minpri': 2, 'comment': 'Negative response to query/request denied'},
         '02':  {'opc': 'HLT', 'title': 'Bus Halt', 'format': '', 'minpri': 0, 'comment': 'Commonly broadcasted to all nodes to indicate CBUS is not available and no further packets should be sent until a BON or ARST is received'},
