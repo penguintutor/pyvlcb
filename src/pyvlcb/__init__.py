@@ -124,8 +124,8 @@ class VLCB:
         opcode_string = f'{opcode} - {VLCBOpcode.opcode_mnemonic(opcode)}'
         #data_string = f"{VLCBOpcode.parse_data(vlcb_entry.data)}"
         data_string = dict_to_string(VLCBOpcode.parse_data(vlcb_entry.data))
-        return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string]
-        # Todo - error handling 
+        description_string = vlcb_entry.get_description()
+        return [date_string, direction, message, str(vlcb_entry.can_id), opcode_string, data_string, description_string]
     
         
     # Static Methods moved to utils

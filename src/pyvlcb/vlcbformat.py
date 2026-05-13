@@ -62,6 +62,24 @@ class VLCBFormat :
         """
         return VLCBOpcode.parse_data(self.data)
 
+
+    def get_description (self): # -> str:
+        """Returns a human readable string based on the data string
+
+        Returns:
+            String
+
+        Raises:
+            ValueError: If opcode not found
+        """
+        str_value = self.data[0:2]
+        if str_value in VLCBOpcode.opcodes.keys():
+            #TODO: Currently returns title - in future look to parse loco ID if appropriate
+            return VLCBOpcode.opcodes[str_value]['title']
+        else:
+            raise ValueError(f"Opcode {str_value} is not defined.")
+
+
     def format_data (self) -> OpcodeData:
         """Returns the opcode associated with the data string
 
