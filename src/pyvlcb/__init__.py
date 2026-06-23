@@ -250,9 +250,16 @@ class VLCB:
         Returns:
             String: A string for the request
         """
+
         # if ev_id is a string then convert to an int
         # Setting based to 0 will automatically handle base 10 or hex
-        ev_id = int(ev_id, 0)
+        if not isinstance(ev_id, (int, str)):
+            raise TypeError(f"Expected int or str, got {type(ev_id).__name__}")
+
+        # Convert strings (ints are ignored and remain ints)
+        if isinstance(ev_id, str):
+            ev_id = int(ev_id, 0)
+
         # determine if long or short
         if ev_id <= 0xffff:
             return self.accessory_short_command (node_id, ev_id, state)
