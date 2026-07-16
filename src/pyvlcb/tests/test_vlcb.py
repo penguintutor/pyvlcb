@@ -92,6 +92,7 @@ class TestVLCB(unittest.TestCase):
         self.assertEqual(f_to_bytes (2, functions), ("01", "19"))
         self.assertEqual(f_to_bytes (7, functions), ("02", "06"))
         self.assertEqual(f_to_bytes (24, functions), ("05", "00"))
+        
 
 
 if __name__ == "__main__":

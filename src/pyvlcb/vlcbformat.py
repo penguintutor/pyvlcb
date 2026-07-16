@@ -318,7 +318,7 @@ class VLCBOpcode:
         'F9':  {'opc': 'ASOF3', 'title': 'Accessory Short OFF', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': 'Indicates an OFF event using the short event number of 2 LS bytes with three added data bytes.'},
         'FA':  {'opc': 'DDES', 'title': 'Device data event (short mode)', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'Function is the same as F6 but uses device addressing so can relate data to a device attached to a node. e.g. one of several RFID readers attached to a single node.'},
         'FB':  {'opc': 'DDRS', 'title': 'Device data response (short mode)', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 3, 'comment': 'The response to a request for data from a device. (0x5B)'},
-        'FC':  {'opc': 'DDWS', 'title': 'Write data', 'format': 'DNHigh_DNLow,byte1,byte2,byte3,byte4,byte5', 'minpri': 0, 'comment': 'Used to write data to a device such as an RFID tag. For RC522 byte1 should be 0.'},
+        'FC':  {'opc': 'DDWS', 'title': 'Write data', 'format': 'DNHigh_DNLow,Byte1,Byte2,Byte3,Byte4,Byte5', 'minpri': 0, 'comment': 'Used to write data to a device such as an RFID tag. For RC522 byte1 should be 0.'},
         'FD':  {'opc': 'ARSON3', 'title': 'Accessory Short Response Event', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': "Indicates an ON response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event."},
         'FE':  {'opc': 'ARSOF3', 'title': 'Accessory Short Response Event', 'format': 'NN,DNHigh_DNLow,Byte1,Byte2,Byte3', 'minpri': 3, 'comment': "Indicates an OFF response event with with three added data bytes. A response event is a reply to a status request (ASRQ) without producing an ON or OFF event."},
         'FF':  {'opc': 'EXTC6', 'title': 'Extended op-code with 6 data bytes', 'format': 'ExtOpc,Byte1,Byte2,Byte3,Byte4,Byte5,Byte6', 'minpri': 3, 'comment': 'Used if the basic set of 32 OPCs is not enough. Allows an additional 256 OPCs'}
@@ -335,8 +335,9 @@ class VLCBOpcode:
             "Consist": [2, "num"],        # Consist ID
             "Index": [2, "num"],          # Index of loco in consist
             "Status": [2, "hex"],     
-            "NN": [4, "num"],    # Node number
-            "AllocCode": [2, "num"],       # Specific allocation code
+            "NN": [4, "num"],             # Node number
+            "NNIndex": [2, "num"],        # Index for the node variable value 
+            "AllocCode": [2, "num"],      # Specific allocation code
             "SpeedDir": [2, "hex"],
             "SpeedFlag": [2, "hex"],       # Speed flags DDD-DDDDD
             "Fnum": [2, "num"],            # Function number
