@@ -126,7 +126,7 @@ def f_to_bytes (f_num: int, function_status: List[int]) -> Tuple[str, str]:
 
 # Where 2 bytes convert to addr id
 def bytes_to_addr (byte1: bytes, byte2: bytes) -> int:
-    """Convert 2 byte values into an address id sring
+    """Convert 2 byte values into an address id string
 
     Args:
         byte1 (bytes): Most significant byte
@@ -138,6 +138,35 @@ def bytes_to_addr (byte1: bytes, byte2: bytes) -> int:
     msb = int(byte1)
     lsb = int(byte2)
     return ((msb << 8) + lsb)
+
+
+def bytes_to_locoid (byte1: bytes, byte2: bytes) -> int:
+    """ Convert 2 byte values into DCC Loco ID.
+    Strips highest two bits
+    
+    Args:
+        byte1 (bytes): Most significant byte
+        byte2 (bytes): Least significant byte
+
+    Returns:
+        Int: The address id value
+    """
+    return bytes_to_addr(byte1, byte2) & 0x3FFF
+    
+    
+def byte_to_sessionid (byte1: bytes) -> int:
+    """ Converts a single type to a session ID.
+    Sames as casting the byte to an int, but here for
+    consistant function name. 
+    
+    Args:
+        byte1 (bytes): Data byte
+
+    Returns:
+        Int: The session id value
+    """
+    return int(byte1)
+    
 
 
 def bytes_to_hexstr (byte1: bytes, byte2: bytes) -> str:
