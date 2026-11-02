@@ -456,7 +456,7 @@ class VLCB:
         return f"{self.make_header(opcode='47')}47{num_to_1hexstr(session_id)}{num_to_1hexstr(speeddir)};"
     
     # Set function using DFUN - needs to be provided with the two bytes
-    # First byte is group (1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12)
+    # First byte is group (1 = F0 to F4, 2 = F5 to F8, 3 = F9 to F12)
     # 4 = F13 to 19, 5 = F20 to F28
     # Second byte is 1 bit per function - set 1 for on, 0 for off, lsb to right
     # eg. 1 = 0001, 2 = 0010
@@ -467,7 +467,7 @@ class VLCB:
 
         Args:
             session_id: Session ID
-            byte1: Function group. 1 = F1 to F4, 2 = F5 to F8, 3 = F9 to F12, 4 = F13 to 19, 5 = F20 to F28
+            byte1: Function group. 1 = F0 to F4, 2 = F5 to F8, 3 = F9 to F12, 4 = F13 to 19, 5 = F20 to F28
             byte2: 1 bit per function 1=on, 0=off. LSB to right eg 1 = 0001, 2 = 0010
 
         Returns:
@@ -475,7 +475,7 @@ class VLCB:
         """
         return f"{self.make_header(opcode='60')}60{num_to_1hexstr(session_id)}{num_to_1hexstr(byte1)}{num_to_1hexstr(byte2)};"
     
-    def loco_set_function (self, session_id: int, function_num, function_list) -> str:
+    def loco_set_function (self, session_id: int, function_num: int, function_list: list[int]) -> str:
         """Create a set function request using the function list
         Sends the entire group of functions where the function_num resides
         This is an alternative to loco_set_dfun as this calculates the bytes
@@ -485,8 +485,7 @@ class VLCB:
 
         Args:
             session_id: Session ID
-            byte1: Function number
-            byte2: List of current function statuses
+            function_num: Function number which is already updated in the function_list: List of current function statuses (binary 1 or 0 values)
 
         Returns:
             String: A string for the request
