@@ -2,7 +2,7 @@ import unittest
 from typing import Optional
 from pyvlcb import VLCB
 # Import utils
-from pyvlcb import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes
+from pyvlcb import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes, dfun_to_functions
 from pyvlcb.vlcbformat import VLCBFormat
 
 class TestVLCB(unittest.TestCase):
@@ -92,6 +92,14 @@ class TestVLCB(unittest.TestCase):
         self.assertEqual(f_to_bytes (2, functions), ("01", "19"))
         self.assertEqual(f_to_bytes (7, functions), ("02", "06"))
         self.assertEqual(f_to_bytes (24, functions), ("05", "00"))
+        
+        
+    #dfun_to_functions (fn: bytes, byte1: bytes) -> dict[int, int]:
+    # opposite of f_to_bytes
+    def test_dfun_to_functions(self):
+        self.assertEqual(dfun_to_functions (1, 0b10101), {0:1, 1:1, 2:0, 3:1, 4:0})
+        self.assertEqual(dfun_to_functions (2, 0b1010), {5:0, 6:1, 7:0, 8:1})
+        self.assertEqual(dfun_to_functions (5, 0b10101011), {21:1, 22:1, 23:0, 24:1, 25:0, 26:1, 27:0, 28:1})
         
 
 

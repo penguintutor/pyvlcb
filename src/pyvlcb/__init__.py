@@ -3,7 +3,7 @@
 
 from .vlcbformat import VLCBFormat, VLCBOpcode
 from .canusb import CanUSB4
-from .utils import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes, dict_to_string
+from .utils import num_to_1hexstr, num_to_2hexstr, num_to_4hexstr, f_to_bytes, dict_to_string, dfun_to_functions
 from .exceptions import (
     MyLibraryError, 
     DeviceConnectionError, 

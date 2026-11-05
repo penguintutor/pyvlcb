@@ -181,6 +181,57 @@ def bytes_to_hexstr (byte1: bytes, byte2: bytes) -> str:
     """
     return f"{hex(byte1).upper()[2:]:0>2}{hex(byte2).upper()[2:]:0>2}"
     
+def dfun_to_functions (fn: int, byte1: int) -> dict[int, int]:
+    """ Takes the fn and byte from a dfun command and extracts into a dict of function values. Depending upon the value of fn determines the range of functions included in the response. 
+    fn = 1 - F0 to F4
+    fn = 2 - F5 to F8
+    fn = 3 - F9 to F12
+    fn = 4 - F13 to F20
+    fn = 5 - F21 to F28
+    Functions above F28 are not supported and need to use DFNON / DFNOFF instead.
+    Assumes that the fn and byte1 values are already converted into ints
+    
+    Args: 
+        fn: Function range (FR). Which function values are included.
+        byte1: byte of set values
+    Returns:
+        Dict of function values as 0 or 1 for each function as off and on. The Key is an int of the function number 
+    """
+    func_dict =  {} # dict to store the functions to return
+    # Establish first and number of functions included in bytes
+    # Could do this by having condition for 4 and 5 having 8 instead of 4
+    # but this should be easier to follow
+    match fn:
+        case 1:
+            # special case for 0 - fn0 is in the higher nibble bit 5
+            func_dict[0] = 1 if (byte1 & 0b10000) else 0
+            # first value (after 0)
+            start_func = 1
+            num_func = 4
+        case 2:
+            start_func = 5
+            num_func = 4
+        case 3:
+            start_func = 9
+            num_func = 4
+        case 4:
+            start_func = 13
+            # More num_func as uses 2nd nibble
+            num_func = 8
+        case 5:
+            start_func = 21
+            num_func = 8
+        # default is invalid
+        case _:
+            raise ValueError (f"Function range is not a valid number between 1 and 5 = {fn}")
+    # bit_index will count 0, 1 ...
+    # func_num will count start_func, start_func+1 ...
+    for bit_index, func_num in enumerate(range(start_func, start_func + num_func)):
+        func_dict[func_num] = (byte1 >> bit_index) & 1
+    return func_dict
+        
+            
+
 
 def bytes_to_functions (fn1: bytes, fn2: bytes, fn3: bytes) -> List[int]:
     """ Sets the value of the functions from a PLOC message
