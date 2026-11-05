@@ -9,7 +9,7 @@ It is designed for use with the MERG CANUSB4 CBUS adapter and other compatible h
 ---
 
 ## Install
-
+Requires Python 3.10 or newer (default on Raspberry Pi OS Bookworm and later).
 
 For most systems including a Raspberry Pi then Python is managed using virtual environment.
 
@@ -31,6 +31,10 @@ source ~/venv/pyvlcb/bin/activate
 ```bash
 pip install pyvlcb
 ```
+
+## What's New in 0.3.0
+* Added new function to convert dfun to function values
+* **Breaking Change:** Dropped support for Python 3.9. Python 3.10+ is now required.
 
 ---
 
