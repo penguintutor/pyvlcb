@@ -1,0 +1,18 @@
+/* Force the scrollable wrapper to fill the space */
+.md-typeset__table {
+    min-width: 100%;
+    display: block; /* Ensures it takes up the full line */
+}
+
+/* Force the table itself to fill the wrapper */
+.md-typeset table:not([class]) {
+    width: 100%;
+    display: table;
+}
+
+/* Target the first header and first cell of every row */
+.md-typeset table:not([class]) th:first-child,
+.md-typeset table:not([class]) td:first-child {
+    width: 1%;
+    white-space: nowrap; /* OPTIONAL: Prevents text from wrapping */
+}
